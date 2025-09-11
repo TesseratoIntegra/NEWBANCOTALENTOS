@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import SplitText from '@/components/SliptText';
 import * as Icon from 'react-bootstrap-icons'
+import LoadChiap from '@/components/LoadChiap';
 import { 
   Briefcase, 
   Calendar, 
@@ -10,8 +11,7 @@ import {
   Building2, 
   Clock,
   Eye,
-  Trash2,
-  Loader2
+  Trash2
 } from 'lucide-react';
 import applicationService from '@/services/applicationService';
 import { Application } from '@/types';
@@ -24,9 +24,6 @@ const ApplicationsPage = () => {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // Filtros
-  //const [selectedStatus, setSelectedStatus] = useState('');
 
   // Paginação
   const [currentPage, setCurrentPage] = useState(1);
@@ -203,9 +200,8 @@ const ApplicationsPage = () => {
 
           {/* Loading */}
           {loading && (
-            <div className="flex justify-center items-center py-12">
-              <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-              <span className="ml-2 text-slate-700">Carregando candidaturas...</span>
+            <div className="min-h-[60vh] 2xl:min-h-[75vh] flex justify-center items-center">
+              <LoadChiap/>
             </div>
           )}
 

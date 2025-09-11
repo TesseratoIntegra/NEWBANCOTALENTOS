@@ -1,7 +1,7 @@
 'use client'
 import { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import LoadChiap from '@/components/LoadChiap';
 
 export default function JobRedirectPage() {
   const params = useParams();
@@ -45,10 +45,7 @@ export default function JobRedirectPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-zinc-100 to-white flex items-center justify-center">
-      <div className="text-center">
-        <Loader2 className="w-8 h-8 text-blue-500 animate-spin mx-auto mb-4" />
-        <p className="text-slate-700">Carregando vaga...</p>
-      </div>
+      <LoadChiap/>
     </div>
   );
 }

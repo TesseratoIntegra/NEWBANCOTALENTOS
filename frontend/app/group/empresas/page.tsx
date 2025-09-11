@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Search, Building2, MapPin, Loader2 } from 'lucide-react';
+import { Search, Building2, MapPin } from 'lucide-react';
+import LoadChiap from '@/components/LoadChiap';
 import companyService from '@/services/companyService';
 import { Company } from '@/types';
 import Navbar from '@/components/Navbar';
@@ -209,8 +210,7 @@ const CompaniesPage = () => {
           {/* Loading */}
           {loading && (
             <div className="flex justify-center items-center py-12">
-              <Loader2 className="w-8 h-8 text-cyan-500 animate-spin" />
-              <span className="ml-2 text-zinc-300">Carregando empresas...</span>
+              <LoadChiap/>
             </div>
           )}
 

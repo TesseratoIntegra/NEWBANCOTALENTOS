@@ -15,6 +15,7 @@ import PreferencesSection from '@/app/perfil/account/PreferencesSection';
 import Navbar from '@/components/Navbar';
 import SplitText from '@/components/SliptText';
 import * as Icon from 'react-bootstrap-icons'
+import LoadChiap from '@/components/LoadChiap';
 // ...removido: ícones não utilizados...
 
 export default function AccountPage() {
@@ -143,10 +144,7 @@ export default function AccountPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-white via-zinc-100 to-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-slate-600">Carregando perfil...</p>
-        </div>
+        <LoadChiap/>
       </div>
     );
   }

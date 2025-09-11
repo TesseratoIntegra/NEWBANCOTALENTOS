@@ -9,6 +9,7 @@ import CandidateService from '@/services/candidateService';
 import ApplicationService from '@/services/applicationService';
 import { CandidateProfile, Application } from '@/types';
 import SplitText from '@/components/SliptText';
+import LoadChiap from '@/components/LoadChiap';
 import { toast } from 'react-hot-toast';
 
 // Types for job data
@@ -204,10 +205,7 @@ const JobListingPage: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-white via-zinc-100 to-white flex items-center justify-center">
-        <div className="text-center">
-          <Loader className="w-12 h-12 text-blue-500 animate-spin mx-auto mb-4" />
-          <p className="text-slate-600">Carregando informações da vaga...</p>
-        </div>
+        <LoadChiap/>
       </div>
     );
   }

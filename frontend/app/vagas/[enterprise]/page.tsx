@@ -7,6 +7,7 @@ import { Search, Filter, Briefcase } from 'lucide-react';
 import { JobCard } from '@/app/vagas/[enterprise]/components/JobCard'
 import { useParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
+import LoadChiap from '@/components/LoadChiap';
 
 // Componente principal
 const JobsListingPage: React.FC = () => {
@@ -62,10 +63,7 @@ const JobsListingPage: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-white via-zinc-100 to-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-md h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-slate-600">Carregando vagas...</p>
-        </div>
+        <LoadChiap/>
       </div>
     );
   }
