@@ -101,7 +101,7 @@ export default function Navbar() {
                                 </div>
                             ) : user?.user_type === 'admin' ? (
                                 <div className="flex items-center space-x-2 ml-5">
-                                    <Link href='/admin' className="animate-fade text-zinc-100 hover:text-zinc-800 border border-zinc-900/40 px-4 py-2 rounded-md cursor-pointer text-sm duration-300 flex justify-center place-items-center gap-2 hover:bg-zinc-100">
+                                    <Link href='/admin-panel' className="animate-fade text-zinc-100 hover:text-zinc-800 border border-zinc-900/40 px-4 py-2 rounded-md cursor-pointer text-sm duration-300 flex justify-center place-items-center gap-2 hover:bg-zinc-100">
                                         <Icon.Person className="w-4 h-4" /> Admin Panel
                                     </Link>
                                     <LogoutBtn />
@@ -184,7 +184,7 @@ export default function Navbar() {
                             ) : user?.user_type === 'recruiter' ? (
                                 <div className="animate-fade flex flex-col space-y-3">
                                     <Link 
-                                        href='/admin' 
+                                        href='/admin-panel' 
                                         onClick={() => setIsMenuOpen(false)}
                                         className="bg-zinc-900 hover:bg-zinc-800 text-white px-4 py-2 rounded-md cursor-pointer text-sm duration-300 flex justify-center place-items-center gap-2"
                                     >
