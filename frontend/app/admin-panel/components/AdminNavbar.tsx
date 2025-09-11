@@ -15,27 +15,27 @@ const AdminNavbar = () => {
   const navItems = [
     {
       name: 'Dashboard',
-      href: '/admin',
+      href: '/admin-panel',
       icon: Home,
     },
     {
       name: 'Listar Vagas',
-      href: '/admin/jobs',
+      href: '/admin-panel/jobs',
       icon: List,
     },
     {
       name: 'Nova Vaga',
-      href: '/admin/jobs/create',
+      href: '/admin-panel/jobs/create',
       icon: Plus,
     },
     {
       name: 'Candidaturas',
-      href: '/admin/candidaturas',
+      href: '/admin-panel/candidaturas',
       icon: FileText,
     },
     {
       name: 'Candidaturas Espontâneas',
-      href: '/admin/espontaneas',
+      href: '/admin-panel/espontaneas',
       icon: FileEarmarkPerson,
     },
   ];
@@ -45,7 +45,7 @@ const AdminNavbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 md:h-16">
           <div className="flex items-center space-x-4 md:space-x-8">
-            <Link href="/admin" className="text-xl font-bold text-indigo-400">
+            <Link href="/admin-panel" className="text-xl font-bold text-indigo-400">
               Admin Panel
             </Link>
           </div>
