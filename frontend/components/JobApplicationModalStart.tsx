@@ -223,9 +223,9 @@ export default function JobApplicationModalStart({ show, onClose }: JobApplicati
 	return (
         <>
 				<div >
-					<div className={`bg-white rounded-lg max-w-2xl w-[90%] mx-auto lg:w-full max-h-[90vh] overflow-y-auto border border-gray-200 shadow-2xl fixed -translate-1/2 top-1/2 left-1/2 z-50 ${show ? 'animate-fade-up' : 'opacity-0 pointer-events-none'}`}>
+					<div className={`bg-white rounded-lg max-w-2xl w-[90%] mx-auto lg:w-full max-h-[90vh] overflow-y-auto border border-gray-200 shadow-2xl fixed -translate-1/2 top-1/2 left-1/2 z-[61] ${show ? 'animate-fade-up' : 'opacity-0 pointer-events-none'}`}>
 						{/* Header */}
-						<div className="sticky top-0 flex items-center justify-between px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-blue-900 to-blue-800 text-white rounded-t-lg z-50">
+						<div className="sticky top-0 flex items-center justify-between px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-blue-900 to-blue-800 text-white rounded-t-lg z-[61]">
 							<div>
 								<SplitText
 									text="Candidatura Espontânea"
@@ -400,7 +400,7 @@ export default function JobApplicationModalStart({ show, onClose }: JobApplicati
 
 				</div>
         
-        <div className={`w-full h-screen fixed top-0 left-0 bg-black/40 z-40 ${show ? 'opacity-100' : 'opacity-0 pointer-events-none'} duration-300`} onClick={onClose}></div>
+        <div className={`w-full h-screen fixed top-0 left-0 bg-black/40 z-[60] ${show ? 'opacity-100' : 'opacity-0 pointer-events-none'} duration-300`} onClick={onClose}></div>
         </>
 			);
 		}
