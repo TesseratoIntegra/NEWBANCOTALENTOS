@@ -38,7 +38,7 @@ export default function Navbar() {
             { href: '/candidaturas', label: 'Minhas Candidaturas', icon: Icon.Person },
         ] : []),
         ...(isAuthenticated && user?.user_type === 'recruiter' ? [
-            { href: '/admin', label: 'Painel Colaboradores', icon: Icon.Person },
+            { href: '/admin-panel', label: 'Painel Colaboradores', icon: Icon.Person },
         ] : [])
     ]
 
