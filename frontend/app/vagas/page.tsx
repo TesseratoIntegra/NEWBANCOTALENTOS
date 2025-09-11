@@ -206,12 +206,12 @@ const Home = () => {
           <div className="text-center mb-8">
               <SplitText
                 text="Por que escolher nossa plataforma?"
-                className="text-3xl lg:text-4xl font-bold text-blue-900 mb-2 quicksand"
+                className="text-2xl lg:text-4xl font-bold text-blue-900 mb-2 quicksand"
                 delay={30}
                 duration={0.6}
               />
               <ScrollReveal>
-                <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+                <p className="text-lg text-slate-600 max-w-3xl mx-auto">
                   Oferecemos uma experiência completa e diferenciada para conectar os melhores talentos às empresas mais inovadoras do mercado.
                 </p>
               </ScrollReveal>
@@ -244,12 +244,12 @@ const Home = () => {
           <div className="text-center mb-6">
             <SplitText
               text="Como funciona"
-              className="text-3xl lg:text-4xl font-bold text-blue-900 mb-2 quicksand"
+              className="text-2xl lg:text-4xl font-bold text-blue-900 mb-2 quicksand"
               delay={30}
               duration={0.6}
             />
             <ScrollReveal>
-            <p className="text-xl text-slate-600 max-w-7xl mx-auto">
+            <p className="text-lg text-slate-600 max-w-7xl mx-auto">
               Um processo simples e eficiente para conectar você às melhores oportunidades do mercado.
             </p>
             </ScrollReveal>
@@ -286,7 +286,7 @@ const Home = () => {
           <div className="text-center mb-4">
             <SplitText
               text="Vagas Disponíveis"
-              className="text-3xl lg:text-4xl font-bold text-blue-900 mb-2 quicksand"
+              className="text-2xl lg:text-4xl font-bold text-blue-900 mb-2 quicksand"
               delay={30}
               duration={0.6}
             />
