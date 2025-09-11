@@ -55,7 +55,6 @@ export default function JobApplicationModalStart({ show, onClose }: JobApplicati
 		'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
 	];
 	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState('');
 	const [success, setSuccess] = useState(false);
 	const [occupations, setOccupations] = useState<{ id: number; title: string }[]>([]);
 	const occupationOptions: OccupationOption[] = occupations.map(o => ({ value: o.id, label: o.title }));
@@ -68,7 +67,7 @@ export default function JobApplicationModalStart({ show, onClose }: JobApplicati
 				const data = await res.json();
 				setOccupations(data);
 			} catch {
-				setError('Erro ao carregar áreas');
+				console.log('Erro ao carregar áreas');
 			}
 		}
 		fetchOccupations();
@@ -79,7 +78,7 @@ export default function JobApplicationModalStart({ show, onClose }: JobApplicati
 		async function fetchExistingApplication() {
 			if (!show) return;
 			setLoading(true);
-			setError('');
+			console.log('');
 			try {
 				const accessToken = AuthService.getAccessToken();
 				if (!accessToken) return;
@@ -117,7 +116,7 @@ export default function JobApplicationModalStart({ show, onClose }: JobApplicati
 					}
 				}
 			} catch (err) {
-				setError('Erro ao buscar candidatura existente');
+				console.log('Erro ao buscar candidatura existente');
 				console.error(err);
 			} finally {
 				setLoading(false);
@@ -147,7 +146,7 @@ export default function JobApplicationModalStart({ show, onClose }: JobApplicati
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		setLoading(true);
-		setError('');
+		console.log('');
 		setSuccess(false);
 		const data = new FormData();
 		Object.entries(form).forEach(([key, value]) => {
@@ -211,9 +210,9 @@ export default function JobApplicationModalStart({ show, onClose }: JobApplicati
 			if (onClose) onClose();
 		} catch (err) {
 			if (err instanceof Error) {
-				setError(err.message);
+				console.log(err.message);
 			} else {
-				setError('Erro desconhecido');
+				console.log('Erro desconhecido');
 			}
 		} finally {
 			setLoading(false);
@@ -391,7 +390,6 @@ export default function JobApplicationModalStart({ show, onClose }: JobApplicati
 										)}
 									</button>
 								</div>
-								{error && <div className="text-red-600 mt-2">{error}</div>}
 								{success && <div className="text-green-600 mt-2">Candidatura enviada com sucesso!</div>}
 							</form>
 						)}
