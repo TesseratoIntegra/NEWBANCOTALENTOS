@@ -3,6 +3,7 @@ from datetime import timedelta
 from pathlib import Path
 from decouple import Config, RepositoryEnv
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 ROOT_ENV = BASE_DIR.parent / ".env" 
@@ -63,23 +64,18 @@ SITE_ID = 1
 
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://89.116.23.23:3000",
-    "http://89.116.23.23:3001",
-    "http://192.168.3.28:3000",
-    "http://192.168.3.28:3001",
-    "http://192.168.0.77:3000",
+    "http://82.29.59.80:3025",
+    "https://www.bancodetalentos.chiaperini.com.br",
+    "https://bancodetalentos.chiaperini.com.br",
+
 
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3001",
-    "http://89.116.23.23:3001",
-    "http://localhost:3000",
-    "http://89.116.23.23:3000",
-    "http://192.168.3.28:3000",
-    "http://192.168.3.28:3001",
-    "http://192.168.0.77:3000",
-    # Adicione suas URLs de produção aqui
+    "http://82.29.59.80:3025",
+    "https://www.bancodetalentos.chiaperini.com.br",
+    "https://bancodetalentos.chiaperini.com.br",
+
 ]
 
 ACCOUNT_LOGIN_METHODS = {'email'}
