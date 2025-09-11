@@ -67,6 +67,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://89.116.23.23:3001",
     "http://192.168.3.28:3000",
     "http://192.168.3.28:3001",
+    "http://192.168.0.77:3000",
 
 ]
 
@@ -77,6 +78,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://89.116.23.23:3000",
     "http://192.168.3.28:3000",
     "http://192.168.3.28:3001",
+    "http://192.168.0.77:3000",
     # Adicione suas URLs de produção aqui
 ]
 
@@ -199,16 +201,25 @@ TEMPLATES = [
 WSGI_APPLICATION = 'app.wsgi.application'
 
 # Database
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('POSTGRES_DB', 'bancodetalentos'),
-        'USER': config('POSTGRES_USER', 'postgres'),
-        'PASSWORD': config('POSTGRES_PASSWORD', 'postgres'),
-        'HOST': config('POSTGRES_HOST', 'localhost'),
-        'PORT': config('POSTGRES_PORT', '5432'),
+if DEBUG:
+    # Ambiente de Desenvolvimento: SQLite
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': config('POSTGRES_DB', 'bancodetalentos'),
+            'USER': config('POSTGRES_USER', 'postgres'),
+            'PASSWORD': config('POSTGRES_PASSWORD', 'postgres'),
+            'HOST': config('POSTGRES_HOST', 'localhost'),
+            'PORT': config('POSTGRES_PORT', '5432'),
+        }
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

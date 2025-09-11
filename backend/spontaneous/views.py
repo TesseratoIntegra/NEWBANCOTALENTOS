@@ -46,35 +46,41 @@ class OccupationViewSet(viewsets.ModelViewSet):
 @extend_schema_view(
     list=extend_schema(
         tags=['SpontaneousApplication'],
-        summary='Listar Aplicação Espontânea',
-        description='Retorna todas as Jobs cadastradas no sistema.'
+        summary='Listar candidaturas do usuário',
+        description='Retorna apenas a candidatura do usuário autenticado.'
     ),
     retrieve=extend_schema(
         tags=['SpontaneousApplication'],
-        summary='Detalhar Aplicação Espontânea',
-        description='Retorna os detalhes de uma Aplicação Espontânea específica.'
+        summary='Detalhar sua candidatura'
     ),
     create=extend_schema(
         tags=['SpontaneousApplication'],
-        summary='Criar Aplicação Espontânea',
-        description='Permite cadastrar uma nova Aplicação Espontânea.'
+        summary='Criar sua candidatura'
     ),
     update=extend_schema(
         tags=['SpontaneousApplication'],
-        summary='Atualizar Aplicação Espontânea',
-        description='Atualiza todos os campos de uma Aplicação Espontânea.'
+        summary='Atualizar sua candidatura'
     ),
     partial_update=extend_schema(
         tags=['SpontaneousApplication'],
-        summary='Atualizar parcialmente Aplicação Espontânea',
-        description='Atualiza parcialmente os dados de uma Aplicação Espontânea.'
+        summary='Atualizar parcialmente sua candidatura'
     ),
     destroy=extend_schema(
         tags=['SpontaneousApplication'],
-        summary='Excluir Aplicação Espontânea',
-        description='Remove uma Aplicação Espontânea do sistema.'
+        summary='Excluir sua candidatura'
     ),
 )
 class SpontaneousApplicationViewSet(viewsets.ModelViewSet):
     queryset = SpontaneousApplication.objects.all()
     serializer_class = SpontaneousApplicationSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        # staff enxerga tudo (útil para RH/admin); usuário comum vê somente a sua
+        if user.is_staff:
+            return SpontaneousApplication.objects.all()
+        return SpontaneousApplication.objects.filter(user=user)
+
+    def perform_create(self, serializer):
+        # força vinculação ao usuário autenticado e respeita o OneToOne
+        serializer.save(user=self.request.user)

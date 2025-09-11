@@ -28,6 +28,13 @@ class SpontaneousApplication(Base):
 
     resume = models.FileField(upload_to='resumes/', verbose_name='Currículo')
 
+    user = models.OneToOneField(
+        'accounts.UserProfile',
+        on_delete=models.CASCADE,
+        related_name='candidate_spontaneous',
+        verbose_name='Usuário'
+    )
+
     area_1 = models.ForeignKey('spontaneous.Occupation', related_name='occupation_area1', on_delete=models.CASCADE, verbose_name='Área de Atuação 1 (Obrigatória)')
     area_2 = models.ForeignKey('spontaneous.Occupation', related_name='occupation_area2', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Área de Atuação 2')
     area_3 = models.ForeignKey('spontaneous.Occupation', related_name='occupation_area3', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Área de Atuação 3')
