@@ -82,7 +82,7 @@ export default function Navbar() {
                                     >
                                         <div className='animate-fade flex items-center space-x-1 transition group'>
                                             <Icon.FileEarmarkPerson className="w-4 h-4" />
-                                            <span>Candidatura espontânea</span>
+                                            <span>Candidatura Espontânea</span>
                                         </div>
                                     </div>
                                     <JobApplicationModalStart show={jobStart} onClose={() => JobStart(false)} />
@@ -148,6 +148,25 @@ export default function Navbar() {
                                 <span>{label}</span>
                             </Link>
                         ))}
+
+                            {isAuthenticated && user?.user_type === 'candidate' && (
+                                <>
+                                    <div
+                                        className={`group ${canClickJobStart ? 'cursor-pointer ml-3 text-zinc-300/90 hover:text-yellow-300' : 'cursor-not-allowed text-zinc-400'} `}
+                                        onClick={() => {
+                                            if (canClickJobStart) JobStart(true);
+                                        }}
+                                        aria-disabled={!canClickJobStart}
+                                    >
+                                        <div className='animate-fade flex items-center space-x-1 transition group'>
+                                            <Icon.FileEarmarkPerson className="w-4 h-4" />
+                                            <span>Candidatura Espontânea</span>
+                                        </div>
+                                    </div>
+                                    <JobApplicationModalStart show={jobStart} onClose={() => JobStart(false)} />
+                                </>
+                            )}
+
                     </nav>
                     <div className="mt-4 pt-4 border-t border-blue-900/20">
                         {isAuthenticated ? (
