@@ -12,10 +12,6 @@ class ApplicationService {
   // Helper method to get axios config with auth headers
   private getAuthHeaders() {
     const token = AuthService.getAccessToken();
-    console.log('ApplicationService - Token disponível:', !!token);
-    if (token) {
-      console.log('ApplicationService - Token válido:', !AuthService.isTokenExpired(token));
-    }
     return token ? { Authorization: `Bearer ${token}` } : {};
   }
 

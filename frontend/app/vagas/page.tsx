@@ -559,24 +559,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      {/* <section className="py-8 px-4 bg-gradient-to-br from-blue-900 to-blue-950">
-        <div className="w-full mx-auto text-center">
-          <div className="p-12">
-            <h2 className="text-4xl font-bold text-yellow-400 mb-6 quicksand">
-              Pronto para dar o próximo passo?
-            </h2>
-            <p className="text-xl text-zinc-300 mb-8 max-w-2xl mx-auto">
-              Junte-se a milhares de profissionais que já encontraram suas oportunidades ideais através da nossa plataforma.
-            </p>
-            <Link href="#avaliable" className="group bg-yellow-300 hover:opacity-80 px-5 py-3 rounded-md font-semibold text-lg transition-all duration-300 inline-flex items-center gap-3 shadow-lg hover:shadow-xl quicksand">
-              Começar Agora
-              <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
-        </div>
-      </section> */}
-
       <Footer />
 
       {isAuthenticated && user?.user_type === 'candidate' && <JobApplicationModalStart show={showModal} onClose={() => setShowModal(false)} />}

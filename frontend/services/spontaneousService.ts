@@ -1,6 +1,7 @@
 // services/spontaneousService.ts
 import axios from 'axios';
 import { Occupation, SpontaneousApplication, PaginatedResponse } from '@/types';
+import AuthService from '@/services/auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const API_VERSION = process.env.NEXT_PUBLIC_API_VERSION || 'v1';
@@ -215,7 +216,10 @@ class SpontaneousService {
   async getOccupationsByCategory(category: string): Promise<PaginatedResponse<Occupation>> {
     try {
       const response = await axios.get(`${this.baseUrl}/occupations/`, {
-        params: { category }
+        params: { category },
+        headers: {
+          Bearer: `Bearer ${AuthService.getAccessToken()}`
+        }
       });
       return response.data;
     } catch (error) {

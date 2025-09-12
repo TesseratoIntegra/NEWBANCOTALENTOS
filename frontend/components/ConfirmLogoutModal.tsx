@@ -7,10 +7,9 @@ interface ConfirmLogoutModalProps {
 }
 
 export default function ConfirmLogoutModal({ show, onConfirm, onCancel }: ConfirmLogoutModalProps) {
-  if (!show) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div className={`fixed inset-0 w-full h-screen z-50 flex items-center justify-center bg-black/40 ${show ? 'opacity-100' : 'opacity-0 pointer-events-none'} duration-300`}>
       <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
         <h2 className="text-lg font-semibold mb-4">Confirmar Logout</h2>
         <p className="mb-6">Tem certeza que deseja sair?</p>

@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import adminApplicationService from '@/services/adminApplicationService';
 import { Application } from '@/types/index';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface ApplicationFilters {
   status?: string;
@@ -13,20 +12,11 @@ interface ApplicationFilters {
 }
 
 export default function AdminApplicationsPage() {
-  const { user } = useAuth();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<ApplicationFilters>({ page: 1 });
   const [totalCount, setTotalCount] = useState(0);
-
-  // Log user info for debugging
-  useEffect(() => {
-    console.log('Current user:', user);
-    console.log('User type:', user?.user_type);
-    console.log('Is staff:', user?.is_staff);
-    console.log('Is superuser:', user?.is_superuser);
-  }, [user]);
 
   const statusOptions = [
     { value: '', label: 'Todos os Status' },
@@ -69,9 +59,7 @@ export default function AdminApplicationsPage() {
         const params: { page: number; status?: string } = { page: filters.page };
         if (filters.status) params.status = filters.status;
         
-        console.log('Fetching applications with params:', params);
         const response = await adminApplicationService.getAllApplications(params);
-        console.log('Response received:', response);
         
         if (Array.isArray(response)) {
           setApplications(response);
@@ -80,7 +68,6 @@ export default function AdminApplicationsPage() {
           setApplications(response.results || []);
           setTotalCount(response.count || 0);
         }
-        console.log('Applications set:', response);
       } catch (err) {
         setError('Erro ao carregar candidaturas');
         console.error('Error fetching applications:', err);
@@ -177,7 +164,7 @@ export default function AdminApplicationsPage() {
         <div className="space-y-4">
           {applications.map((application) => (
             <Link
-              href={`/admin/candidaturas/${application.id}`}
+              href={`/admin-panel/candidaturas/${application.id}`}
               key={application.id}
               className="block bg-gradient-to-r from-zinc-900 to-zinc-800 hover:opacity-60 rounded-md p-6 border border-zinc-700 duration-300"
             >

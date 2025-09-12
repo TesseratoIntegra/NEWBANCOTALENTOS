@@ -5,6 +5,7 @@ import AuthService from '@/services/auth';
 import { toast } from 'react-hot-toast';
 import * as Icon from 'react-bootstrap-icons'
 import SplitText from './SliptText';
+import LoadChiap from './LoadChiap';
 
 interface JobApplicationModalStartProps {
 	show: boolean;
@@ -62,7 +63,13 @@ export default function JobApplicationModalStart({ show, onClose }: JobApplicati
 	useEffect(() => {
 		async function fetchOccupations() {
 			try {
-				const res = await fetch('http://192.168.0.77:8001/api/v1/occupations/');
+				const accessToken = AuthService.getAccessToken();
+				if (!accessToken) return;
+				const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/occupations/`, {
+					headers: {
+						'Authorization': `Bearer ${accessToken}`
+					}
+				});
 				if (!res.ok) throw new Error('Erro ao buscar ocupações');
 				const data = await res.json();
 				setOccupations(data);
@@ -78,12 +85,11 @@ export default function JobApplicationModalStart({ show, onClose }: JobApplicati
 		async function fetchExistingApplication() {
 			if (!show) return;
 			setLoading(true);
-			console.log('');
 			try {
 				const accessToken = AuthService.getAccessToken();
 				if (!accessToken) return;
 				// Busca candidatura do usuário logado
-				const res = await fetch('http://192.168.0.77:8001/api/v1/spontaneous-applications/', {
+				const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/spontaneous-applications/`, {
 					method: 'GET',
 					headers: {
 						Authorization: `Bearer ${accessToken}`,
@@ -116,7 +122,6 @@ export default function JobApplicationModalStart({ show, onClose }: JobApplicati
 					}
 				}
 			} catch (err) {
-				console.log('Erro ao buscar candidatura existente');
 				console.error(err);
 			} finally {
 				setLoading(false);
@@ -146,7 +151,6 @@ export default function JobApplicationModalStart({ show, onClose }: JobApplicati
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		setLoading(true);
-		console.log('');
 		setSuccess(false);
 		const data = new FormData();
 		Object.entries(form).forEach(([key, value]) => {
@@ -171,7 +175,7 @@ export default function JobApplicationModalStart({ show, onClose }: JobApplicati
 			let res;
 			if (existingId) {
 				// PATCH se já existe
-				res = await fetch(`http://192.168.0.77:8001/api/v1/spontaneous-applications/${existingId}/`, {
+				res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/spontaneous-applications/${existingId}/`, {
 					method: 'PATCH',
 					body: data,
 					headers: {
@@ -180,7 +184,7 @@ export default function JobApplicationModalStart({ show, onClose }: JobApplicati
 				});
 			} else {
 				// POST se não existe
-				res = await fetch('http://192.168.0.77:8001/api/v1/spontaneous-applications/', {
+				res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/spontaneous-applications/`, {
 					method: 'POST',
 					body: data,
 					headers: {
@@ -245,8 +249,7 @@ export default function JobApplicationModalStart({ show, onClose }: JobApplicati
 						{/* Loading */}
 						{loading && (
 							<div className="flex items-center justify-center py-8">
-								<Loader className="w-8 h-8 text-blue-600 animate-spin" />
-								<span className="ml-2 text-gray-600">Enviando candidatura...</span>
+								<LoadChiap/>
 							</div>
 						)}
 

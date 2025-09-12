@@ -56,7 +56,7 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
 
     try {
       await adminJobService.deleteJob(job.id);
-      router.push('/admin/jobs');
+      router.push('/admin-panel/jobs');
     } catch (err) {
       alert('Erro ao excluir vaga');
       console.error(err);
@@ -107,7 +107,7 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
         <div className="text-center">
           <div className="text-red-400 mb-4">{error || 'Vaga não encontrada'}</div>
           <Link
-            href="/admin/jobs"
+            href="/admin-panel/jobs"
             className="text-indigo-400 hover:text-indigo-300"
           >
             ← Voltar para lista
@@ -122,7 +122,7 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <Link
-            href="/admin/jobs"
+            href="/admin-panel/jobs"
             className="text-indigo-400 hover:text-indigo-300"
           >
             ← Voltar para lista
@@ -130,7 +130,7 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
           
           <div className="flex items-center space-x-2">
             <Link
-              href={`/admin/jobs/${job.id}/edit`}
+              href={`/admin-panel/jobs/${job.id}/edit`}
               className="flex items-center space-x-2 px-4 py-2 bg-yellow-400/90 hover:bg-yellow-600 text-zinc-800 rounded-md font-medium transition-colors"
             >
               <PencilIcon className="h-4 w-4" />

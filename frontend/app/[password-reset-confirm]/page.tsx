@@ -92,8 +92,6 @@ export default function ResetPass() {
             new_password2: passwords.new_password2
         };
 
-        console.log('Payload enviado:', payload);  // ✅ Debug opcional
-
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/accounts/password/reset/confirm/`, {
                 method: 'POST',

@@ -28,9 +28,7 @@ class JobService {
       if (params?.company) queryParams.append('company', params.company.toString());
 
       const url = `${this.baseUrl}/jobs/?${queryParams.toString()}`;
-      console.log('URL da requisição:', url);
-      console.log('Parâmetros enviados:', params);
-      
+
       const response = await axios.get(url);
         // Aceita tanto array simples quanto formato paginado
         if (Array.isArray(response.data)) {

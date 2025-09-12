@@ -48,7 +48,7 @@ export default function Navbar() {
 
     return (
         <header className="bg-gradient-to-r from-blue-800 to-blue-950 fixed top-0 left-0 z-40 w-full">
-            <div className="max-w-[92%] mx-auto px-4 sm:px-6 py-2">
+            <div className="max-w-[92%] mx-auto px-4 sm:px-6 py-3">
                 <div className="flex items-center justify-between">
                     <Link href='/' className="flex items-center space-x-3 cursor-pointer">
                         <Image src='https://raw.githubusercontent.com/Chiaperini-TI/Chiaperini-TI/main/chiaperini.png' width={300} height={300} alt='' className='animate-fade w-auto h-8 sm:h-10'></Image>

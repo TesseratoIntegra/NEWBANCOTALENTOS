@@ -1,6 +1,7 @@
 // services/companyService.ts
 import axios from 'axios';
 import { Company, CompanyGroup, PaginatedResponse } from '@/types';
+import AuthService from '@/services/auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const API_VERSION = process.env.NEXT_PUBLIC_API_VERSION || 'v1';
@@ -21,7 +22,11 @@ class CompanyService {
       if (params?.search) queryParams.append('search', params.search);
       if (params?.group) queryParams.append('group', params.group.toString());
 
-      const response = await axios.get(`${this.baseUrl}/companies/?${queryParams.toString()}`);
+      const response = await axios.get(`${this.baseUrl}/companies/?${queryParams.toString()}`,{
+        headers: {
+          Authorization: `Bearer ${AuthService.getAccessToken()}`
+        }
+      });
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar empresas:', error);
@@ -32,7 +37,11 @@ class CompanyService {
   /* Buscar todas as empresas (simplificado para dropdowns) */
   async getAllCompanies(): Promise<Company[]> {
     try {
-      const response = await axios.get(`${this.baseUrl}/companies/`);
+      const response = await axios.get(`${this.baseUrl}/companies/`, {
+        headers: {
+          Authorization: `Bearer ${AuthService.getAccessToken()}`
+        }
+      });
       // Se a resposta tiver paginação, retorna os results
       if (response.data.results) {
         return response.data.results;
@@ -48,7 +57,11 @@ class CompanyService {
   /* Buscar empresa por ID */
   async getCompanyById(id: number): Promise<Company> {
     try {
-      const response = await axios.get(`${this.baseUrl}/companies/${id}/`);
+      const response = await axios.get(`${this.baseUrl}/companies/${id}/`, {
+        headers: {
+          Authorization: `Bearer ${AuthService.getAccessToken()}`
+        }
+      });
       return response.data;
     } catch (error) {
       console.error(`Erro ao buscar empresa ${id}:`, error);
@@ -59,7 +72,10 @@ class CompanyService {
   /* Buscar empresa por slug */
   async getCompanyBySlug(slug: string): Promise<Company> {
     try {
-      const response = await axios.get(`${this.baseUrl}/companies/`, {
+      const response = await axios.get(`${this.baseUrl}/companies/`,{
+        headers: {
+          Authorization: `Bearer ${AuthService.getAccessToken()}`
+        },
         params: { slug }
       });
       
@@ -77,7 +93,11 @@ class CompanyService {
   /* Criar nova empresa */
   async createCompany(companyData: Partial<Company>): Promise<Company> {
     try {
-      const response = await axios.post(`${this.baseUrl}/companies/`, companyData);
+      const response = await axios.post(`${this.baseUrl}/companies/`, companyData, {
+        headers: {
+          Authorization: `Bearer ${AuthService.getAccessToken()}`
+      }
+      });
       return response.data;
     } catch (error) {
       console.error('Erro ao criar empresa:', error);
@@ -88,7 +108,11 @@ class CompanyService {
   /* Atualizar empresa existente */
   async updateCompany(id: number, companyData: Partial<Company>): Promise<Company> {
     try {
-      const response = await axios.patch(`${this.baseUrl}/companies/${id}/`, companyData);
+      const response = await axios.patch(`${this.baseUrl}/companies/${id}/`, companyData, {
+        headers: {
+          Authorization: `Bearer ${AuthService.getAccessToken()}`
+        }
+      });
       return response.data;
     } catch (error) {
       console.error(`Erro ao atualizar empresa ${id}:`, error);
@@ -99,7 +123,11 @@ class CompanyService {
   /* Deletar empresa */
   async deleteCompany(id: number): Promise<void> {
     try {
-      await axios.delete(`${this.baseUrl}/companies/${id}/`);
+      await axios.delete(`${this.baseUrl}/companies/${id}/`, {
+        headers: {
+          Authorization: `Bearer ${AuthService.getAccessToken()}`
+        }
+      });
     } catch (error) {
       console.error(`Erro ao deletar empresa ${id}:`, error);
       throw error;
@@ -133,6 +161,7 @@ class CompanyService {
 
       const response = await axios.patch(`${this.baseUrl}/companies/${companyId}/`, formData, {
         headers: {
+          Authorization: `Bearer ${AuthService.getAccessToken()}`,
           'Content-Type': 'multipart/form-data',
         },
       });

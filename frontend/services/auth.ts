@@ -126,23 +126,16 @@ class AuthService {
 
   // Função para login
   async login(email: string, password: string): Promise<AuthTokens> {
-    console.log('AuthService.login called with:', { email, password: '***' });
-    console.log('BASE_API_URL:', BASE_API_URL);
-    
     const response = await axios.post(`${BASE_API_URL}/accounts/login/`, {
       email,
       password,
     });
-
-    console.log('AuthService.login response:', response.data);
     
     const { access, refresh, user } = response.data;
     
     this.setAccessToken(access);
     this.setRefreshToken(refresh);
     this.setUser(user);
-    
-    console.log('AuthService.login - tokens and user saved');
     
     return { user, access, refresh };
   }

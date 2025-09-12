@@ -114,7 +114,7 @@ export default function ApplicationDetailPage() {
       <div className="flex flex-col items-center justify-center min-h-64 space-y-4">
         <div className="text-red-400">{error || 'Candidatura não encontrada'}</div>
         <Link 
-          href="/admin/candidaturas"
+          href="/admin-panel/candidaturas"
           className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md transition-colors"
         >
           Voltar para candidaturas
@@ -129,7 +129,7 @@ export default function ApplicationDetailPage() {
       <div className="flex items-center justify-between">
         <div>
           <Link 
-            href="/admin/candidaturas"
+            href="/admin-panel/candidaturas"
             className="text-indigo-400 hover:text-indigo-300 text-sm mb-2 inline-block"
           >
             ← Voltar para candidaturas

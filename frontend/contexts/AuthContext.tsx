@@ -37,11 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const storedUser = AuthService.getUser();
       const token = AuthService.getAccessToken();
       
-      console.log('loadUserFromStorage - storedUser:', storedUser);
-      console.log('loadUserFromStorage - token:', token);
-      
       if (storedUser && token && !AuthService.isTokenExpired(token)) {
-        console.log('User authenticated from storage');
         setUser(storedUser);
       } else {
         console.log('User not authenticated, clearing data');
@@ -58,11 +54,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (credentials: LoginRequest): Promise<void> => {
     try {
       setIsLoading(true);
-      console.log('AuthContext - login started');
       const tokens = await AuthService.login(credentials.email, credentials.password);
-      console.log('AuthContext - login response:', tokens);
       setUser(tokens.user);
-      console.log('AuthContext - user set:', tokens.user);
     } catch (error) {
       console.error('Erro no login:', error);
       throw error;

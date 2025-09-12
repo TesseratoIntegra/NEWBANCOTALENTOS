@@ -111,7 +111,7 @@ export default function JobsListPage() {
           </p>
         </div>
         <Link
-          href="/admin/jobs/create"
+          href="/admin-panel/jobs/create"
           className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md font-medium transition-colors"
         >
           + Nova Vaga
@@ -157,7 +157,7 @@ export default function JobsListPage() {
         <div className="text-center py-12">
           <p className="text-zinc-400">Nenhuma vaga encontrada</p>
           <Link
-            href="/admin/jobs/create"
+            href="/admin-panel/jobs/create"
             className="text-indigo-400 hover:text-indigo-300 mt-2 inline-block"
           >
             Criar primeira vaga →
@@ -197,7 +197,7 @@ export default function JobsListPage() {
               </thead>
               <tbody className="divide-y divide-zinc-700">
                 {filteredJobs.map((job) => (
-                  <tr key={job.id} className="hover:bg-zinc-800 cursor-pointer" onClick={() => window.location.href = `/admin/jobs/${job.id}`}>
+                  <tr key={job.id} className="hover:bg-zinc-800 cursor-pointer" onClick={() => window.location.href = `/admin-panel/jobs/${job.id}`}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-zinc-100">

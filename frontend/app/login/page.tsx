@@ -42,7 +42,6 @@ export default function LoginPage() {
 
     useEffect(() => {
       const accessToken = AuthService.getAccessToken();
-      console.log(accessToken)
       if (accessToken) {
         router.push('/')
       }

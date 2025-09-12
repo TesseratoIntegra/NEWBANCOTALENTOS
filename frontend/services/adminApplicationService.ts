@@ -12,10 +12,6 @@ class AdminApplicationService {
   // Helper method to get axios config with auth headers
   private getAuthHeaders() {
     const token = AuthService.getAccessToken();
-    console.log('AdminApplicationService - Token disponível:', !!token);
-    if (token) {
-      console.log('AdminApplicationService - Token válido:', !AuthService.isTokenExpired(token));
-    }
     return token ? { Authorization: `Bearer ${token}` } : {};
   }
 
@@ -47,15 +43,11 @@ class AdminApplicationService {
       if (params?.status) queryParams.append('status', params.status);
       if (params?.search) queryParams.append('search', params.search);
 
-      console.log('AdminApplicationService - Making request to:', `${this.baseUrl}/applications/?${queryParams.toString()}`);
-      console.log('AdminApplicationService - With headers:', this.getAuthHeaders());
-
       const response = await axios.get(
         `${this.baseUrl}/applications/?${queryParams.toString()}`,
         this.getAxiosConfig()
       );
       
-      console.log('AdminApplicationService - Response:', response.data);
       return response.data;
     } catch (error) {
       console.error('AdminApplicationService - Erro ao buscar candidaturas:', error);

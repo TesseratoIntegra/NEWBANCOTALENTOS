@@ -74,19 +74,19 @@ export default function AdminDashboard() {
       <div className="rounded-md m-auto justify-center flex items-center mt-5">
         <div className="flex flex-wrap gap-4">
           <Link
-            href="/admin/jobs/create"
+            href="/admin-panel/jobs/create"
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-md font-medium transition-colors"
           >
             + Nova Vaga
           </Link>
           <Link
-            href="/admin/jobs"
+            href="/admin-panel/jobs"
             className="bg-zinc-700 hover:bg-zinc-600 text-zinc-100 px-6 py-3 rounded-md font-medium transition-colors"
           >
             Ver Todas as Vagas
           </Link>
           <Link
-            href="/admin/candidaturas"
+            href="/admin-panel/candidaturas"
             className="bg-green-700 hover:bg-green-600 text-zinc-100 px-6 py-3 rounded-md font-medium transition-colors"
           >
             Ver Candidaturas
@@ -154,7 +154,7 @@ export default function AdminDashboard() {
               Candidaturas Recentes
             </h2>
             <Link
-              href="/admin/candidaturas"
+              href="/admin-panel/candidaturas"
               className="text-indigo-400 hover:text-indigo-300 text-sm"
             >
               Ver todas →
@@ -163,7 +163,7 @@ export default function AdminDashboard() {
           <div className="space-y-3">
             {applications.slice(0, 5).map((application: Application) => (
               <Link
-                href={`/admin/candidaturas/${application.id}`}
+                href={`/admin-panel/candidaturas/${application.id}`}
                 key={application.id}
                 className="flex items-center justify-between p-4 rounded-md border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 transition-colors"
               >
@@ -211,7 +211,7 @@ export default function AdminDashboard() {
           <div className="space-y-3">
             {filteredJobs.slice(0, 5).map((job: Job) => (
               <Link
-                href={`/admin/jobs/${job.id}`}
+                href={`/admin-panel/jobs/${job.id}`}
                 key={job.id}
                 className='flex items-center bg-gradient-to-r from-zinc-800 to-zinc-700 hover:opacity-70 justify-between py-4 px-5 rounded-md'
               >

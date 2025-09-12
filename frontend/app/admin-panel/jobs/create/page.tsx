@@ -292,7 +292,7 @@ export default function CreateJobPage() {
 
     try {
       await adminJobService.createJob(formData);
-      router.push('/admin/jobs');
+      router.push('/admin-panel/jobs');
     } catch (error) {
       alert('Erro ao criar vaga. Verifique os dados e tente novamente.');
       console.error(error);
@@ -306,7 +306,7 @@ export default function CreateJobPage() {
       <div className="mb-6">
         <div className="flex items-center space-x-4 mb-4">
           <Link
-            href="/admin/jobs"
+            href="/admin-panel/jobs"
             className="text-indigo-400 hover:text-indigo-300"
           >
             ← Voltar para lista
@@ -587,7 +587,7 @@ export default function CreateJobPage() {
 
         <div className="flex items-center justify-end space-x-4">
           <Link
-            href="/admin/jobs"
+            href="/admin-panel/jobs"
             className="px-6 py-2 border border-zinc-600 text-zinc-300 rounded-md hover:bg-zinc-700 transition-colors"
           >
             Cancelar

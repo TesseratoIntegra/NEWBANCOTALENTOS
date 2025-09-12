@@ -202,9 +202,7 @@ export default function PersonalInfoSection({ profile, onUpdate, saving }: Perso
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('Image change triggered', e);
     const file = e.target.files?.[0];
-    console.log('Selected file:', file);
     
     if (file) {
       // Verifica se é uma imagem
@@ -231,8 +229,6 @@ export default function PersonalInfoSection({ profile, onUpdate, saving }: Perso
   };
 
   const handleImageClick = () => {
-    console.log('Image click triggered');
-    console.log('File input ref:', fileInputRef.current);
     if (fileInputRef.current) {
       fileInputRef.current.click();
     } else {

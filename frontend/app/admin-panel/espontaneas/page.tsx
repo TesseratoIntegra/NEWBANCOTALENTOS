@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import AuthService from '@/services/auth';
 
 interface ModalProps {
 	application: SpontaneousApplication | null;
@@ -26,7 +27,7 @@ function DetailsModal({ application, onClose, occupations }: ModalProps & { occu
 			<div className="bg-zinc-900 rounded-lg p-6 w-full max-w-md relative">
 				<button
 					onClick={onClose}
-					className="absolute top-2 right-2 text-zinc-400 hover:text-zinc-100 text-xl cursor-pointer"
+					className="absolute top-2 right-4 text-zinc-400 hover:text-zinc-100 text-3xl cursor-pointer"
 					aria-label="Fechar"
 				>
 					&times;
@@ -81,8 +82,14 @@ export default function SpontaneousApplicationsPage() {
 
 	useEffect(() => {
 		const fetchApplications = async () => {
+			const accessToken = AuthService.getAccessToken();
+			if (!accessToken) return;
 			try {
-				const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/spontaneous-applications/`);
+				const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/spontaneous-applications/`, {
+					headers: {
+						'Authorization': `Bearer ${accessToken}`
+					}
+				});
 				if (!res.ok) throw new Error('Erro ao buscar candidaturas espontâneas');
 				const data = await res.json();
 				setApplications(Array.isArray(data) ? data : []);
@@ -99,7 +106,13 @@ export default function SpontaneousApplicationsPage() {
 	useEffect(() => {
 		const fetchOccupations = async () => {
 			try {
-				const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/occupations/`);
+				const accessToken = AuthService.getAccessToken();
+				if (!accessToken) return;
+				const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/occupations/`, {
+					headers: {
+						'Authorization': `Bearer ${AuthService.getAccessToken()}`
+					}
+				});
 				if (!res.ok) throw new Error('Erro ao buscar áreas');
 				const data = await res.json();
 				setOccupations(Array.isArray(data) ? data : []);

@@ -106,7 +106,7 @@ export default function EditJobPage({ params }: EditJobPageProps) {
 
     try {
       await adminJobService.updateJob(job.id, formData);
-      router.push(`/admin/jobs/${job.id}`);
+      router.push(`/admin-panel/jobs/${job.id}`);
     } catch (error) {
       alert('Erro ao atualizar vaga. Verifique os dados e tente novamente.');
       console.error(error);
@@ -129,7 +129,7 @@ export default function EditJobPage({ params }: EditJobPageProps) {
         <div className="text-center">
           <div className="text-red-400 mb-4">{error || 'Vaga não encontrada'}</div>
           <Link
-            href="/admin/jobs"
+            href="/admin-panel/jobs"
             className="text-indigo-400 hover:text-indigo-300"
           >
             ← Voltar para lista
@@ -144,7 +144,7 @@ export default function EditJobPage({ params }: EditJobPageProps) {
       <div className="mb-6">
         <div className="flex items-center space-x-4 mb-4">
           <Link
-            href={`/admin/jobs/${job.id}`}
+            href={`/admin-panel/jobs/${job.id}`}
             className="text-indigo-400 hover:text-indigo-300"
           >
             ← Voltar para detalhes
@@ -368,7 +368,7 @@ export default function EditJobPage({ params }: EditJobPageProps) {
 
         <div className="flex items-center justify-end space-x-4">
           <Link
-            href={`/admin/jobs/${job.id}`}
+            href={`/admin-panel/jobs/${job.id}`}
             className="px-6 py-2 border border-zinc-600 text-zinc-300 rounded-lg hover:bg-zinc-700 transition-colors"
           >
             Cancelar
