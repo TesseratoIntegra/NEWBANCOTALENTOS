@@ -22,11 +22,7 @@ class CompanyService {
       if (params?.search) queryParams.append('search', params.search);
       if (params?.group) queryParams.append('group', params.group.toString());
 
-      const response = await axios.get(`${this.baseUrl}/companies/?${queryParams.toString()}`,{
-        headers: {
-          Authorization: `Bearer ${AuthService.getAccessToken()}`
-        }
-      });
+      const response = await axios.get(`${this.baseUrl}/companies/?${queryParams.toString()}`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar empresas:', error);
@@ -37,11 +33,7 @@ class CompanyService {
   /* Buscar todas as empresas (simplificado para dropdowns) */
   async getAllCompanies(): Promise<Company[]> {
     try {
-      const response = await axios.get(`${this.baseUrl}/companies/`, {
-        headers: {
-          Authorization: `Bearer ${AuthService.getAccessToken()}`
-        }
-      });
+      const response = await axios.get(`${this.baseUrl}/companies/`);
       // Se a resposta tiver paginação, retorna os results
       if (response.data.results) {
         return response.data.results;
@@ -57,11 +49,7 @@ class CompanyService {
   /* Buscar empresa por ID */
   async getCompanyById(id: number): Promise<Company> {
     try {
-      const response = await axios.get(`${this.baseUrl}/companies/${id}/`, {
-        headers: {
-          Authorization: `Bearer ${AuthService.getAccessToken()}`
-        }
-      });
+      const response = await axios.get(`${this.baseUrl}/companies/${id}/`);
       return response.data;
     } catch (error) {
       console.error(`Erro ao buscar empresa ${id}:`, error);
@@ -73,9 +61,6 @@ class CompanyService {
   async getCompanyBySlug(slug: string): Promise<Company> {
     try {
       const response = await axios.get(`${this.baseUrl}/companies/`,{
-        headers: {
-          Authorization: `Bearer ${AuthService.getAccessToken()}`
-        },
         params: { slug }
       });
       

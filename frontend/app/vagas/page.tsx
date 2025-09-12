@@ -143,11 +143,6 @@ const Home = () => {
     loadCompanies();
   }, [loadAllJobs]);
 
-  // Obter empresa por ID
-  const getCompanyById = (companyId: number): Company | undefined => {
-  return (Array.isArray(companies) ? companies : []).find(company => company.id === companyId);
-  };
-
   // Obter localizações únicas
   const getUniqueLocations = (): string[] => {
     if (!Array.isArray(allJobs)) return [];
@@ -472,7 +467,6 @@ const Home = () => {
                         </div>
                         <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                         {getCurrentPageJobs().map(job => {
-                          const company = getCompanyById(job.company);
                           const isClosingSoon = jobService.isClosingInDays(job.closure, 7);
                           const isExpired = jobService.isExpired(job.closure);
 
@@ -493,7 +487,7 @@ const Home = () => {
                                     <div className="grid grid-cols-1 md:grid-cols-2 text-sm text-slate-600">
                                       <div className="flex items-center gap-1">
                                         <Building2 className="w-4 h-4 flex-shrink-0" />
-                                        <span className="truncate">{company?.name || 'Empresa não informada'}</span>
+                                        <span className="truncate">{job.company_name || 'Empresa não informada'}</span>
                                       </div>
                                       <div className="flex items-center space-x-1">
                                         <MapPin className="w-4 h-4 flex-shrink-0" />

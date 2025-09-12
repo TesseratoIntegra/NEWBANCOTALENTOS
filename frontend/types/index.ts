@@ -67,6 +67,7 @@ export interface Job {
   title: string;
   description: string;
   location: string;
+  company_name?: string;
   job_type: 'full_time' | 'part_time' | 'contract' | 'freelance' | 'internship';
   type_models: 'in_person' | 'home_office' | 'hybrid';
   salary_range: string;
