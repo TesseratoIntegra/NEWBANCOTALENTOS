@@ -153,7 +153,6 @@ export default function LoginPage() {
                 text: "Por favor, faça seu login.",
                 theme: 'light',
             });
-            
             // Limpar os campos
             setCreateEmail('');
             setCreateName('');
@@ -161,8 +160,23 @@ export default function LoginPage() {
             setCreatePassword2('');
             setNextStep(false);
             window.location.href = '/login';
+        } catch (error: unknown) {
+            const apiError = error as { response?: { data?: { email?: string[] } } };
             
-        } catch (error) {
+            // Verifica se o erro é do tipo de e-mail já existente
+            if (apiError?.response?.data?.email && Array.isArray(apiError.response.data.email)) {
+                if (apiError.response.data.email.includes("user profile com este E-mail já existe.")) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "E-mail já cadastrado!",
+                        text: "Já existe um usuário com este e-mail.",
+                        theme: 'light',
+                    });
+                    setIsLoading(false);
+                    return;
+                }
+            }
+            
             Swal.fire({
                 icon: "error",
                 title: "Algo deu errado!",
