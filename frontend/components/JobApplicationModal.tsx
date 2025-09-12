@@ -1,12 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import ReactSelect from 'react-select';
 import { X, Loader, Send, User, Phone, MapPin, DollarSign, FileText, MessageSquare } from 'lucide-react';
 import candidateService from '@/services/candidateService';
 import applicationService from '@/services/applicationService';
 import locationService, { State, City } from '@/services/locationService';
 import { toast } from 'react-hot-toast';
 import SplitText from './SliptText';
+import { formatTEL } from '@/functions/FormatTEL';
 
 interface JobApplicationModalProps {
   isOpen: boolean;
@@ -112,26 +114,26 @@ const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
     }
   };
 
-  const handleStateChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedState = event.target.value;
-    const stateObj = states.find(state => state.sigla === selectedState);
-    
-    setFormData(prev => ({ 
-      ...prev, 
-      state: selectedState,
-      city: '' // Reset city when state changes
-    }));
-    
-    if (stateObj) {
-      setSelectedStateId(stateObj.id);
+  const handleStateChange = (option: { value: string; label: string; id: number } | null) => {
+    if (option) {
+      setFormData(prev => ({
+        ...prev,
+        state: option.value,
+        city: '' // Reset city when state changes
+      }));
+      setSelectedStateId(option.id);
     } else {
+      setFormData(prev => ({ ...prev, state: '', city: '' }));
       setSelectedStateId(null);
     }
   };
 
-  const handleCityChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedCity = event.target.value;
-    setFormData(prev => ({ ...prev, city: selectedCity }));
+  const handleCityChange = (option: { value: string; label: string; id: number } | null) => {
+    if (option) {
+      setFormData(prev => ({ ...prev, city: option.value }));
+    } else {
+      setFormData(prev => ({ ...prev, city: '' }));
+    }
   };
 
   const loadCandidateProfile = async () => {
@@ -162,9 +164,13 @@ const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    let newValue = value;
+    if (name === 'phone') {
+      newValue = formatTEL(value);
+    }
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: newValue
     }));
   };
 
@@ -347,51 +353,54 @@ const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
                     <MapPin className="w-4 h-4 inline mr-1" />
                     Estado *
                   </label>
-                  <select
+                  <ReactSelect
                     name="state"
-                    value={formData.state}
+                    value={formData.state ? {
+                      value: formData.state,
+                      label: states.find(s => s.sigla === formData.state)?.nome + ` (${formData.state})`,
+                      id: states.find(s => s.sigla === formData.state)?.id || 0
+                    } : null}
                     onChange={handleStateChange}
-                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    options={states.map(state => ({
+                      value: state.sigla,
+                      label: `${state.nome} (${state.sigla})`,
+                      id: state.id
+                    }))}
+                    isLoading={loadingStates}
+                    isClearable
+                    placeholder={loadingStates ? 'Carregando...' : 'Selecione um estado'}
+                    classNamePrefix="react-select"
                     required
-                    disabled={loadingStates}
-                  >
-                    <option value="">
-                      {loadingStates ? 'Carregando...' : 'Selecione um estado'}
-                    </option>
-                    {states.map((state) => (
-                      <option key={state.id} value={state.sigla}>
-                        {state.nome} ({state.sigla})
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </div>
-                
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Cidade *
                   </label>
-                  <select
+                  <ReactSelect
                     name="city"
-                    value={formData.city}
+                    value={formData.city ? {
+                      value: formData.city,
+                      label: formData.city,
+                      id: cities.find(c => c.nome === formData.city)?.id || 0
+                    } : null}
                     onChange={handleCityChange}
-                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    options={cities.map(city => ({
+                      value: city.nome,
+                      label: city.nome,
+                      id: city.id
+                    }))}
+                    isLoading={loadingCities}
+                    isClearable
+                    placeholder={!selectedStateId
+                      ? 'Primeiro selecione um estado'
+                      : loadingCities
+                      ? 'Carregando...'
+                      : 'Selecione uma cidade'}
+                    classNamePrefix="react-select"
                     required
-                    disabled={!selectedStateId || loadingCities}
-                  >
-                    <option value="">
-                      {!selectedStateId 
-                        ? 'Primeiro selecione um estado' 
-                        : loadingCities 
-                        ? 'Carregando...' 
-                        : 'Selecione uma cidade'
-                      }
-                    </option>
-                    {cities.map((city) => (
-                      <option key={city.id} value={city.nome}>
-                        {city.nome}
-                      </option>
-                    ))}
-                  </select>
+                    isDisabled={!selectedStateId || loadingCities}
+                  />
                 </div>
               </div>
             </div>

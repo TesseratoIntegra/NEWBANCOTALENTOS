@@ -6,6 +6,9 @@ import { toast } from 'react-hot-toast';
 import * as Icon from 'react-bootstrap-icons'
 import SplitText from './SliptText';
 import LoadChiap from './LoadChiap';
+import formatCPF from '@/functions/FormatCPF';
+import { formatTEL } from '@/functions/FormatTEL';
+import locationService, { City } from '@/services/locationService';
 
 interface JobApplicationModalStartProps {
 	show: boolean;
@@ -17,25 +20,29 @@ interface OccupationOption {
 	label: string;
 }
 
+interface JobApplicationForm {
+	is_active: boolean;
+	name: string;
+	email: string;
+	cpf: string;
+	phone: string;
+	city: string;
+	state: string;
+	neighborhood: string;
+	number: string;
+	complement: string;
+	resume: File | null;
+	area_1: number | '';
+	area_2: number | '';
+	area_3: number | '';
+}
+
 export default function JobApplicationModalStart({ show, onClose }: JobApplicationModalStartProps) {
-	const [form, setForm] = useState<{
-		is_active: boolean;
-		name: string;
-		email: string;
-		phone: string;
-		city: string;
-		state: string;
-		neighborhood: string;
-		number: string;
-		complement: string;
-		resume: File | null;
-		area_1: number | '';
-		area_2: number | '';
-		area_3: number | '';
-	}>({
+	const [form, setForm] = useState<JobApplicationForm>({
 		is_active: false,
 		name: '',
 		email: '',
+		cpf: '',
 		phone: '',
 		city: '',
 		state: '',
@@ -55,10 +62,20 @@ export default function JobApplicationModalStart({ show, onClose }: JobApplicati
 		'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN',
 		'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
 	];
+
+	// Opções para react-select de estados
+	const stateOptions = estadosBrasil.map(uf => ({ value: uf, label: uf }));
 	const [loading, setLoading] = useState(false);
 	const [success, setSuccess] = useState(false);
 	const [occupations, setOccupations] = useState<{ id: number; title: string }[]>([]);
 	const occupationOptions: OccupationOption[] = occupations.map(o => ({ value: o.id, label: o.title }));
+
+	// Estado para cidades
+	const [cities, setCities] = useState<City[]>([]);
+	const [loadingCities, setLoadingCities] = useState(false);
+
+	// Opções para react-select de cidades (deve vir após cities)
+	const cityOptions = cities.map(city => ({ value: city.nome, label: city.nome }));
 
 	useEffect(() => {
 		async function fetchOccupations() {
@@ -115,6 +132,7 @@ export default function JobApplicationModalStart({ show, onClose }: JobApplicati
 							area_1: app.area_1 ?? '',
 							area_2: app.area_2 ?? '',
 							area_3: app.area_3 ?? '',
+							cpf: app.cpf ?? '',
 						});
 					} else {
 						setExistingId(null);
@@ -131,15 +149,58 @@ export default function JobApplicationModalStart({ show, onClose }: JobApplicati
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [show]);
 
-	const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+	// Função para formatar CPF
+
+
+	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
 		if (name === 'resume') {
 			const fileInput = e.target as HTMLInputElement;
 			setForm({ ...form, resume: fileInput.files ? fileInput.files[0] : null });
+		} else if (name === 'cpf') {
+			setForm({ ...form, cpf: formatCPF(value) });
+		} else if (name === 'phone') {
+			setForm({ ...form, phone: formatTEL(value) });
 		} else {
 			setForm({ ...form, [name]: value });
 		}
 	};
+
+	// Handler para react-select de estado
+	const handleStateSelect = (selected: SingleValue<{ value: string; label: string }>) => {
+		setForm({ ...form, state: selected ? selected.value : '', city: '' });
+	};
+
+	// Handler para react-select de cidade
+	const handleCitySelect = (selected: SingleValue<{ value: string; label: string }>) => {
+		setForm({ ...form, city: selected ? selected.value : '' });
+	};
+// Buscar cidades quando o estado mudar
+useEffect(() => {
+	async function fetchCities() {
+		if (!form.state) {
+			setCities([]);
+			return;
+		}
+		setLoadingCities(true);
+		try {
+			// Buscar id do estado pelo sigla
+			const states = await locationService.getStates();
+			const selectedState = states.find(s => s.sigla === form.state);
+			if (!selectedState) {
+				setCities([]);
+				return;
+			}
+			const citiesList = await locationService.getCitiesByState(selectedState.id);
+			setCities(citiesList);
+		} catch {
+			setCities([]);
+		} finally {
+			setLoadingCities(false);
+		}
+	}
+	fetchCities();
+}, [form.state]);
 
 	const handleAreaChange = (
 		selected: SingleValue<OccupationOption>,
@@ -209,6 +270,7 @@ export default function JobApplicationModalStart({ show, onClose }: JobApplicati
 				area_1: '',
 				area_2: '',
 				area_3: '',
+				cpf: '',
 			});
 			setExistingId(null);
 			if (onClose) onClose();
@@ -273,24 +335,35 @@ export default function JobApplicationModalStart({ show, onClose }: JobApplicati
 											<input name="phone" value={form.phone} onChange={handleChange} required placeholder="Telefone" className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
 										</div>
 										<div>
-											<label className="block text-sm font-medium text-gray-700 mb-2">Cidade *</label>
-											<input name="city" value={form.city} onChange={handleChange} required placeholder="Cidade" className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-										</div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">CPF *</label>
+                                            <input name="cpf" value={form.cpf} onChange={handleChange} required placeholder="CPF" className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                                        </div>
 										<div>
-										 <label className="block text-sm font-medium text-gray-700 mb-2">Estado *</label>
-										 <select
-											 name="state"
-											 value={form.state}
-											 onChange={handleChange}
-											 required
-											 className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-										 >
-											 <option value="">Selecione um estado</option>
-											 {estadosBrasil.map((uf) => (
-												 <option key={uf} value={uf}>{uf}</option>
-											 ))}
-										 </select>
+											<label className="block text-sm font-medium text-gray-700 mb-2">Estado *</label>
+											<Select
+												options={stateOptions}
+												value={stateOptions.find(o => o.value === form.state) || null}
+												onChange={handleStateSelect}
+												placeholder="Selecione ou busque um estado"
+												isClearable
+												required
+												classNamePrefix="react-select"
+												isDisabled={loadingCities}
+											/>
 										</div>
+																				<div>
+																					<label className="block text-sm font-medium text-gray-700 mb-2">Cidade *</label>
+																					<Select
+																						options={cityOptions}
+																						value={cityOptions.find(o => o.value === form.city) || null}
+																						onChange={handleCitySelect}
+																						placeholder={loadingCities ? 'Carregando cidades...' : 'Selecione ou busque uma cidade'}
+																						isClearable
+																						required
+																						classNamePrefix="react-select"
+																						isDisabled={!form.state || loadingCities || cityOptions.length === 0}
+																					/>
+																				</div>
 										<div>
 											<label className="block text-sm font-medium text-gray-700 mb-2">Bairro *</label>
 											<input name="neighborhood" value={form.neighborhood} onChange={handleChange} required placeholder="Bairro" className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { formatTEL } from '@/functions/FormatTEL';
 import Image from 'next/image';
 import { CandidateProfile } from '@/types';
 import candidateService from '@/services/candidateService';
@@ -91,9 +92,9 @@ export default function PersonalInfoSection({ profile, onUpdate, saving }: Perso
         ];
         const emptyFields = requiredFields.filter(field => !field.value || field.value === '').map(field => field.key);
         if (emptyFields.length > 0) {
-          setWizardStep(1);
+          setWizardStep(0);
         } else {
-          setWizardStep(2);
+          setWizardStep(1);
         }
       }
   }, [profile, states, setWizardStep]);
@@ -263,32 +264,9 @@ export default function PersonalInfoSection({ profile, onUpdate, saving }: Perso
     }
   };
 
+  // Usa a máscara do arquivo FormatTEL.ts
   const formatPhone = (value: string) => {
-    // Remove tudo que não for número
-    const numericValue = value.replace(/\D/g, '');
-    
-    // Se começar com 55, assume que é Brasil
-    if (numericValue.startsWith('55')) {
-      const phoneNumber = numericValue.slice(2); // Remove o código do país
-      
-      // Aplica a máscara brasileira +55 (11) 99999-9999 (11 dígitos: 2 DDD + 9 número)
-      if (phoneNumber.length <= 2) {
-        return `+55 (${phoneNumber}`;
-      } else if (phoneNumber.length <= 6) {
-        return `+55 (${phoneNumber.slice(0, 2)}) ${phoneNumber.slice(2)}`;
-      } else {
-        return `+55 (${phoneNumber.slice(0, 2)}) ${phoneNumber.slice(2, 7)}-${phoneNumber.slice(7, 11)}`;
-      }
-    } else {
-      // Se não começar com 55, adiciona +55 automaticamente
-      if (numericValue.length <= 2) {
-        return `+55 (${numericValue}`;
-      } else if (numericValue.length <= 6) {
-        return `+55 (${numericValue.slice(0, 2)}) ${numericValue.slice(2)}`;
-      } else {
-        return `+55 (${numericValue.slice(0, 2)}) ${numericValue.slice(2, 7)}-${numericValue.slice(7, 11)}`;
-      }
-    }
+    return formatTEL(value);
   };
 
   const calculateAge = (birthDate: string) => {
@@ -306,15 +284,12 @@ export default function PersonalInfoSection({ profile, onUpdate, saving }: Perso
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    
     if (name === 'date_of_birth') {
-      // Verifica se a idade é menor que 14 anos
       if (value && calculateAge(value) < 14) {
         alert('A idade mínima é de 14 anos. Por favor, insira uma data de nascimento válida.');
         return;
       }
     }
-    
     if (name === 'zip_code') {
       const formattedValue = formatCEP(value);
       setFormData(prev => ({
@@ -344,6 +319,33 @@ export default function PersonalInfoSection({ profile, onUpdate, saving }: Perso
         ...prev,
         [name]: value
       }));
+    }
+  };
+
+  // Busca CEP na API ViaCEP
+  const fetchAddressByCEP = async (cep: string) => {
+    const cleanCep = cep.replace(/\D/g, '');
+    if (cleanCep.length !== 8) return;
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+      const data = await response.json();
+      if (!data.erro) {
+        // Atualiza rua, bairro, cidade e estado
+        setFormData(prev => ({
+          ...prev,
+          street: data.logradouro || prev.street,
+          neighborhood: data.bairro || prev.neighborhood,
+          city: data.localidade || prev.city,
+          state: data.uf || prev.state
+        }));
+        // Atualiza estado selecionado para carregar cidades
+        const stateObj = states.find(state => state.sigla === data.uf);
+        if (stateObj) {
+          setSelectedStateId(stateObj.id);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao buscar CEP:', error);
     }
   };
 
@@ -488,6 +490,7 @@ export default function PersonalInfoSection({ profile, onUpdate, saving }: Perso
                 name="zip_code"
                 value={formData.zip_code}
                 onChange={handleChange}
+                onBlur={() => fetchAddressByCEP(formData.zip_code || '')}
                 placeholder="00000-000"
                 maxLength={9}
                 className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.zip_code ? 'border-red-500' : 'border-slate-400'}`}

@@ -170,7 +170,7 @@ class SpontaneousService {
       if (params?.page) queryParams.append('page', params.page.toString());
       if (params?.status) queryParams.append('status', params.status);
 
-      const response = await axios.get(`${this.baseUrl}/spontaneous-applications/me/?${queryParams.toString()}`);
+      const response = await axios.get(`${this.baseUrl}/spontaneous-applications/?${queryParams.toString()}`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar minhas candidaturas espontâneas:', error);

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { formatRS } from '@/functions/FormatRS';
 import { CandidateProfile } from '@/types';
 import candidateService from '@/services/candidateService';
 import { Save } from 'lucide-react';
@@ -20,8 +21,8 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
     current_company?: string;
     education_level?: EducationLevelType;
     experience_years?: number;
-    desired_salary_min?: number;
-    desired_salary_max?: number;
+  desired_salary_min?: string;
+  desired_salary_max?: string;
     professional_summary?: string;
     skills?: string;
     certifications?: string;
@@ -34,8 +35,8 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
     current_company: '',
     education_level: '',
     experience_years: undefined,
-    desired_salary_min: undefined,
-    desired_salary_max: undefined,
+    desired_salary_min: '',
+    desired_salary_max: '',
     professional_summary: '',
     skills: '',
     certifications: '',
@@ -57,8 +58,8 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
               current_company: data.current_company || '',
               education_level: (data.education_level as EducationLevelType) || '',
               experience_years: typeof data.experience_years === 'number' ? data.experience_years : undefined,
-              desired_salary_min: typeof data.desired_salary_min === 'number' ? data.desired_salary_min : undefined,
-              desired_salary_max: typeof data.desired_salary_max === 'number' ? data.desired_salary_max : undefined,
+              desired_salary_min: data.desired_salary_min !== undefined ? String(data.desired_salary_min) : '',
+              desired_salary_max: data.desired_salary_max !== undefined ? String(data.desired_salary_max) : '',
               professional_summary: data.professional_summary || '',
               skills: data.skills || '',
               certifications: data.certifications || '',
@@ -92,8 +93,8 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
           current_company: profile.current_company || '',
           education_level: (profile.education_level as EducationLevelType) || '',
           experience_years: typeof profile.experience_years === 'number' ? profile.experience_years : undefined,
-          desired_salary_min: typeof profile.desired_salary_min === 'number' ? profile.desired_salary_min : undefined,
-          desired_salary_max: typeof profile.desired_salary_max === 'number' ? profile.desired_salary_max : undefined,
+    desired_salary_min: profile.desired_salary_min !== undefined ? String(profile.desired_salary_min) : '',
+    desired_salary_max: profile.desired_salary_max !== undefined ? String(profile.desired_salary_max) : '',
           professional_summary: profile.professional_summary || '',
           skills: profile.skills || '',
           certifications: profile.certifications || '',
@@ -126,8 +127,8 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
         current_company: profile.current_company || '',
         education_level: (profile.education_level as EducationLevelType) || '',
         experience_years: typeof profile.experience_years === 'number' ? profile.experience_years : undefined,
-        desired_salary_min: typeof profile.desired_salary_min === 'number' ? profile.desired_salary_min : undefined,
-        desired_salary_max: typeof profile.desired_salary_max === 'number' ? profile.desired_salary_max : undefined,
+  desired_salary_min: profile.desired_salary_min !== undefined ? String(profile.desired_salary_min) : '',
+  desired_salary_max: profile.desired_salary_max !== undefined ? String(profile.desired_salary_max) : '',
         professional_summary: profile.professional_summary || '',
         skills: profile.skills || '',
         certifications: profile.certifications || '',
@@ -146,21 +147,28 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
     const newErrors: { [key: string]: boolean } = {};
     if (!formData.current_position || formData.current_position.trim() === '') newErrors.current_position = true;
     if (!formData.current_company || formData.current_company.trim() === '') newErrors.current_company = true;
-  if (!formData.education_level) newErrors.education_level = true;
+    if (!formData.education_level) newErrors.education_level = true;
     if (formData.experience_years === undefined || formData.experience_years < 0) newErrors.experience_years = true;
-    if (formData.desired_salary_min === undefined || formData.desired_salary_min < 0) newErrors.desired_salary_min = true;
-    if (formData.desired_salary_max === undefined || formData.desired_salary_max < 0) newErrors.desired_salary_max = true;
+    if (!formData.desired_salary_min || formData.desired_salary_min.trim() === '') newErrors.desired_salary_min = true;
+    if (!formData.desired_salary_max || formData.desired_salary_max.trim() === '') newErrors.desired_salary_max = true;
     if (!formData.professional_summary || formData.professional_summary.trim() === '') newErrors.professional_summary = true;
     if (!formData.skills || formData.skills.trim() === '') newErrors.skills = true;
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
       return;
     }
-    // Converter campos numéricos
-    // Ajusta education_level para undefined se for string vazia
+    // Converter campos numéricos para o tipo correto
     const submitData: Partial<CandidateProfile> = {
       ...formData,
       education_level: formData.education_level === '' ? undefined : formData.education_level,
+      desired_salary_min:
+        formData.desired_salary_min !== '' && formData.desired_salary_min !== undefined
+          ? Number(formData.desired_salary_min.replace(/\./g, '').replace(',', '.'))
+          : undefined,
+      desired_salary_max:
+        formData.desired_salary_max !== '' && formData.desired_salary_max !== undefined
+          ? Number(formData.desired_salary_max.replace(/\./g, '').replace(',', '.'))
+          : undefined,
     };
     await onUpdate(submitData);
     setWizardStep(3); // Avança para o próximo passo do wizard
@@ -168,10 +176,20 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'number' ? (value === '' ? undefined : Number(value)) : value
-    }));
+    if (name === 'desired_salary_min' || name === 'desired_salary_max') {
+      // Remove tudo que não é número ou vírgula/ponto
+  const raw = value.replace(/[^\d.,]/g, '');
+      // Substitui vírgula por ponto para parseFloat
+      setFormData(prev => ({
+        ...prev,
+        [name]: raw
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: type === 'number' ? (value === '' ? undefined : Number(value)) : value
+      }));
+    }
     setErrors(prev => ({ ...prev, [name]: false }));
   };
 
@@ -266,14 +284,13 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
               Pretensão Salarial Mínima (R$)
             </label>
             <input
-              type="number"
+              type="text"
               id="desired_salary_min"
               name="desired_salary_min"
-              value={formData.desired_salary_min || ''}
+              value={formData.desired_salary_min ? formatRS(formData.desired_salary_min) : ''}
               onChange={handleChange}
-              min="0"
-              step="0.01"
-              placeholder="0.00"
+              inputMode="decimal"
+              placeholder="R$ 0,00"
               className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.desired_salary_min ? 'border-red-500' : 'border-slate-400'}`}
             />
             {errors.desired_salary_min && <span className="text-xs text-red-600">Campo obrigatório</span>}
@@ -284,14 +301,13 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
               Pretensão Salarial Máxima (R$)
             </label>
             <input
-              type="number"
+              type="text"
               id="desired_salary_max"
               name="desired_salary_max"
-              value={formData.desired_salary_max || ''}
+              value={formData.desired_salary_max ? formatRS(formData.desired_salary_max) : ''}
               onChange={handleChange}
-              min="0"
-              step="0.01"
-              placeholder="0.00"
+              inputMode="decimal"
+              placeholder="R$ 0,00"
               className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.desired_salary_max ? 'border-red-500' : 'border-slate-400'}`}
             />
             {errors.desired_salary_max && <span className="text-xs text-red-600">Campo obrigatório</span>}

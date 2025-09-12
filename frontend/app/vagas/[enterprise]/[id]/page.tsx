@@ -1,6 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react';
-import { Calendar, MapPin, Clock, DollarSign, FileText, Target, CheckCircle, Loader } from 'lucide-react';
+import { Calendar, MapPin, Clock, FileText, Target, CheckCircle, Loader } from 'lucide-react';
+import * as Icon from 'react-bootstrap-icons'
 import Navbar from '@/components/Navbar';
 import JobApplicationModal from '@/components/JobApplicationModal';
 import { useParams } from 'next/navigation';
@@ -268,8 +269,8 @@ const JobListingPage: React.FC = () => {
                   <span className="text-sm text-yellow-300">{getJobTypeLabel(jobData.job_type)}</span>
                 </div>
                 <div className="flex items-center space-x-2 bg-blue-900 pl-4 pr-6 py-2 rounded-full w-full lg:w-auto">
-                  <DollarSign className="w-4 h-4 text-yellow-300" />
-                  <span className="text-sm text-yellow-300">R$ {jobData.salary_range}</span>
+                  <Icon.Cash className="w-4 h-4 text-yellow-300" />
+                  <span className="text-sm text-yellow-300">{jobData.salary_range}</span>
                 </div>
               </div>
             </div>

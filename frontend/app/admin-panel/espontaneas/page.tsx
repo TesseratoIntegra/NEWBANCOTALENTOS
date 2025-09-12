@@ -35,6 +35,7 @@ function DetailsModal({ application, onClose, occupations }: ModalProps & { occu
 				<h2 className="text-2xl font-bold text-zinc-100 mb-4">Detalhes da Candidatura</h2>
 				<div className="space-y-2 text-zinc-300 text-sm">
 					<div><strong>Nome:</strong> {application.name}</div>
+					<div><strong>CPF:</strong> {application.cpf}</div>
 					<div><strong>Email:</strong> {application.email}</div>
 					<div><strong>Telefone:</strong> {application.phone}</div>
 					<div><strong>Cidade:</strong> {application.city}</div>
@@ -60,6 +61,7 @@ interface SpontaneousApplication {
 	created_at: string;
 	updated_at: string;
 	name: string;
+	cpf: string;
 	email: string;
 	phone: string;
 	city: string;
@@ -169,7 +171,7 @@ export default function SpontaneousApplicationsPage() {
 										{app.name || 'Nome não informado'}
 									</h3>
 									<p className="text-sm text-zinc-400">
-										{app.email} • {app.phone}
+										{app.cpf ? `CPF: ${app.cpf} • ` : ''}{app.email} • {app.phone}
 									</p>
 									<p className="text-sm text-zinc-400">
 										{app.city}, {app.state} • {app.neighborhood} {app.number} {app.complement && `• ${app.complement}`}

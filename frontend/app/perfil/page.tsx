@@ -225,10 +225,11 @@ export default function AccountPage() {
           >
             <Icon.ArrowLeft/> Anterior
           </button>
+          
           <button
             className="px-4 py-2 bg-blue-500 hover:bg-blue-400 text-white rounded disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed flex place-items-center gap-x-2"
             onClick={() => {setCurrentStep((prev) => Math.min(prev + 1, formSteps.length - 1)); window.scrollTo({ top: 0, behavior: 'smooth' });}}
-            disabled={currentStep === formSteps.length - 1 || currentStep < 2 && currentStep === wizzardStep - 1}
+            disabled={currentStep === formSteps.length - 1 || currentStep < 2 && currentStep === wizzardStep}
           >
             Próximo <Icon.ArrowRight/>
           </button>

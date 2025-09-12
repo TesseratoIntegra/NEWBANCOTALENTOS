@@ -45,7 +45,7 @@ export default function PreferencesSection({ profile, onUpdate, saving }: Prefer
     const { name, value, type } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+      [name]: type === 'checkbox' && e.target instanceof HTMLInputElement ? e.target.checked : value
     }));
   };
 
@@ -148,43 +148,6 @@ export default function PreferencesSection({ profile, onUpdate, saving }: Prefer
               </option>
             ))}
           </select>
-        </div>
-
-        {/* Transporte */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-blue-900">Transporte</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="has_vehicle"
-                name="has_vehicle"
-                checked={formData.has_vehicle || false}
-                onChange={handleChange}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-400 rounded bg-white"
-              />
-              <label htmlFor="has_vehicle" className="ml-3 block text-sm text-zinc-700">
-                <span className="font-medium">Possuo veículo próprio</span>
-                <p className="text-slate-700 text-xs mt-1">Tenho carro ou moto para transporte</p>
-              </label>
-            </div>
-
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="has_cnh"
-                name="has_cnh"
-                checked={formData.has_cnh || false}
-                onChange={handleChange}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-400 rounded bg-white"
-              />
-              <label htmlFor="has_cnh" className="ml-3 block text-sm text-zinc-700">
-                <span className="font-medium">Possuo CNH</span>
-                <p className="text-slate-700 text-xs mt-1">Carteira Nacional de Habilitação válida</p>
-              </label>
-            </div>
-          </div>
         </div>
 
         {/* Resumo das Preferências */}

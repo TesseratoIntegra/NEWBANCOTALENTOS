@@ -18,16 +18,6 @@ const Home = () => {
   const { user, isAuthenticated } = useAuth();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [showModal, setShowModal] = useState(false);
-  // Exibir modal após 4 segundos para candidatos autenticados
-  useEffect(() => {
-    if (isAuthenticated && user?.user_type === 'candidate') {
-      const timer = setTimeout(() => setShowModal(true), 
-      3000);
-      return () => clearTimeout(timer);
-    } else {
-      setShowModal(false);
-    }
-  }, [isAuthenticated, user]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +36,28 @@ const Home = () => {
   });
   const [allJobs, setAllJobs] = useState<Job[]>([]);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+
+  useEffect(() => {
+    async function checkSpontaneousApplication() {
+      if (isAuthenticated && user?.user_type === 'candidate') {
+        // Chama o serviço para buscar candidaturas espontâneas do usuário
+        const response = await import('@/services/spontaneousService').then(mod => mod.default.getMySpontaneousApplications());
+          // Se não houver candidaturas (array vazio ou objeto vazio), exibe o modal após 3s
+          const isEmpty =
+            (Array.isArray(response) && response.length === 0) ||
+            (response && Array.isArray(response.results) && response.results.length === 0);
+          if (isEmpty) {
+            const timer = setTimeout(() => setShowModal(true), 3000);
+            return () => clearTimeout(timer);
+          } else {
+            setShowModal(false);
+          }
+      } else {
+        setShowModal(false);
+      }
+    }
+    checkSpontaneousApplication();
+  }, [isAuthenticated, user]);
 
   // Função para carregar empresas
   const loadCompanies = async () => {

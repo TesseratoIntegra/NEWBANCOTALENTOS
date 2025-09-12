@@ -48,10 +48,10 @@ export default function Navbar() {
 
     return (
         <header className="bg-gradient-to-r from-blue-800 to-blue-950 fixed top-0 left-0 z-40 w-full">
-            <div className="max-w-[92%] mx-auto px-4 sm:px-6 py-3">
+            <div className="max-w-[92%] mx-auto px-4 sm:px-6 py-2">
                 <div className="flex items-center justify-between">
                     <Link href='/' className="flex items-center space-x-3 cursor-pointer">
-                        <Image src='https://raw.githubusercontent.com/Chiaperini-TI/Chiaperini-TI/main/chiaperini.png' width={300} height={300} alt='' className='animate-fade w-auto h-8 sm:h-10'></Image>
+                        <Image src='https://raw.githubusercontent.com/Chiaperini-TI/Chiaperini-TI/main/chiaperini.png' width={300} height={300} alt='' className='animate-fade w-auto h-12 sm:h-10 -ml-4'></Image>
                     </Link>
                     
                     {/* Desktop Navigation */}
@@ -124,8 +124,8 @@ export default function Navbar() {
                             className="text-zinc-100 hover:text-blue-900 transition"
                             aria-label="Toggle menu"
                         >
-                            <X className={`w-6 h-6 absolute z-[60] top-3 right-5 ${!isMenuOpen ? 'rotate-[-60deg] pointer-events-none opacity-0' : 'rotate-0 opacity-100'} duration-300`} />
-                            <Menu className={`w-6 h-6 absolute z-[60] top-3 right-5 ${isMenuOpen ? 'rotate-[60deg] pointer-events-none opacity-0' : 'rotate-0 opacity-100'} duration-300`} />
+                            <X className={`w-6 h-6 absolute z-[60] top-5 right-5 ${!isMenuOpen ? 'rotate-[-60deg] pointer-events-none opacity-0' : 'rotate-0 opacity-100'} duration-300`} />
+                            <Menu className={`w-6 h-6 absolute z-[60] top-5 right-5 ${isMenuOpen ? 'rotate-[60deg] pointer-events-none opacity-0' : 'rotate-0 opacity-100'} duration-300`} />
                         </button>
                     </div>
                 </div>
@@ -152,7 +152,7 @@ export default function Navbar() {
                             {isAuthenticated && user?.user_type === 'candidate' && (
                                 <>
                                     <div
-                                        className={`group ${canClickJobStart ? 'cursor-pointer ml-3 text-zinc-300/90 hover:text-yellow-300' : 'cursor-not-allowed text-zinc-400'} `}
+                                        className={`group ml-3 ${canClickJobStart ? 'cursor-pointer text-zinc-300/90 hover:text-yellow-300' : 'cursor-not-allowed text-zinc-400'} `}
                                         onClick={() => {
                                             if (canClickJobStart) JobStart(true);
                                         }}
@@ -197,7 +197,7 @@ export default function Navbar() {
                             <Link
                                 href="/login"
                                 onClick={() => setIsMenuOpen(false)}
-                                className="animate-fade bg-gradient-to-r from-yellow-400 to-yellow-300 hover:opacity-70 text-zinc-900 px-4 py-2 rounded-md transition font-semibold flex justify-center place-items-center gap-2 w-full"
+                                className="animate-fade bg-gradient-to-r from-yellow-400 to-yellow-300 hover:opacity-70 text-zinc-900 px-4 py-2 rounded-md transition font-semibold flex justify-center place-items-center gap-2 w-full -mt-5"
                             >
                               <Icon.Person className='w-4 h-4'/>  Faça seu Login
                             </Link>
