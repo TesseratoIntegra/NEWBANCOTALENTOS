@@ -151,7 +151,7 @@ class CandidateEducation(Base):
     end_date = models.DateField(blank=True, null=True, verbose_name='Data de Conclusão')
     is_current = models.BooleanField(default=False, verbose_name='Está Cursando')
     description = models.TextField(blank=True, verbose_name='Descrição')
-    file = models.FileField(upload_to='file_education', blank=True, verbose_name='Certiciado')
+    file = models.FileField(upload_to='file_education', blank=True, verbose_name='Certificado')
 
     class Meta:
         verbose_name = 'Formação Acadêmica'
