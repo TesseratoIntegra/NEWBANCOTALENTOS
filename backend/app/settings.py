@@ -67,19 +67,12 @@ CSRF_TRUSTED_ORIGINS = [
     "http://82.29.59.80:3025",
     "https://www.bancodetalentos.chiaperini.com.br",
     "https://bancodetalentos.chiaperini.com.br",
-
-    'http://192.168.3.28:3000',
-
-
 ]
 
 CORS_ALLOWED_ORIGINS = [
     "http://82.29.59.80:3025",
     "https://www.bancodetalentos.chiaperini.com.br",
     "https://bancodetalentos.chiaperini.com.br",
-
-    'http://192.168.3.28:3000',
-
 ]
 
 ACCOUNT_LOGIN_METHODS = {'email'}
@@ -116,7 +109,6 @@ AUTH_USER_MODEL = 'accounts.UserProfile'
 # REST Framework Configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [

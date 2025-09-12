@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 
@@ -48,7 +48,7 @@ class RegisterViewSet(viewsets.ModelViewSet):
     """ViewSet para registrar novos usuários como candidatos"""
     queryset = UserProfile.objects.all()
     serializer_class = RegisterSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [AllowAny]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -83,6 +83,7 @@ class CustomLoginView(LoginView):
     """
     View customizada para autenticação JWT.
     """
+    permission_classes = [AllowAny]
 
     def get_response(self):
         """
@@ -128,6 +129,7 @@ class CustomPasswordResetView(PasswordResetView):
     View customizada para reset de senha que usa serializer customizado
     """
     serializer_class = CustomPasswordResetSerializer
+    permission_classes = [AllowAny]
 
     def get_serializer_context(self):
         print("[DEBUG] get_serializer_context foi chamado")
