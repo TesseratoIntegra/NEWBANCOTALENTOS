@@ -63,21 +63,19 @@ class CandidateProfile(Base):
         validators=[MaxValueValidator(50)],
         verbose_name='Anos de Experiência'
     )
-    desired_salary_min = models.DecimalField(
-        max_digits=10, 
-        decimal_places=2, 
+    desired_salary_min = models.CharField(
+        max_length=13,
         blank=True, 
         null=True,
         verbose_name='Pretensão Salarial Mínima'
     )
-    desired_salary_max = models.DecimalField(
-        max_digits=10, 
-        decimal_places=2, 
-        blank=True, 
+    desired_salary_max = models.CharField(
+        max_length=13,
+        blank=True,
         null=True,
         verbose_name='Pretensão Salarial Máxima'
     )
-    
+
     # Textos livres
     professional_summary = models.TextField(blank=True, verbose_name='Resumo Profissional')
     skills = models.TextField(blank=True, verbose_name='Habilidades e Competências')
@@ -180,10 +178,9 @@ class CandidateExperience(Base):
     is_current = models.BooleanField(default=False, verbose_name='Trabalho Atual')
     description = models.TextField(verbose_name='Descrição das Atividades')
     achievements = models.TextField(blank=True, verbose_name='Principais Conquistas')
-    salary = models.DecimalField(
-        max_digits=10, 
-        decimal_places=2, 
-        blank=True, 
+    salary = models.CharField(
+        max_length=13,
+        blank=True,
         null=True,
         verbose_name='Salário'
     )

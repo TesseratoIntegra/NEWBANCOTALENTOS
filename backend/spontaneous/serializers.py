@@ -1,4 +1,5 @@
 from rest_framework import serializers
+
 from spontaneous.models import Occupation, SpontaneousApplication
 
 
@@ -15,10 +16,17 @@ class SpontaneousApplicationSerializer(serializers.ModelSerializer):
         read_only_fields = ['created_at', 'updated_at', 'user']
 
     def validate(self, attrs):
-        # exemplo: garantir pelo menos área_1 e evitar áreas repetidas
+        request = self.context.get('request')
+        user = getattr(request, 'user', None)
+
+        # Apenas candidatos podem ter candidatura (OneToOne)
+        if user and getattr(user, 'user_type', None) != 'candidate':
+            raise serializers.ValidationError('Apenas usuários do tipo "candidate" podem ter candidatura espontânea.')
+
+        # regra de áreas
         area_1 = attrs.get('area_1') or getattr(self.instance, 'area_1', None)
         if not area_1:
-            raise serializers.ValidationError({"area_1": "Área 1 é obrigatória."})
+            raise serializers.ValidationError({'area_1': 'Área 1 é obrigatória.'})
 
         areas = [
             area_1,
@@ -27,5 +35,6 @@ class SpontaneousApplicationSerializer(serializers.ModelSerializer):
         ]
         areas_clean = [a for a in areas if a]
         if len(areas_clean) != len(set(areas_clean)):
-            raise serializers.ValidationError("As áreas de atuação não podem se repetir.")
+            raise serializers.ValidationError('As áreas de atuação não podem se repetir.')
+
         return attrs
