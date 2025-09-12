@@ -68,6 +68,8 @@ CSRF_TRUSTED_ORIGINS = [
     "https://www.bancodetalentos.chiaperini.com.br",
     "https://bancodetalentos.chiaperini.com.br",
 
+    'http://192.168.3.28:3000',
+
 
 ]
 
@@ -75,6 +77,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://82.29.59.80:3025",
     "https://www.bancodetalentos.chiaperini.com.br",
     "https://bancodetalentos.chiaperini.com.br",
+
+    'http://192.168.3.28:3000',
 
 ]
 
@@ -116,7 +120,7 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+        'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',

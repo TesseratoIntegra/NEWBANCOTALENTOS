@@ -1,4 +1,6 @@
 from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import NotAuthenticated, PermissionDenied
 
 from drf_spectacular.utils import extend_schema, extend_schema_view
 
@@ -71,16 +73,36 @@ class OccupationViewSet(viewsets.ModelViewSet):
     ),
 )
 class SpontaneousApplicationViewSet(viewsets.ModelViewSet):
-    queryset = SpontaneousApplication.objects.all()
     serializer_class = SpontaneousApplicationSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = SpontaneousApplication.objects.none()
 
     def get_queryset(self):
         user = self.request.user
-        # staff enxerga tudo (útil para RH/admin); usuário comum vê somente a sua
-        if user.is_staff:
+
+        # Guarda de segurança: evita cair no filter(user=AnonymousUser)
+        if not user.is_authenticated:
+
+            raise NotAuthenticated("Faça login para acessar suas candidaturas.")
+
+        # Admin absoluto vê tudo
+        if user.is_superuser:
             return SpontaneousApplication.objects.all()
-        return SpontaneousApplication.objects.filter(user=user)
+
+        # Permissão de RH (granular) para ver tudo
+        if user.has_perm('spontaneous.view_all_spontaneousapplications'):
+            return SpontaneousApplication.objects.all()
+
+        # Somente a própria (use user_id para não forçar cast do objeto user)
+        return SpontaneousApplication.objects.filter(user_id=user.id)
 
     def perform_create(self, serializer):
-        # força vinculação ao usuário autenticado e respeita o OneToOne
-        serializer.save(user=self.request.user)
+        user = self.request.user
+        if not user.is_authenticated:
+            raise NotAuthenticated("Faça login para criar candidatura.")
+
+        # Só candidatos podem criar candidatura (regra de negócio)
+        if getattr(user, 'user_type', None) != 'candidate':
+            raise PermissionDenied('Apenas candidatos podem criar candidatura espontânea.')
+
+        serializer.save(user=user)

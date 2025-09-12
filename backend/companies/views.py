@@ -1,4 +1,6 @@
 from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+
 from drf_spectacular.utils import extend_schema, extend_schema_view
 
 from companies.models import CompanyGroup, Company
@@ -40,6 +42,7 @@ from companies.serializers import CompanyGroupSerializer, CompanySerializer
 class CompanyGroupViewSet(viewsets.ModelViewSet):
     queryset = CompanyGroup.objects.all()
     serializer_class = CompanyGroupSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
 
 @extend_schema_view(
@@ -77,3 +80,4 @@ class CompanyGroupViewSet(viewsets.ModelViewSet):
 class CompanyViewSet(viewsets.ModelViewSet):
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]

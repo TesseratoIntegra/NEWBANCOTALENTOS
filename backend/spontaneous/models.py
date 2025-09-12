@@ -19,6 +19,7 @@ class Occupation(models.Model):
 class SpontaneousApplication(Base):
     name = models.CharField(max_length=255, verbose_name='Nome completo')
     email = models.EmailField(verbose_name='E-mail')
+    cpf = models.CharField(max_length=14, verbose_name='CPF')
     phone = models.CharField(max_length=20, verbose_name='Telefone')
     city = models.CharField(max_length=100, verbose_name='Cidade')
     state = models.CharField(max_length=100, verbose_name='Estado')
@@ -43,6 +44,9 @@ class SpontaneousApplication(Base):
         ordering = ['-created_at']
         verbose_name = 'Candidatura Espontânea'
         verbose_name_plural = 'Candidaturas Espontâneas'
+        permissions = [
+            ("view_all_spontaneousapplications", "Pode visualizar todas as candidaturas espontâneas"),
+        ]
 
     def __str__(self):
         return f'{self.name} ({self.email})'
