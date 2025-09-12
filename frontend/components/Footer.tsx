@@ -14,7 +14,7 @@ const Footer = () => {
           
           {/* Company Info */}
           <div className="space-y-4">
-            <Image src='https://raw.githubusercontent.com/Chiaperini-TI/Chiaperini-TI/main/chiaperini.png' alt="Inovar" width={150} height={50} />
+            <Image src='https://raw.githubusercontent.com/Chiaperini-TI/Chiaperini-TI/main/chiaperini.png' alt="Chiaperini Logo" width={150} height={50} />
             <p className="text-zinc-100 text-sm leading-relaxed w-[40%]">
               Conectando futuros, criando oportunidades. Sua plataforma de confiança para encontrar os melhores talentos e serviços especializados.
             </p>
@@ -84,10 +84,12 @@ const Footer = () => {
         {/* Divider */}
         <div className="border-t border-zinc-500 mt-8 pt-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <p className="text-zinc-100 text-sm text-center md:text-left">
-              © 2025 Chiaperini Industrial.
-            </p>
-            
+            <div className="text-zinc-100 text-sm text-center md:text-left">
+              © 2025 Banco de Talentos - Chiaperini Industrial. 
+              <div className="text-zinc-100 text-sm text-center md:text-left flex place-items-center gap-x-1">
+              Powered by <a className='text-purple-300 hover:text-purple-500 flex place-items-center' href="https://tesseratointegra.com.br/"> <Image className='w-auto h-12' width={300} height={300} src='/img/logo.png' alt='Logo Tesserato'></Image> </a>
+            </div>
+            </div>
             {/* Back to Top Button */}
             <button
               onClick={scrollToTop}
