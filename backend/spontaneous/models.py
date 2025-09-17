@@ -24,6 +24,7 @@ class SpontaneousApplication(Base):
     city = models.CharField(max_length=100, verbose_name='Cidade')
     state = models.CharField(max_length=100, verbose_name='Estado')
     neighborhood = models.CharField(max_length=100, verbose_name='Bairro')
+    street = models.CharField(max_length=250, null=True, blank=True, verbose_name='Rua')
     number = models.CharField(max_length=20, verbose_name='Número')
     complement = models.CharField(max_length=100, blank=True, null=True, verbose_name='Complemento')
 
