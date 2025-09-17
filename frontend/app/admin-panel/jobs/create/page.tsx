@@ -1,13 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Select from 'react-select';
+import { useForm, Controller } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { adminJobService, CreateJobData } from '@/services/adminJobService';
+import { formatRS } from '@/functions/FormatRS';
+import { adminJobService } from '@/services/adminJobService';
 import companyService from '@/services/companyService';
+import locationService, { State, City } from '@/services/locationService';
 import { Company } from '@/types';
-// Modal para criar empresa
-// ...existing code...
+
 type CreateCompanyModalProps = {
   isOpen: boolean;
   onClose: () => void;
@@ -19,11 +24,10 @@ function CreateCompanyModal({ isOpen, onClose, onCreated }: CreateCompanyModalPr
   const [cnpj, setCnpj] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Função para aplicar máscara de CNPJ
   const formatCnpj = (value: string) => {
-    // Remove tudo que não é número
+    
     const digits = value.replace(/\D/g, '');
-    // Aplica a máscara
+    
     return digits
       .replace(/(\d{2})(\d)/, '$1.$2')
       .replace(/(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
@@ -102,15 +106,13 @@ function CreateCompanyModal({ isOpen, onClose, onCreated }: CreateCompanyModalPr
     </div>
   );
 }
-import locationService, { State, City } from '@/services/locationService';
-// ...existing code...
+
 
 export default function CreateJobPage() {
-  // Modal de empresa
   const [showCompanyModal, setShowCompanyModal] = useState(false);
+  const [requirementsList, setRequirementsList] = useState<string[]>([]);
+  const [requirementInput, setRequirementInput] = useState('');
   const router = useRouter();
-  
-  // Função para obter a data de amanhã no formato YYYY-MM-DD
   const getTomorrowDate = (): string => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -122,23 +124,72 @@ export default function CreateJobPage() {
   const [loadingCompanies, setLoadingCompanies] = useState(true);
   const [states, setStates] = useState<State[]>([]);
   const [cities, setCities] = useState<City[]>([]);
-  const [selectedState, setSelectedState] = useState<number | ''>('');
-  const [selectedCity, setSelectedCity] = useState<string>('');
+  const [selectedState, setSelectedState] = useState<{ value: number; label: string } | null>(null);
+  const [selectedCity, setSelectedCity] = useState<{ value: string; label: string } | null>(null);
   const [loadingStates, setLoadingStates] = useState(true);
   const [loadingCities, setLoadingCities] = useState(false);
-  const [formData, setFormData] = useState<CreateJobData>({
-    title: '',
-    description: '',
-    location: '',
-    job_type: 'full_time',
-    type_models: 'in_person',
-    salary_range: '',
-    requirements: '',
-    responsibilities: '',
-    closure: '',
-    company: 0, // Changed to 0 as default to force selection
-    is_active: true,
+
+  // Zod schema
+  const schema = z.object({
+    title: z.string().min(1, 'Título obrigatório'),
+    description: z.string().min(1, 'Descrição obrigatória'),
+    location: z.string().min(1, 'Localização obrigatória'),
+    job_type: z.enum(['full_time', 'part_time', 'contract', 'internship']),
+    type_models: z.enum(['in_person', 'home_office', 'hybrid']),
+    salary_min: z.string().optional(),
+    salary_max: z.string().optional(),
+    requirements: z.string().min(1, 'Requisitos obrigatórios'),
+    responsibilities: z.string().min(1, 'Responsabilidades obrigatórias'),
+    closure: z.string().min(1, 'Data obrigatória'),
+    company: z.union([z.string(), z.number()]),
+    is_active: z.boolean(),
   });
+
+  type FormFields = z.infer<typeof schema>;
+
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    register,
+    formState: { errors },
+  } = useForm<FormFields>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      title: '',
+      description: '',
+      location: '',
+      job_type: 'full_time',
+      type_models: 'in_person',
+      salary_min: '',
+      salary_max: '',
+      requirements: '',
+      responsibilities: '',
+      closure: '',
+  company: '',
+      is_active: true,
+    },
+  });
+
+
+  // Adiciona requisito ao pressionar Enter
+  const handleRequirementKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && requirementInput.trim()) {
+      e.preventDefault();
+      setRequirementsList(prev => [...prev, requirementInput.trim()]);
+      setRequirementInput('');
+    }
+  };
+
+  // Remove requisito
+  const handleRemoveRequirement = (idx: number) => {
+    setRequirementsList(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  // Atualiza o campo 'requirements' do formulário sempre que a lista mudar
+  useEffect(() => {
+    setValue('requirements', requirementsList.join(', '));
+  }, [requirementsList, setValue]);
 
   useEffect(() => {
     loadCompanies();
@@ -158,10 +209,9 @@ export default function CreateJobPage() {
     }
   };
 
-  // Quando uma empresa é criada
   const handleCompanyCreated = (newCompany: Company) => {
     setCompanies(prev => [...prev, newCompany]);
-    setFormData(prev => ({ ...prev, company: newCompany.id }));
+    setValue('company', newCompany.id);
   };
 
   const loadStates = async () => {
@@ -190,108 +240,85 @@ export default function CreateJobPage() {
     }
   };
 
-  // Função para formatar valor monetário
-  const formatCurrency = (value: string): string => {
-    // Remove tudo que não é número
-    const numericValue = value.replace(/\D/g, '');
-    
-    if (!numericValue) return '';
-    
-    // Converte para número e divide por 100 para ter centavos
-    const number = parseInt(numericValue) / 100;
-    
-    // Formata como moeda brasileira
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(number);
+  // Remove formatCurrency, pois agora serão valores numéricos simples
+
+  const handleSalaryMinChange = (value: string) => {
+    const rawValue = value.replace(/\D/g, '');
+    setValue('salary_min', formatRS(rawValue));
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value, type } = e.target;
-    
-    if (type === 'checkbox') {
-      const checkbox = e.target as HTMLInputElement;
-      setFormData(prev => ({
-        ...prev,
-        [name]: checkbox.checked
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    }
+  const handleSalaryMaxChange = (value: string) => {
+    const rawValue = value.replace(/\D/g, '');
+    setValue('salary_max', formatRS(rawValue));
   };
 
-  const handleSalaryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const inputValue = e.target.value;
-    const formattedValue = formatCurrency(inputValue);
-    
-    setFormData(prev => ({
-      ...prev,
-      salary_range: formattedValue
-    }));
-  };
-
-  const handleStateChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const stateId = parseInt(e.target.value);
-    setSelectedState(stateId);
-    setSelectedCity('');
+  const handleStateChange = async (option: { value: number; label: string } | null) => {
+    setSelectedState(option);
+    setSelectedCity(null);
     setCities([]);
-    
-    if (stateId) {
-      await loadCities(stateId);
+    setValue('location', '');
+    if (option && option.value) {
+      await loadCities(option.value);
     }
   };
 
-  const handleCityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const cityName = e.target.value;
-    setSelectedCity(cityName);
-    
-    // Atualizar o campo location no formData com o formato "Cidade, Estado"
-    if (cityName && selectedState) {
-      const selectedStateData = states.find(state => state.id === selectedState);
+  const handleCityChange = (option: { value: string; label: string } | null) => {
+    setSelectedCity(option);
+    if (option && selectedState) {
+      const selectedStateData = states.find(state => state.id === selectedState.value);
       if (selectedStateData) {
-        setFormData(prev => ({
-          ...prev,
-          location: `${cityName}, ${selectedStateData.sigla}`
-        }));
+        setValue('location', `${option.value}, ${selectedStateData.sigla}`);
       }
     } else {
-      setFormData(prev => ({
-        ...prev,
-        location: ''
-      }));
+      setValue('location', '');
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.company) {
-      alert('Por favor, selecione uma empresa');
-      return;
-    }
-    
-    // Validar se a data de encerramento não é hoje ou no passado
-    if (formData.closure) {
-      const closureDate = new Date(formData.closure);
+  const onSubmit = async (data: FormFields) => {
+    // Validação extra de datas
+    if (data.closure) {
+      const closureDate = new Date(data.closure);
       const today = new Date();
-      today.setHours(0, 0, 0, 0); // Remove horas para comparar apenas a data
-
+      today.setHours(0, 0, 0, 0);
       if (closureDate < today) {
         alert('A data de encerramento deve ser hoje ou uma data futura');
         return;
       }
     }
-
+    // Validação dos salários
+    if (data.salary_min && data.salary_max && parseInt(data.salary_min.replace(/\D/g, '')) > parseInt(data.salary_max.replace(/\D/g, ''))) {
+      alert('O salário mínimo não pode ser maior que o máximo');
+      return;
+    }
+    // Monta o salary_range no formato "min - max"
+    let salaryRange = '';
+    if (data.salary_min && data.salary_max) {
+      salaryRange = `${data.salary_min} - ${data.salary_max}`;
+    } else if (data.salary_min) {
+      salaryRange = `${data.salary_min}`;
+    } else if (data.salary_max) {
+      salaryRange = `R$ 0,00 - ${data.salary_max}`;
+    }
+    // Junta requisitos
+    const requirementsString = requirementsList.join(', ');
+    if (!requirementsString) {
+      alert('Adicione pelo menos um requisito');
+      return;
+    }
+    // Validação de responsabilidades
+    if (!data.responsibilities || !data.responsibilities.trim()) {
+      alert('Preencha o campo de responsabilidades.');
+      return;
+    }
     setLoading(true);
-
     try {
-      await adminJobService.createJob(formData);
+      await adminJobService.createJob({
+        ...data,
+        salary_range: salaryRange,
+        requirements: requirementsString,
+        responsibilities: data.responsibilities,
+        company: typeof data.company === 'string' ? Number(data.company) : data.company,
+      });
       router.push('/admin-panel/jobs');
     } catch (error) {
       alert('Erro ao criar vaga. Verifique os dados e tente novamente.');
@@ -318,7 +345,7 @@ export default function CreateJobPage() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+  <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-md p-6 border border-zinc-700">
           <h2 className="text-lg font-semibold text-zinc-100 mb-4">
             Informações Básicas
@@ -331,13 +358,12 @@ export default function CreateJobPage() {
               <input
                 type="text"
                 id="title"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
+                {...register('title')}
                 required
                 className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 placeholder="Ex: Desenvolvedor Frontend"
               />
+              {errors.title && <span className="text-red-500 text-xs">{errors.title.message}</span>}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -350,21 +376,21 @@ export default function CreateJobPage() {
                     Carregando estados...
                   </div>
                 ) : (
-                  <select
+                  <Select
                     id="state"
-                    name="state"
+                    options={states.map(state => ({ value: state.id, label: `${state.nome} (${state.sigla})` }))}
                     value={selectedState}
                     onChange={handleStateChange}
-                    required
-                    className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    <option value="">Selecione um estado</option>
-                    {states.map((state) => (
-                      <option key={state.id} value={state.id}>
-                        {state.nome} ({state.sigla})
-                      </option>
-                    ))}
-                  </select>
+                    placeholder="Selecione ou busque um estado"
+                    isClearable
+                    classNamePrefix="react-select"
+                    styles={{
+                      control: (base) => ({ ...base, backgroundColor: '#3f3f46', borderColor: '#52525b', color: '#f4f4f5' }),
+                      singleValue: (base) => ({ ...base, color: '#f4f4f5' }),
+                      menu: (base) => ({ ...base, backgroundColor: '#27272a', color: '#f4f4f5' }),
+                      option: (base, state) => ({ ...base, backgroundColor: state.isFocused ? '#6366f1' : '#27272a', color: '#f4f4f5' }),
+                    }}
+                  />
                 )}
               </div>
 
@@ -377,79 +403,96 @@ export default function CreateJobPage() {
                     Carregando cidades...
                   </div>
                 ) : (
-                  <select
+                  <Select
                     id="city"
-                    name="city"
+                    options={cities.map(city => ({ value: city.nome, label: city.nome }))}
                     value={selectedCity}
                     onChange={handleCityChange}
-                    required
-                    disabled={!selectedState}
-                    className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <option value="">
-                      {selectedState ? 'Selecione uma cidade' : 'Primeiro selecione um estado'}
-                    </option>
-                    {cities.map((city) => (
-                      <option key={city.id} value={city.nome}>
-                        {city.nome}
-                      </option>
-                    ))}
-                  </select>
+                    placeholder={selectedState ? "Selecione ou busque uma cidade" : "Primeiro selecione um estado"}
+                    isClearable
+                    isDisabled={!selectedState}
+                    classNamePrefix="react-select"
+                    styles={{
+                      control: (base) => ({ ...base, backgroundColor: '#3f3f46', borderColor: '#52525b', color: '#f4f4f5', opacity: selectedState ? 1 : 0.5 }),
+                      singleValue: (base) => ({ ...base, color: '#f4f4f5' }),
+                      menu: (base) => ({ ...base, backgroundColor: '#27272a', color: '#f4f4f5' }),
+                      option: (base, state) => ({ ...base, backgroundColor: state.isFocused ? '#6366f1' : '#27272a', color: '#f4f4f5' }),
+                    }}
+                  />
                 )}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <label htmlFor="job_type" className="block text-sm font-medium text-zinc-300 mb-2">
-                Tipo de Contrato *
-              </label>
-              <select
-                id="job_type"
-                name="job_type"
-                value={formData.job_type}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="full_time">Tempo Integral</option>
-                <option value="part_time">Meio Período</option>
-                <option value="contract">Contrato</option>
-                <option value="freelance">Freelance</option>
-                <option value="internship">Estágio</option>
-              </select>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label htmlFor="job_type" className="block text-sm font-medium text-zinc-300 mb-2">
+                  Tipo de Contrato *
+                </label>
+                <select
+                  id="job_type"
+                  {...register('job_type')}
+                  required
+                  className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="full_time">Tempo Integral</option>
+                  <option value="part_time">Meio Período</option>
+                  <option value="contract">Contrato</option>
+                  <option value="frelance">Freelance</option>
+                  <option value="internship">Estágio</option>
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="type_models" className="block text-sm font-medium text-zinc-300 mb-2">
+                  Modelo de Trabalho *
+                </label>
+                <select
+                  id="type_models"
+                  {...register('type_models')}
+                  required
+                  className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="in_person">Presencial</option>
+                  <option value="home_office">Home Office</option>
+                  <option value="hybrid">Híbrido</option>
+                </select>
+              </div>
+          </div>
 
             <div>
-              <label htmlFor="type_models" className="block text-sm font-medium text-zinc-300 mb-2">
-                Modelo de Trabalho *
-              </label>
-              <select
-                id="type_models"
-                name="type_models"
-                value={formData.type_models}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="in_person">Presencial</option>
-                <option value="home_office">Home Office</option>
-                <option value="hybrid">Híbrido</option>
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="salary_range" className="block text-sm font-medium text-zinc-300 mb-2">
-                Faixa Salarial
-              </label>
-              <input
-                type="text"
-                id="salary_range"
-                name="salary_range"
-                value={formData.salary_range}
-                onChange={handleSalaryChange}
-                className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="Ex: 500000 (para R$ 5.000,00)"
-              />
+              <label className="block text-sm font-medium text-zinc-300 mb-2">Faixa Salarial</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Controller
+                  name="salary_min"
+                  control={control}
+                  render={({ field }) => (
+                    <input
+                      type="text"
+                      id="salary_min"
+                      value={field.value}
+                      onChange={e => handleSalaryMinChange(e.target.value)}
+                      className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      placeholder="Mínimo (ex: R$ 1400,00)"
+                      inputMode="numeric"
+                    />
+                  )}
+                />
+                <Controller
+                  name="salary_max"
+                  control={control}
+                  render={({ field }) => (
+                    <input
+                      type="text"
+                      id="salary_max"
+                      value={field.value}
+                      onChange={e => handleSalaryMaxChange(e.target.value)}
+                      className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      placeholder="Máximo (ex: R$ 3000,00)"
+                      inputMode="numeric"
+                    />
+                  )}
+                />
+              </div>
             </div>
 
             <div>
@@ -459,13 +502,12 @@ export default function CreateJobPage() {
               <input
                 type="date"
                 id="closure"
-                name="closure"
-                value={formData.closure}
-                onChange={handleChange}
+                {...register('closure')}
                 min={getTomorrowDate()}
                 required
                 className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
+              {errors.closure && <span className="text-red-500 text-xs">{errors.closure.message}</span>}
               <p className="text-xs text-zinc-400 mt-1">
                 A data deve ser amanhã ou uma data futura
               </p>
@@ -484,9 +526,7 @@ export default function CreateJobPage() {
                   ) : (
                     <select
                       id="company"
-                      name="company"
-                      value={formData.company}
-                      onChange={handleChange}
+                      {...register('company')}
                       required
                       className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     >
@@ -523,40 +563,60 @@ export default function CreateJobPage() {
               </label>
               <textarea
                 id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
+                {...register('description')}
                 required
                 rows={4}
                 className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 placeholder="Descreva a vaga, o que a empresa faz, o ambiente de trabalho..."
               />
+              {errors.description && <span className="text-red-500 text-xs">{errors.description.message}</span>}
             </div>
 
             <div>
-              <label htmlFor="requirements" className="block text-sm font-medium text-zinc-300 mb-2">
-                Requisitos
-              </label>
-              <textarea
-                id="requirements"
-                name="requirements"
-                value={formData.requirements}
-                onChange={handleChange}
-                rows={4}
-                className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="Liste os requisitos necessários para a vaga..."
-              />
+              <label className="block text-sm font-medium text-zinc-300 mb-2">Requisitos *</label>
+              <div className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  value={requirementInput}
+                  onChange={e => setRequirementInput(e.target.value)}
+                  onKeyDown={handleRequirementKeyDown}
+                  className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100 focus:outline-none"
+                  placeholder="Digite o requisito e pressione Enter"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (requirementInput.trim()) {
+                      setRequirementsList(prev => [...prev, requirementInput.trim()]);
+                      setRequirementInput('');
+                    }
+                  }}
+                  className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md font-medium"
+                >Adicionar</button>
+              </div>
+              <ul className="mb-2">
+                {requirementsList.map((req, idx) => (
+                  <li key={idx} className="flex items-center justify-between bg-zinc-800 px-3 py-2 rounded mb-1">
+                    <span className="text-zinc-100 text-sm">{req}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveRequirement(idx)}
+                      className="text-red-400 hover:text-red-600 text-xs ml-2"
+                    >Remover</button>
+                  </li>
+                ))}
+              </ul>
+              {errors.requirements && <span className="text-red-500 text-xs">{errors.requirements.message}</span>}
+              <p className="text-xs text-zinc-400">Pressione Enter ou clique em Adicionar para cada requisito.</p>
             </div>
 
             <div>
               <label htmlFor="responsibilities" className="block text-sm font-medium text-zinc-300 mb-2">
-                Responsabilidades
+                Responsabilidades *
               </label>
               <textarea
                 id="responsibilities"
-                name="responsibilities"
-                value={formData.responsibilities}
-                onChange={handleChange}
+                {...register('responsibilities')}
                 rows={4}
                 className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 placeholder="Descreva as principais responsabilidades do cargo..."
@@ -574,9 +634,7 @@ export default function CreateJobPage() {
             <input
               type="checkbox"
               id="is_active"
-              name="is_active"
-              checked={formData.is_active}
-              onChange={handleChange}
+              {...register('is_active')}
               className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-zinc-600 rounded bg-zinc-700"
             />
             <label htmlFor="is_active" className="ml-2 block text-sm text-zinc-300">

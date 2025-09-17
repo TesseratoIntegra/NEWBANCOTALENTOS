@@ -135,7 +135,7 @@ export default function SkillsSection({ skills, onUpdate }: SkillsSectionProps) 
                 value={formData.skill_name}
                 onChange={handleChange}
                 required
-                placeholder="Ex: React, Python, Comunicação, etc."
+                placeholder="Ex: Administração, Comunicação, Trabalho em Grupo, etc."
                 className="w-full px-3 py-2 bg-white border border-slate-400 rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>

@@ -9,6 +9,8 @@ import {
   PaginatedResponse 
 } from '@/types';
 
+import AuthService from './auth';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const API_VERSION = process.env.NEXT_PUBLIC_API_VERSION || 'v1';
 
@@ -28,6 +30,19 @@ class CandidateService {
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar perfil do candidato:', error);
+      throw error;
+    }
+  }
+
+  async getAllCandidates(): Promise<CandidateProfile> {
+    try {
+      const url = `${this.baseUrl}/candidates/profiles/`;
+      const token = AuthService.getAccessToken();
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await axios.get(url, { headers });
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar candidatos:', error);
       throw error;
     }
   }

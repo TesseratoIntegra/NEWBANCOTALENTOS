@@ -4,11 +4,20 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import applicationService from '@/services/applicationService';
-import { Application } from '@/types/index';
+import candidateService from '@/services/candidateService';
+
+import { Application, CandidateProfile, CandidateEducation, CandidateExperience, CandidateLanguage, CandidateSkill } from '@/types/index';
+
+
 
 export default function ApplicationDetailPage() {
   const params = useParams();
   const [application, setApplication] = useState<Application | null>(null);
+  const [candidata, setCandidata] = useState<CandidateProfile | null>(null);
+  const [educations, setEducations] = useState<CandidateEducation[]>([]);
+  const [experiences, setExperiences] = useState<CandidateExperience[]>([]);
+  const [languages, setLanguages] = useState<CandidateLanguage[]>([]);
+  const [skills, setSkills] = useState<CandidateSkill[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updateLoading, setUpdateLoading] = useState(false);
@@ -50,11 +59,26 @@ export default function ApplicationDetailPage() {
   useEffect(() => {
     const fetchApplication = async () => {
       if (!applicationId) return;
-      
       try {
         setLoading(true);
         const data = await applicationService.getApplicationById(Number(applicationId));
         setApplication(data);
+        if (data?.candidate) {
+          const candidateId = Number(data.candidate);
+          const dataCandidate = await candidateService.getCandidateProfile(candidateId);
+          setCandidata(dataCandidate);
+          // Buscar dados detalhados
+          const [educs, exps, langs, skls] = await Promise.all([
+            candidateService.getCandidateEducations(candidateId).then(r => r.results),
+            candidateService.getCandidateExperiences(candidateId).then(r => r.results),
+            candidateService.getCandidateLanguages(candidateId).then(r => r.results),
+            candidateService.getCandidateSkills(candidateId).then(r => r.results)
+          ]);
+          setEducations(educs);
+          setExperiences(exps);
+          setLanguages(langs);
+          setSkills(skls);
+        }
       } catch (err) {
         setError('Erro ao carregar dados da candidatura');
         console.error(err);
@@ -62,9 +86,9 @@ export default function ApplicationDetailPage() {
         setLoading(false);
       }
     };
-
     fetchApplication();
   }, [applicationId]);
+
 
   const handleStatusUpdate = async (newStatus: string, notes?: string) => {
     if (!application) return;
@@ -234,6 +258,186 @@ export default function ApplicationDetailPage() {
                 <label className="block text-sm font-medium text-zinc-400 mb-2">Observações</label>
                 <div className="bg-zinc-700 rounded-md p-4">
                   <p className="text-zinc-100 whitespace-pre-wrap">{application.observations}</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="bg-zinc-800 rounded-md p-6 border border-zinc-700 max-w-full text-white min-h-70">
+            {/* Dados detalhados do candidato */}
+            {candidata && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">Nome</label>
+                  <p className="text-indigo-300">{candidata.user_name || 'Não informado'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">Email</label>
+                  <p className='text-indigo-300'>{candidata.user_email || 'Não informado'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">CPF</label>
+                  <p className='text-indigo-300'>{candidata.cpf || 'Não informado'}</p>
+                </div>
+                {/* Idade removida, não existe no tipo CandidateProfile */}
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">Data de Nascimento</label>
+                  <p className='text-indigo-300'>{candidata.date_of_birth || 'Não informado'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">Gênero</label>
+                  <p className='text-indigo-300'>{candidata.gender || 'Não informado'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">Telefone Secundário</label>
+                  <p className='text-indigo-300'>{candidata.phone_secondary || 'Não informado'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">Cidade</label>
+                  <p className='text-indigo-300'>{candidata.city || 'Não informado'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">Estado</label>
+                  <p className='text-indigo-300'>{candidata.state || 'Não informado'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">CEP</label>
+                  <p className='text-indigo-300'>{candidata.zip_code || 'Não informado'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">Endereço</label>
+                  <p className='text-indigo-300'>{candidata.street || ''} {candidata.number || ''} {candidata.complement || ''} {candidata.neighborhood || ''}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">Resumo Profissional</label>
+                  <p className='text-indigo-300'>{candidata.professional_summary || 'Não informado'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">Cargo Atual</label>
+                  <p className='text-indigo-300'>{candidata.current_position || 'Não informado'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">Empresa Atual</label>
+                  <p className='text-indigo-300'>{candidata.current_company || 'Não informado'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">Nível de Escolaridade</label>
+                  <p className='text-indigo-300'>{candidata.education_level || 'Não informado'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">Anos de Experiência</label>
+                  <p className='text-indigo-300'>{candidata.experience_years || 'Não informado'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">Pretensão Salarial Mínima</label>
+                  <p className='text-indigo-300'>R$ {candidata.desired_salary_min || 'Não informado'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">Pretensão Salarial Máxima</label>
+                  <p className='text-indigo-300'>R$ {candidata.desired_salary_max || 'Não informado'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">Skills</label>
+                  <p className='text-indigo-300'>{candidata.skills || 'Não informado'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">Certificações</label>
+                  <p className='text-indigo-300'>{candidata.certifications || 'Não informado'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">LinkedIn</label>
+                  <p className='text-indigo-300'>{candidata.linkedin_url || 'Não informado'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">GitHub</label>
+                  <p className='text-indigo-300'>{candidata.github_url || 'Não informado'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">Portfólio</label>
+                  <p className='text-indigo-300'>{candidata.portfolio_url || 'Não informado'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">Disponível para trabalho</label>
+                  <p className='text-indigo-300'>{candidata.available_for_work ? 'Sim' : 'Não'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">Pode viajar</label>
+                  <p className='text-indigo-300'>{candidata.can_travel ? 'Sim' : 'Não'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">Aceita trabalho remoto</label>
+                  <p className='text-indigo-300'>{candidata.accepts_remote_work ? 'Sim' : 'Não'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">Aceita mudança de cidade</label>
+                  <p className='text-indigo-300'>{candidata.accepts_relocation ? 'Sim' : 'Não'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">Turno Preferido</label>
+                  <p className='text-indigo-300'>{candidata.preferred_work_shift || 'Não informado'}</p>
+                </div>
+                {/* Arrays detalhados */}
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">Educação</label>
+                  {educations.length > 0 ? (
+                    <ul className="list-disc ml-6">
+                      {educations.map((edu: CandidateEducation) => (
+                        <li key={edu.id} className="mb-2">
+                          <div><span className="font-semibold">Instituição:</span> {edu.institution}</div>
+                          <div><span className="font-semibold">Curso:</span> {edu.course}</div>
+                          <div><span className="font-semibold">Grau:</span> {edu.degree}</div>
+                          <div><span className="font-semibold">Início:</span> {edu.start_date}</div>
+                          <div><span className="font-semibold">Fim:</span> {edu.end_date || (edu.is_current ? 'Cursando' : 'Não informado')}</div>
+                          <div><span className="font-semibold">Descrição:</span> {edu.description}</div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : <p className="text-indigo-300">Não informado</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">Experiências</label>
+                  {experiences.length > 0 ? (
+                    <ul className="list-disc ml-6">
+                      {experiences.map((exp: CandidateExperience) => (
+                        <li key={exp.id} className="mb-2">
+                          <div><span className="font-semibold">Empresa:</span> {exp.company}</div>
+                          <div><span className="font-semibold">Cargo:</span> {exp.position}</div>
+                          <div><span className="font-semibold">Início:</span> {exp.start_date}</div>
+                          <div><span className="font-semibold">Fim:</span> {exp.end_date || (exp.is_current ? 'Atual' : 'Não informado')}</div>
+                          <div><span className="font-semibold">Descrição:</span> {exp.description}</div>
+                          {exp.achievements && <div><span className="font-semibold">Conquistas:</span> {exp.achievements}</div>}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : <p className="text-indigo-300">Não informado</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">Idiomas</label>
+                  {languages.length > 0 ? (
+                    <ul className="list-disc ml-6">
+                      {languages.map((lang: CandidateLanguage) => (
+                        <li key={lang.id} className="mb-2">
+                          <div><span className="font-semibold">Idioma:</span> {lang.language}</div>
+                          <div><span className="font-semibold">Proficiência:</span> {lang.proficiency}</div>
+                          <div><span className="font-semibold">Certificado:</span> {lang.has_certificate ? `Sim (${lang.certificate_name})` : 'Não'}</div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : <p className="text-indigo-300">Não informado</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">Skills Detalhadas</label>
+                  {skills.length > 0 ? (
+                    <ul className="list-disc ml-6">
+                      {skills.map((skill: CandidateSkill) => (
+                        <li key={skill.id} className="mb-2">
+                          <div><span className="font-semibold">Skill:</span> {skill.skill_name}</div>
+                          <div><span className="font-semibold">Nível:</span> {skill.level}</div>
+                          <div><span className="font-semibold">Anos de experiência:</span> {skill.years_experience}</div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : <p className="text-indigo-300">Não informado</p>}
                 </div>
               </div>
             )}

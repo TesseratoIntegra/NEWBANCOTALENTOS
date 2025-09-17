@@ -29,13 +29,13 @@ const AdminNavbar = () => {
       icon: Plus,
     },
     {
-      name: 'Candidaturas',
+      name: 'Candidaturas à Vagas',
       href: '/admin-panel/candidaturas',
       icon: FileText,
     },
     {
-      name: 'Candidaturas Espontâneas',
-      href: '/admin-panel/espontaneas',
+      name: 'Candidaturas Totais',
+      href: '/admin-panel/total-candidaturas',
       icon: FileEarmarkPerson,
     },
   ];

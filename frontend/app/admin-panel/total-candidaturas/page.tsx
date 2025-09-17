@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import AuthService from '@/services/auth';
+import candidateService from '@/services/candidateService';
 
 interface ModalProps {
 	application: SpontaneousApplication | null;
@@ -125,6 +126,23 @@ export default function SpontaneousApplicationsPage() {
 		fetchOccupations();
 	}, []);
 
+	useEffect(() => {
+		const fetchCandidates = async () => {
+			try {
+				setLoading(true);
+				const data = await candidateService.getAllCandidates();
+				console.log(JSON.stringify(data));
+			} catch (err) {
+				setError('Erro ao carregar dados da candidatura');
+				console.error(err);
+			} finally {
+				setLoading(false);
+			}
+		};
+		fetchCandidates();
+	}, []);
+
+
 	if (loading) {
 		return (
 			<div className="flex items-center justify-center min-h-64">
@@ -153,7 +171,7 @@ export default function SpontaneousApplicationsPage() {
 			</div>
 
 			{applications.length > 0 ? (
-				<div className="rounded-md">
+				<div className="rounded-md h-96 overflow-y-scroll">
 					<div className="flex justify-between items-center mb-4">
 						<h2 className="text-xl font-semibold text-zinc-100">
 							Lista de Candidatos
