@@ -215,11 +215,12 @@ class CandidateProfileListSerializer(serializers.ModelSerializer):
     age = serializers.ReadOnlyField()
     experience_summary = serializers.SerializerMethodField()
     education_summary = serializers.SerializerMethodField()
+    cpf = serializers.CharField(read_only=True)
 
     class Meta:
         model = CandidateProfile
         fields = [
-            'id', 'user_name', 'user_email', 'current_position', 'current_company',
+            'id', 'user_name', 'user_email', 'cpf', 'current_position', 'current_company',
             'age', 'education_level', 'experience_years', 'desired_salary_min', 
             'desired_salary_max', 'available_for_work', 'accepts_remote_work',
             'experience_summary', 'education_summary', 'created_at'
