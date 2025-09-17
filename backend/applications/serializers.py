@@ -12,6 +12,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
     # Campos relacionados
     candidate_name = serializers.CharField(source='candidate.name', read_only=True)
     candidate_email = serializers.CharField(source='candidate.email', read_only=True)
+    candidate_id = serializers.IntegerField(source='candidate_id', read_only=True)
     job_title = serializers.CharField(source='job.title', read_only=True)
     company_name = serializers.CharField(source='job.company.name', read_only=True)
 
@@ -26,7 +27,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
         model = Application
         fields = '__all__'
         read_only_fields = [
-            'candidate', 'applied_at', 'reviewed_at', 'reviewed_by',
+            'candidate', 'candidate_id', 'applied_at', 'reviewed_at', 'reviewed_by',
             'created_at', 'updated_at'
         ]
 
@@ -112,6 +113,7 @@ class ApplicationListSerializer(serializers.ModelSerializer):
     """Serializer simplificado para listagem"""
 
     candidate_name = serializers.CharField(source='candidate.name', read_only=True)
+    candidate_id = serializers.IntegerField(read_only=True)
     job_title = serializers.CharField(source='job.title', read_only=True)
     company_name = serializers.CharField(source='job.company.name', read_only=True)
     days_since_application = serializers.ReadOnlyField()
@@ -119,7 +121,7 @@ class ApplicationListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Application
         fields = [
-            'id', 'candidate_name', 'job_title', 'company_name', 
+            'id', 'candidate_id', 'candidate_name', 'job_title', 'company_name', 
             'status', 'applied_at', 'days_since_application', 'phone', 'city', 'state'
         ]
 
