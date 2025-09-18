@@ -30,7 +30,7 @@ export default function ExperienceSection({ experiences: initialExperiences, onU
   useEffect(() => {
     async function fetchExperiences() {
       try {
-        const res = await fetch('http://192.168.0.77:8025/api/v1/candidates/experiences/', {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/candidates/experiences/`, {
                   headers: {
           'Authorization': `Bearer ${AuthService.getAccessToken()}`
         }

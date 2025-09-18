@@ -37,7 +37,7 @@ function DetailsModal({ candidate_profile_id, onClose }: ModalProps) {
 			setLoading(true);
 			setError(null);
 			try {
-				const res = await fetch(`http://192.168.0.77:8025/api/v1/candidates/profiles/${candidate_profile_id}`, {
+				const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/candidates/profiles/${candidate_profile_id}`, {
                     headers: {
                         Authorization: `Bearer ${AuthService.getAccessToken()}`
                     }
