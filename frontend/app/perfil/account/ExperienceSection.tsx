@@ -1,17 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CandidateExperience } from '@/types';
 import candidateService from '@/services/candidateService';
 import { toast } from 'react-hot-toast';
 import { Edit, Trash2, Plus, Save, X } from 'lucide-react';
+import AuthService from '@/services/auth';
 
 export interface ExperienceSectionProps {
   experiences: CandidateExperience[];
   onUpdate: (experiences: CandidateExperience[]) => void;
 }
 
-export default function ExperienceSection({ experiences, onUpdate }: ExperienceSectionProps) {
+export default function ExperienceSection({ experiences: initialExperiences, onUpdate }: ExperienceSectionProps) {
+  const [experiences, setExperiences] = useState<CandidateExperience[]>(initialExperiences || []);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
@@ -23,6 +25,27 @@ export default function ExperienceSection({ experiences, onUpdate }: ExperienceS
     description: '',
     achievements: ''
   });
+
+  // Fetch experiences from API on mount
+  useEffect(() => {
+    async function fetchExperiences() {
+      try {
+        const res = await fetch('http://192.168.0.77:8025/api/v1/candidates/experiences/', {
+                  headers: {
+          'Authorization': `Bearer ${AuthService.getAccessToken()}`
+        }
+        });
+        if (!res.ok) throw new Error('Erro ao buscar experiências');
+        const data = await res.json();
+        setExperiences(data);
+        if (onUpdate) onUpdate(data);
+      } catch (error) {
+        console.error('Erro ao buscar experiências:', error);
+        toast.error('Erro ao buscar experiências');
+      }
+    }
+    fetchExperiences();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,11 +78,13 @@ export default function ExperienceSection({ experiences, onUpdate }: ExperienceS
     try {
       if (editingId) {
         const updated = await candidateService.updateCandidateExperience(editingId, submitData);
-        onUpdate(experiences.map(exp => exp.id === editingId ? updated : exp));
+        setExperiences(experiences.map(exp => exp.id === editingId ? updated : exp));
+        if (onUpdate) onUpdate(experiences.map(exp => exp.id === editingId ? updated : exp));
         toast.success('Experiência atualizada com sucesso!');
       } else {
         const created = await candidateService.createCandidateExperience(submitData);
-        onUpdate([...experiences, created]);
+        setExperiences([...experiences, created]);
+        if (onUpdate) onUpdate([...experiences, created]);
         toast.success('Experiência adicionada com sucesso!');
       }
       resetForm();
@@ -87,7 +112,8 @@ export default function ExperienceSection({ experiences, onUpdate }: ExperienceS
     if (confirm('Tem certeza que deseja excluir esta experiência?')) {
       try {
         await candidateService.deleteCandidateExperience(id);
-        onUpdate(experiences.filter(exp => exp.id !== id));
+  setExperiences(experiences.filter(exp => exp.id !== id));
+  if (onUpdate) onUpdate(experiences.filter(exp => exp.id !== id));
         toast.success('Experiência excluída com sucesso!');
       } catch (error) {
         console.error('Erro ao excluir experiência:', error);
@@ -329,6 +355,13 @@ export default function ExperienceSection({ experiences, onUpdate }: ExperienceS
                     <div className="mt-3">
                       <h4 className="text-sm font-medium text-zinc-700 mb-1">Principais Conquistas:</h4>
                       <p className="text-slate-700 text-sm">{experience.achievements}</p>
+                    </div>
+                  )}
+                  {/* Optionally display salary if present */}
+                  {experience.salary && (
+                    <div className="mt-3">
+                      <h4 className="text-sm font-medium text-zinc-700 mb-1">Salário:</h4>
+                      <p className="text-slate-700 text-sm">R$ {experience.salary}</p>
                     </div>
                   )}
                 </div>

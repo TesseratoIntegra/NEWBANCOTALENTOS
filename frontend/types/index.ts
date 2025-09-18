@@ -106,8 +106,8 @@ export interface CandidateProfile {
   current_company?: string;
   education_level?: 'fundamental' | 'medio' | 'tecnico' | 'superior' | 'pos_graduacao' | 'mestrado' | 'doutorado';
   experience_years?: number;
-  desired_salary_min?: number;
-  desired_salary_max?: number;
+  desired_salary_min?: string;
+  desired_salary_max?: string;
   professional_summary?: string;
   skills?: string;
   certifications?: string;
@@ -156,6 +156,7 @@ export interface CandidateExperience {
   achievements?: string;
   created_at: string;
   updated_at: string;
+  salary?: number;
 }
 
 // Skill types
@@ -213,6 +214,7 @@ export interface Application {
   days_since_application?: number;
   job_location?: string;
   job_type?: string;
+  candidate_profile_id?: number;
 }
 
 // Interview types

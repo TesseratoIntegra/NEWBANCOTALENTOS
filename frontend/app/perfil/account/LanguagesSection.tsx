@@ -1,30 +1,62 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CandidateLanguage } from '@/types';
 import candidateService from '@/services/candidateService';
 import { toast } from 'react-hot-toast';
 import { Edit, Trash2, Plus, Save, X } from 'lucide-react';
+
 
 export interface LanguagesSectionProps {
   languages: CandidateLanguage[];
   onUpdate: (languages: CandidateLanguage[]) => void;
 }
 
-export default function LanguagesSection({ languages, onUpdate }: LanguagesSectionProps) {
-  const [isAdding, setIsAdding] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [formData, setFormData] = useState<{
-    language: string;
-    proficiency: 'basic' | 'intermediate' | 'advanced' | 'fluent' | 'native' | '';
-    has_certificate: boolean;
-    certificate_name: string;
-  }>({
-    language: '',
-    proficiency: '',
-    has_certificate: false,
-    certificate_name: ''
-  });
+export default function LanguagesSection({ languages: initialLanguages, onUpdate }: LanguagesSectionProps) {
+
+    const [userLanguages, setUserLanguages] = useState<CandidateLanguage[]>(initialLanguages);
+    const [isAdding, setIsAdding] = useState(false);
+    const [editingId, setEditingId] = useState<number | null>(null);
+    const [formData, setFormData] = useState<{
+      language: string;
+      proficiency: 'basic' | 'intermediate' | 'advanced' | 'fluent' | 'native' | '';
+      has_certificate: boolean;
+      certificate_name: string;
+    }>({
+      language: '',
+      proficiency: '',
+      has_certificate: false,
+      certificate_name: ''
+    });
+
+  // Buscar idiomas da API ao montar
+  useEffect(() => {
+    const fetchLanguages = async () => {
+      try {
+        const langs = await candidateService.fetchAllLanguages();
+        setUserLanguages(langs);
+        onUpdate(langs);
+      } catch (error) {
+        console.error('Erro ao buscar idiomas:', error);
+      }
+    };
+    fetchLanguages();
+  }, [onUpdate]);
+
+
+  // Buscar idiomas da API ao montar
+  useEffect(() => {
+    const fetchLanguages = async () => {
+      try {
+        const langs = await candidateService.fetchAllLanguages();
+        setUserLanguages(langs);
+        if (onUpdate) onUpdate(langs);
+      } catch (error) {
+        console.error('Erro ao buscar idiomas:', error);
+      }
+    };
+    fetchLanguages();
+  }, [onUpdate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,11 +70,15 @@ export default function LanguagesSection({ languages, onUpdate }: LanguagesSecti
 
       if (editingId) {
         const updated = await candidateService.updateCandidateLanguage(editingId, submitData);
-        onUpdate(languages.map(lang => lang.id === editingId ? updated : lang));
+        const newLangs = userLanguages.map(lang => lang.id === editingId ? updated : lang);
+        setUserLanguages(newLangs);
+        if (onUpdate) onUpdate(newLangs);
         toast.success('Idioma atualizado com sucesso!');
       } else {
         const created = await candidateService.createCandidateLanguage(submitData);
-        onUpdate([...languages, created]);
+        const newLangs = [...userLanguages, created];
+        setUserLanguages(newLangs);
+        if (onUpdate) onUpdate(newLangs);
         toast.success('Idioma adicionado com sucesso!');
       }
       resetForm();
@@ -67,7 +103,9 @@ export default function LanguagesSection({ languages, onUpdate }: LanguagesSecti
     if (confirm('Tem certeza que deseja excluir este idioma?')) {
       try {
         await candidateService.deleteCandidateLanguage(id);
-        onUpdate(languages.filter(lang => lang.id !== id));
+  const newLangs = userLanguages.filter(lang => lang.id !== id);
+  setUserLanguages(newLangs);
+  if (onUpdate) onUpdate(newLangs);
         toast.success('Idioma excluído com sucesso!');
       } catch (error) {
         console.error('Erro ao excluir idioma:', error);
@@ -224,7 +262,7 @@ export default function LanguagesSection({ languages, onUpdate }: LanguagesSecti
 
       {/* Lista de Idiomas */}
       <div className="space-y-4">
-        {languages.length === 0 ? (
+  {userLanguages.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-slate-700 mb-4">Nenhum idioma cadastrado</p>
             <button
@@ -236,7 +274,7 @@ export default function LanguagesSection({ languages, onUpdate }: LanguagesSecti
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {languages.map((language) => (
+            {userLanguages.map((language) => (
               <div key={language.id} className="bg-white rounded-md border border-blue-900/50 p-4">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">

@@ -192,6 +192,16 @@ class CandidateService {
       throw error;
     }
   }
+    /** Buscar todos os idiomas (sem paginação) */
+    async fetchAllLanguages(): Promise<CandidateLanguage[]> {
+      try {
+        const response = await axios.get(`${this.baseUrl}/candidates/languages/`);
+        return response.data;
+      } catch (error) {
+        console.error('Erro ao buscar todos os idiomas:', error);
+        throw error;
+      }
+    }
 
   /* Criar habilidade do candidato */
   async createCandidateSkill(skillData: Partial<CandidateSkill>): Promise<CandidateSkill> {

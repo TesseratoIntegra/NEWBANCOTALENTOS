@@ -163,11 +163,11 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
       education_level: formData.education_level === '' ? undefined : formData.education_level,
       desired_salary_min:
         formData.desired_salary_min !== '' && formData.desired_salary_min !== undefined
-          ? Number(formData.desired_salary_min.replace(/\./g, '').replace(',', '.'))
+          ? formatRS(formData.desired_salary_min)
           : undefined,
       desired_salary_max:
         formData.desired_salary_max !== '' && formData.desired_salary_max !== undefined
-          ? Number(formData.desired_salary_max.replace(/\./g, '').replace(',', '.'))
+          ? formatRS(formData.desired_salary_max)
           : undefined,
     };
     await onUpdate(submitData);
@@ -177,9 +177,8 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     if (name === 'desired_salary_min' || name === 'desired_salary_max') {
-      // Remove tudo que não é número ou vírgula/ponto
-  const raw = value.replace(/[^\d.,]/g, '');
-      // Substitui vírgula por ponto para parseFloat
+      // Permite apenas dígitos
+      const raw = value.replace(/\D/g, '');
       setFormData(prev => ({
         ...prev,
         [name]: raw
@@ -289,9 +288,10 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
               name="desired_salary_min"
               value={formData.desired_salary_min ? formatRS(formData.desired_salary_min) : ''}
               onChange={handleChange}
-              inputMode="decimal"
+              inputMode="numeric"
               placeholder="R$ 0,00"
               className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.desired_salary_min ? 'border-red-500' : 'border-slate-400'}`}
+              maxLength={25}
             />
             {errors.desired_salary_min && <span className="text-xs text-red-600">Campo obrigatório</span>}
           </div>
@@ -306,9 +306,10 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
               name="desired_salary_max"
               value={formData.desired_salary_max ? formatRS(formData.desired_salary_max) : ''}
               onChange={handleChange}
-              inputMode="decimal"
+              inputMode="numeric"
               placeholder="R$ 0,00"
               className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.desired_salary_max ? 'border-red-500' : 'border-slate-400'}`}
+              maxLength={25}
             />
             {errors.desired_salary_max && <span className="text-xs text-red-600">Campo obrigatório</span>}
           </div>

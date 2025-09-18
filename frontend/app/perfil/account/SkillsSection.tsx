@@ -6,12 +6,13 @@ import candidateService from '@/services/candidateService';
 import { toast } from 'react-hot-toast';
 import { Edit, Trash2, Plus, Save, X } from 'lucide-react';
 
-export interface SkillsSectionProps {
+type SkillsSectionProps = {
   skills: CandidateSkill[];
-  onUpdate: (skills: CandidateSkill[]) => void;
-}
+  onUpdate: React.Dispatch<React.SetStateAction<CandidateSkill[]>>;
+};
 
 export default function SkillsSection({ skills, onUpdate }: SkillsSectionProps) {
+  // Removido: isLoading, agora o loading é controlado pelo pai
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState<{
@@ -23,6 +24,8 @@ export default function SkillsSection({ skills, onUpdate }: SkillsSectionProps) 
     level: '',
     years_experience: ''
   });
+
+  // Removido: busca de skills, pois agora é controlado pelo pai
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,9 +65,9 @@ export default function SkillsSection({ skills, onUpdate }: SkillsSectionProps) 
   const handleDelete = async (id: number) => {
     if (confirm('Tem certeza que deseja excluir esta habilidade?')) {
       try {
-        await candidateService.deleteCandidateSkill(id);
-        onUpdate(skills.filter(skill => skill.id !== id));
-        toast.success('Habilidade excluída com sucesso!');
+    await candidateService.deleteCandidateSkill(id);
+    onUpdate(skills.filter(skill => skill.id !== id));
+    toast.success('Habilidade excluída com sucesso!');
       } catch (error) {
         console.error('Erro ao excluir habilidade:', error);
         toast.error('Erro ao excluir habilidade');

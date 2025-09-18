@@ -6,8 +6,15 @@ import Link from 'next/link';
 import applicationService from '@/services/applicationService';
 import candidateService from '@/services/candidateService';
 
-import { Application, CandidateProfile, CandidateEducation, CandidateExperience, CandidateLanguage, CandidateSkill } from '@/types/index';
+import { Application } from '@/types/index';
 
+import type {
+  CandidateProfile,
+  CandidateEducation,
+  CandidateExperience,
+  CandidateLanguage,
+  CandidateSkill
+} from '@/types';
 
 
 export default function ApplicationDetailPage() {
@@ -17,12 +24,28 @@ export default function ApplicationDetailPage() {
   const [educations, setEducations] = useState<CandidateEducation[]>([]);
   const [experiences, setExperiences] = useState<CandidateExperience[]>([]);
   const [languages, setLanguages] = useState<CandidateLanguage[]>([]);
-  const [skills, setSkills] = useState<CandidateSkill[]>([]);
+  const [detailedSkills, setDetailedSkills] = useState<CandidateSkill[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updateLoading, setUpdateLoading] = useState(false);
 
   const applicationId = Array.isArray(params.id) ? params.id[0] : params.id;
+
+  const formatDateToBrazilian = (dateString:string) => {
+    if (!dateString) return 'Não informado';
+    
+    try {
+      // Se a data já estiver no formato brasileiro, retorna como está
+      if (dateString.includes('/')) return dateString;
+      
+      // Converte de yyyy-mm-dd para dd/mm/yyyy
+      const [year, month, day] = dateString.split('-');
+      return `${day}/${month}/${year}`;
+    } catch (error) {
+      console.error(error);
+      return 'Data inválida';
+    }
+  };
 
   const statusOptions = [
     { value: 'submitted', label: 'Em análise' },
@@ -64,20 +87,20 @@ export default function ApplicationDetailPage() {
         const data = await applicationService.getApplicationById(Number(applicationId));
         setApplication(data);
         if (data?.candidate) {
-          const candidateId = Number(data.candidate);
+          const candidateId = Number(data.candidate_profile_id);
           const dataCandidate = await candidateService.getCandidateProfile(candidateId);
           setCandidata(dataCandidate);
-          // Buscar dados detalhados
-          const [educs, exps, langs, skls] = await Promise.all([
-            candidateService.getCandidateEducations(candidateId).then(r => r.results),
-            candidateService.getCandidateExperiences(candidateId).then(r => r.results),
-            candidateService.getCandidateLanguages(candidateId).then(r => r.results),
-            candidateService.getCandidateSkills(candidateId).then(r => r.results)
+          // Buscar arrays detalhados
+          const [educationsData, experiencesData, skillsData, languagesData] = await Promise.all([
+            candidateService.getCandidateEducations(candidateId).catch(() => ({ results: [] })),
+            candidateService.getCandidateExperiences(candidateId).catch(() => ({ results: [] })),
+            candidateService.getCandidateSkills(candidateId).catch(() => ({ results: [] })),
+            candidateService.getCandidateLanguages(candidateId).catch(() => ({ results: [] }))
           ]);
-          setEducations(educs);
-          setExperiences(exps);
-          setLanguages(langs);
-          setSkills(skls);
+          setEducations(educationsData.results || []);
+          setExperiences(experiencesData.results || []);
+          setDetailedSkills(skillsData.results || []);
+          setLanguages(languagesData.results || []);
         }
       } catch (err) {
         setError('Erro ao carregar dados da candidatura');
@@ -282,7 +305,9 @@ export default function ApplicationDetailPage() {
                 {/* Idade removida, não existe no tipo CandidateProfile */}
                 <div>
                   <label className="block text-sm font-medium mb-1 text-slate-100">Data de Nascimento</label>
-                  <p className='text-indigo-300'>{candidata.date_of_birth || 'Não informado'}</p>
+                  <p className='text-indigo-300'>
+                    {formatDateToBrazilian(String(candidata.date_of_birth)) || 'Não informado'}
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1 text-slate-100">Gênero</label>
@@ -330,11 +355,11 @@ export default function ApplicationDetailPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1 text-slate-100">Pretensão Salarial Mínima</label>
-                  <p className='text-indigo-300'>R$ {candidata.desired_salary_min || 'Não informado'}</p>
+                  <p className='text-indigo-300'>{candidata.desired_salary_min || 'Não informado'}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1 text-slate-100">Pretensão Salarial Máxima</label>
-                  <p className='text-indigo-300'>R$ {candidata.desired_salary_max || 'Não informado'}</p>
+                  <p className='text-indigo-300'>{candidata.desired_salary_max || 'Não informado'}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1 text-slate-100">Skills</label>
@@ -372,12 +397,12 @@ export default function ApplicationDetailPage() {
                   <label className="block text-sm font-medium mb-1 text-slate-100">Aceita mudança de cidade</label>
                   <p className='text-indigo-300'>{candidata.accepts_relocation ? 'Sim' : 'Não'}</p>
                 </div>
-                <div>
+                <div className='col-span-2'>
                   <label className="block text-sm font-medium mb-1 text-slate-100">Turno Preferido</label>
                   <p className='text-indigo-300'>{candidata.preferred_work_shift || 'Não informado'}</p>
                 </div>
-                {/* Arrays detalhados */}
-                <div>
+             
+                <div className='col-span-1'>
                   <label className="block text-sm font-medium mb-1 text-slate-100">Educação</label>
                   {educations.length > 0 ? (
                     <ul className="list-disc ml-6">
@@ -386,15 +411,15 @@ export default function ApplicationDetailPage() {
                           <div><span className="font-semibold">Instituição:</span> {edu.institution}</div>
                           <div><span className="font-semibold">Curso:</span> {edu.course}</div>
                           <div><span className="font-semibold">Grau:</span> {edu.degree}</div>
-                          <div><span className="font-semibold">Início:</span> {edu.start_date}</div>
-                          <div><span className="font-semibold">Fim:</span> {edu.end_date || (edu.is_current ? 'Cursando' : 'Não informado')}</div>
+                          <div><span className="font-semibold">Início:</span> {formatDateToBrazilian(edu.start_date)}</div>
+                          <div><span className="font-semibold">Fim:</span> {edu.end_date ? formatDateToBrazilian(edu.end_date) : (edu.is_current ? 'Cursando' : 'Não informado')}</div>
                           <div><span className="font-semibold">Descrição:</span> {edu.description}</div>
                         </li>
                       ))}
                     </ul>
                   ) : <p className="text-indigo-300">Não informado</p>}
                 </div>
-                <div>
+                <div className='col-span-1'>
                   <label className="block text-sm font-medium mb-1 text-slate-100">Experiências</label>
                   {experiences.length > 0 ? (
                     <ul className="list-disc ml-6">
@@ -402,8 +427,8 @@ export default function ApplicationDetailPage() {
                         <li key={exp.id} className="mb-2">
                           <div><span className="font-semibold">Empresa:</span> {exp.company}</div>
                           <div><span className="font-semibold">Cargo:</span> {exp.position}</div>
-                          <div><span className="font-semibold">Início:</span> {exp.start_date}</div>
-                          <div><span className="font-semibold">Fim:</span> {exp.end_date || (exp.is_current ? 'Atual' : 'Não informado')}</div>
+                          <div><span className="font-semibold">Início:</span> {formatDateToBrazilian(exp.start_date)}</div>
+                          <div><span className="font-semibold">Fim:</span> {exp.end_date ? formatDateToBrazilian(exp.end_date) : (exp.is_current ? 'Atual' : 'Não informado')}</div>
                           <div><span className="font-semibold">Descrição:</span> {exp.description}</div>
                           {exp.achievements && <div><span className="font-semibold">Conquistas:</span> {exp.achievements}</div>}
                         </li>
@@ -411,7 +436,22 @@ export default function ApplicationDetailPage() {
                     </ul>
                   ) : <p className="text-indigo-300">Não informado</p>}
                 </div>
-                <div>
+
+                <div className='col-span-1'>
+                  <label className="block text-sm font-medium mb-1 text-slate-100">Skills Detalhadas</label>
+                  {detailedSkills.length > 0 ? (
+                    <ul className="list-disc ml-6">
+                      {detailedSkills.map((skill: CandidateSkill) => (
+                        <li key={skill.id} className="mb-2">
+                          <div><span className="font-semibold">Skill:</span> {skill.skill_name}</div>
+                          <div><span className="font-semibold">Nível:</span> {skill.level}</div>
+                          <div><span className="font-semibold">Anos de experiência:</span> {skill.years_experience}</div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : <p className="text-indigo-300">Não informado</p>}
+                </div>
+                <div className='col-span-1'>
                   <label className="block text-sm font-medium mb-1 text-slate-100">Idiomas</label>
                   {languages.length > 0 ? (
                     <ul className="list-disc ml-6">
@@ -420,20 +460,6 @@ export default function ApplicationDetailPage() {
                           <div><span className="font-semibold">Idioma:</span> {lang.language}</div>
                           <div><span className="font-semibold">Proficiência:</span> {lang.proficiency}</div>
                           <div><span className="font-semibold">Certificado:</span> {lang.has_certificate ? `Sim (${lang.certificate_name})` : 'Não'}</div>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : <p className="text-indigo-300">Não informado</p>}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">Skills Detalhadas</label>
-                  {skills.length > 0 ? (
-                    <ul className="list-disc ml-6">
-                      {skills.map((skill: CandidateSkill) => (
-                        <li key={skill.id} className="mb-2">
-                          <div><span className="font-semibold">Skill:</span> {skill.skill_name}</div>
-                          <div><span className="font-semibold">Nível:</span> {skill.level}</div>
-                          <div><span className="font-semibold">Anos de experiência:</span> {skill.years_experience}</div>
                         </li>
                       ))}
                     </ul>

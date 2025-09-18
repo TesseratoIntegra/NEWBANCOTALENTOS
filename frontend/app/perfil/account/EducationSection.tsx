@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CandidateEducation } from '@/types';
 import candidateService from '@/services/candidateService';
 import { toast } from 'react-hot-toast';
@@ -11,7 +11,8 @@ export interface EducationSectionProps {
   onUpdate: (educations: CandidateEducation[]) => void;
 }
 
-export default function EducationSection({ educations, onUpdate }: EducationSectionProps) {
+export default function EducationSection({ educations: initialEducations, onUpdate }: EducationSectionProps) {
+  const [educations, setEducations] = useState<CandidateEducation[]>(initialEducations || []);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
@@ -22,6 +23,23 @@ export default function EducationSection({ educations, onUpdate }: EducationSect
     end_date: '',
     description: ''
   });
+
+  // Buscar educações da API ao montar
+  useEffect(() => {
+    async function fetchEducations() {
+      try {
+        const response = await candidateService.getCandidateEducations();
+        // Se a resposta for paginada, use response.results, senão response direto
+        const educs = Array.isArray(response) ? response : response.results || [];
+        setEducations(educs);
+        onUpdate(educs);
+      } catch (error) {
+        console.error('Erro ao buscar formações:', error);
+        toast.error('Erro ao buscar formações');
+      }
+    }
+    fetchEducations();
+  }, [onUpdate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,11 +78,15 @@ export default function EducationSection({ educations, onUpdate }: EducationSect
       
       if (editingId) {
         const updated = await candidateService.updateCandidateEducation(editingId, submitData);
-        onUpdate(educations.map(edu => edu.id === editingId ? updated : edu));
+        const newEducations = educations.map(edu => edu.id === editingId ? updated : edu);
+        setEducations(newEducations);
+        onUpdate(newEducations);
         toast.success('Formação atualizada com sucesso!');
       } else {
         const created = await candidateService.createCandidateEducation(submitData);
-        onUpdate([...educations, created]);
+        const newEducations = [...educations, created];
+        setEducations(newEducations);
+        onUpdate(newEducations);
         toast.success('Formação adicionada com sucesso!');
       }
       resetForm();
@@ -91,7 +113,9 @@ export default function EducationSection({ educations, onUpdate }: EducationSect
     if (confirm('Tem certeza que deseja excluir esta formação?')) {
       try {
         await candidateService.deleteCandidateEducation(id);
-        onUpdate(educations.filter(edu => edu.id !== id));
+  const newEducations = educations.filter(edu => edu.id !== id);
+  setEducations(newEducations);
+  onUpdate(newEducations);
         toast.success('Formação excluída com sucesso!');
       } catch (error) {
         console.error('Erro ao excluir formação:', error);
@@ -312,7 +336,7 @@ export default function EducationSection({ educations, onUpdate }: EducationSect
                       {new Date(education.start_date).toLocaleDateString('pt-BR')} - {' '}
                       {education.end_date 
                         ? new Date(education.end_date).toLocaleDateString('pt-BR')
-                        : 'Em andamento'
+                        : (education.is_current ? 'Em andamento' : 'Não informado')
                       }
                     </span>
                   </div>

@@ -108,7 +108,11 @@ class SpontaneousService {
       if (params?.occupation) queryParams.append('occupation', params.occupation.toString());
       if (params?.status) queryParams.append('status', params.status);
 
-      const response = await axios.get(`${this.baseUrl}/spontaneous-applications/?${queryParams.toString()}`);
+      const response = await axios.get(`${this.baseUrl}/spontaneous-applications/?${queryParams.toString()}`, {
+        headers: {
+          'Authorization': `Bearer ${AuthService.getAccessToken()}`
+        }
+      });
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar candidaturas espontâneas:', error);
