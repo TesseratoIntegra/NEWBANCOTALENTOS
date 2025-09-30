@@ -17,6 +17,10 @@ export default function AdminApplicationsPage() {
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<ApplicationFilters>({ page: 1 });
   const [totalCount, setTotalCount] = useState(0);
+    // Novo estado para busca
+
+    // Novo estado para busca
+    const [searchTerm, setSearchTerm] = useState('');
 
   const statusOptions = [
     { value: '', label: 'Todos os Status' },
@@ -58,9 +62,9 @@ export default function AdminApplicationsPage() {
         setLoading(true);
         const params: { page: number; status?: string } = { page: filters.page };
         if (filters.status) params.status = filters.status;
-        
+
         const response = await adminApplicationService.getAllApplications(params);
-        
+
         if (Array.isArray(response)) {
           setApplications(response);
           setTotalCount(response.length);
@@ -82,6 +86,11 @@ export default function AdminApplicationsPage() {
   const handleStatusFilter = (status: string) => {
     setFilters(prev => ({ ...prev, status: status || undefined, page: 1 }));
   };
+
+    // Handler para busca
+    const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSearchTerm(e.target.value);
+    };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR');
@@ -112,6 +121,17 @@ export default function AdminApplicationsPage() {
         <p className="text-zinc-400">
           Gerencie as candidaturas enviadas pelos candidatos
         </p>
+      </div>
+
+      {/* Input de busca */}
+      <div className="flex justify-center mb-4">
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={handleSearchInput}
+          placeholder="Buscar por nome ou vaga..."
+          className="w-full max-w-md px-4 py-2 rounded-md border border-zinc-700 bg-zinc-900 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-600"
+        />
       </div>
 
       {/* Estatísticas */}
@@ -160,74 +180,90 @@ export default function AdminApplicationsPage() {
       </div>
 
       {/* Lista de Candidaturas */}
-      {applications.length > 0 ? (
-        <div className="space-y-4">
-          {applications.map((application) => (
-            <Link
-              href={`/admin-panel/candidaturas/${application.id}`}
-              key={application.id}
-              className="block bg-gradient-to-r from-zinc-900 to-zinc-800 hover:opacity-60 rounded-md p-6 border border-zinc-700 duration-300"
-            >
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-xl font-semibold text-zinc-100 mb-1">
-                    {application.candidate_name || application.name || 'Nome não informado'}
-                  </h3>
-                  <p className="text-indigo-400 font-medium">
-                    {application.job_title || 'Vaga não informada'}
-                  </p>
-                  <p className="text-zinc-400 text-sm">
-                    {application.company_name || 'Empresa não informada'}
-                  </p>
-                </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(application.status)}`}>
-                  {getStatusLabel(application.status)}
-                </span>
+      {(() => {
+        // Filtragem dinâmica local
+        const filteredApplications = applications.filter(app => {
+          const search = searchTerm.trim().toLowerCase();
+          if (!search) return true;
+          const name = (app.candidate_name || app.name || '').toLowerCase();
+          const job = (app.job_title || '').toLowerCase();
+          return name.includes(search) || job.includes(search);
+        });
+        if (filteredApplications.length > 0) {
+          return (
+            <div className="space-y-4">
+              {filteredApplications.map((application) => (
+                <Link
+                  href={`/admin-panel/candidaturas/${application.id}`}
+                  key={application.id}
+                  className="block bg-gradient-to-r from-zinc-900 to-zinc-800 hover:opacity-60 rounded-md p-6 border border-zinc-700 duration-300"
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-xl font-semibold text-zinc-100 mb-1">
+                        {application.candidate_name || application.name || 'Nome não informado'}
+                      </h3>
+                      <p className="text-indigo-400 font-medium">
+                        {application.job_title || 'Vaga não informada'}
+                      </p>
+                      <p className="text-zinc-400 text-sm">
+                        {application.company_name || 'Empresa não informada'}
+                      </p>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(application.status)}`}>
+                      {getStatusLabel(application.status)}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-zinc-400">
+                    <div>
+                      <span className="font-medium">Telefone:</span> {application.phone || 'Não informado'}
+                    </div>
+                    <div>
+                      <span className="font-medium">Localização:</span> {application.city && application.state ? `${application.city}, ${application.state}` : 'Não informado'}
+                    </div>
+                    <div>
+                      <span className="font-medium">Data da Candidatura:</span> {formatDate(application.applied_at)}
+                    </div>
+                  </div>
+
+                  {application.salary_expectation && (
+                    <div className="mt-2 text-sm text-zinc-400">
+                      <span className="font-medium">Pretensão Salarial:</span> R$ {application.salary_expectation.toLocaleString('pt-BR')}
+                    </div>
+                  )}
+
+                  {application.linkedin && (
+                    <div className="mt-2">
+                      <span className="text-xs bg-blue-900 text-blue-300 px-2 py-1 rounded">
+                        LinkedIn disponível
+                      </span>
+                    </div>
+                  )}
+                </Link>
+              ))}
+            </div>
+          );
+        } else {
+          return (
+            <div className="text-center py-12">
+              <div className="text-zinc-400 mb-4">
+                <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-zinc-400">
-                <div>
-                  <span className="font-medium">Telefone:</span> {application.phone || 'Não informado'}
-                </div>
-                <div>
-                  <span className="font-medium">Localização:</span> {application.city && application.state ? `${application.city}, ${application.state}` : 'Não informado'}
-                </div>
-                <div>
-                  <span className="font-medium">Data da Candidatura:</span> {formatDate(application.applied_at)}
-                </div>
-              </div>
-
-              {application.salary_expectation && (
-                <div className="mt-2 text-sm text-zinc-400">
-                  <span className="font-medium">Pretensão Salarial:</span> R$ {application.salary_expectation.toLocaleString('pt-BR')}
-                </div>
-              )}
-
-              {application.linkedin && (
-                <div className="mt-2">
-                  <span className="text-xs bg-blue-900 text-blue-300 px-2 py-1 rounded">
-                    LinkedIn disponível
-                  </span>
-                </div>
-              )}
-            </Link>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-12">
-          <div className="text-zinc-400 mb-4">
-            <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-medium text-zinc-300 mb-2">Nenhuma candidatura encontrada</h3>
-          <p className="text-zinc-500">
-            {filters.status 
-              ? 'Não há candidaturas com o status selecionado.' 
-              : 'Ainda não há candidaturas recebidas.'}
-          </p>
-        </div>
-      )}
+              <h3 className="text-lg font-medium text-zinc-300 mb-2">Nenhuma candidatura encontrada</h3>
+              <p className="text-zinc-500">
+                {searchTerm
+                  ? 'Nenhuma candidatura encontrada para a busca.'
+                  : (filters.status 
+                      ? 'Não há candidaturas com o status selecionado.' 
+                      : 'Ainda não há candidaturas recebidas.')}
+              </p>
+            </div>
+          );
+        }
+      })()}
     </div>
   );
 }

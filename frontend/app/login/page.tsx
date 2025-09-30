@@ -106,6 +106,7 @@ export default function LoginPage() {
 
     // Função para fazer registro
     const handleRegister = async () => {
+
         if (!createEmail || !createName || !createPassword || !createPassword2) {
             Swal.fire({
                 icon: "error",
@@ -117,22 +118,24 @@ export default function LoginPage() {
         }
 
         if (createPassword !== createPassword2) {
-        Swal.fire({
-            icon: "error",
-            title: "Senha inválida!",
-            text: "As senhas não são as mesmas.",
-            theme: 'light',
-        });
+            Swal.fire({
+                icon: "error",
+                title: "Senha inválida!",
+                text: "As senhas não são as mesmas.",
+                theme: 'light',
+            });
             return;
         }
 
-        if (createPassword.length < 6) {
-        Swal.fire({
-            icon: "error",
-            title: "Senha inválida!",
-            text: "A senha não pode ter menos que 6 dígitos.",
-            theme: 'light',
-        });
+        // Validação de senha forte
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{6,}$/;
+        if (!passwordRegex.test(createPassword)) {
+            Swal.fire({
+                icon: "error",
+                title: "Senha inválida!",
+                text: "A senha deve ter no mínimo 6 caracteres, incluindo uma letra maiúscula, uma minúscula e um caractere especial.",
+                theme: 'light',
+            });
             return;
         }
 
