@@ -14,7 +14,10 @@ class ApplicationSerializer(serializers.ModelSerializer):
     candidate_email = serializers.CharField(source='candidate.email', read_only=True)
     candidate_user_id = serializers.IntegerField(source='candidate.id', read_only=True)
     candidate_profile_id = serializers.SerializerMethodField()
+
+    job_id = serializers.ReadOnlyField()
     job_title = serializers.CharField(source='job.title', read_only=True)
+
     company_name = serializers.CharField(source='job.company.name', read_only=True)
 
     # Campos calculados
@@ -120,7 +123,10 @@ class ApplicationListSerializer(serializers.ModelSerializer):
     candidate_name = serializers.CharField(source='candidate.name', read_only=True)
     candidate_user_id = serializers.IntegerField(source='candidate.id', read_only=True)
     candidate_profile_id = serializers.SerializerMethodField()
+
+    job_id = serializers.ReadOnlyField()
     job_title = serializers.CharField(source='job.title', read_only=True)
+
     company_name = serializers.CharField(source='job.company.name', read_only=True)
     days_since_application = serializers.ReadOnlyField()
 
@@ -128,7 +134,7 @@ class ApplicationListSerializer(serializers.ModelSerializer):
         model = Application
         fields = [
             'id', 'candidate_user_id', 'candidate_profile_id',
-            'candidate_name', 'job_title', 'company_name',
+            'candidate_name', 'job_id', 'job_title', 'company_name',
             'status', 'applied_at', 'days_since_application', 'phone', 'city', 'state'
         ]
 
