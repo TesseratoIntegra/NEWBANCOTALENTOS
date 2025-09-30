@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { adminJobService, UpdateJobData } from '@/services/adminJobService';
 import companyService from '@/services/companyService';
 import { Job, Company } from '@/types/index';
+import { formatRS } from '@/functions/FormatRS';
 
 interface EditJobPageProps {
   params: Promise<{
@@ -22,6 +23,8 @@ export default function EditJobPage({ params }: EditJobPageProps) {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loadingCompanies, setLoadingCompanies] = useState(true);
   const resolvedParams = use(params);
+  const [requirementsList, setRequirementsList] = useState<string[]>([]);
+  const [requirementInput, setRequirementInput] = useState('');
   const [formData, setFormData] = useState<UpdateJobData>({
     title: '',
     description: '',
@@ -44,10 +47,8 @@ export default function EditJobPage({ params }: EditJobPageProps) {
           companyService.getAllCompanies(),
           adminJobService.getJobById(parseInt(resolvedParams.id))
         ]);
-        
         setCompanies(companiesData);
         setJob(jobData);
-        
         // Preencher o formulário com os dados existentes
         setFormData({
           title: jobData.title,
@@ -62,6 +63,10 @@ export default function EditJobPage({ params }: EditJobPageProps) {
           company: jobData.company,
           is_active: jobData.is_active,
         });
+        // Preencher lista de requisitos
+        if (jobData.requirements) {
+          setRequirementsList(jobData.requirements.split(',').map(r => r.trim()).filter(r => r));
+        }
       } catch (err) {
         setError('Erro ao carregar dados');
         console.error(err);
@@ -70,20 +75,46 @@ export default function EditJobPage({ params }: EditJobPageProps) {
         setLoadingCompanies(false);
       }
     };
-
     loadData();
   }, [resolvedParams.id]);
+
+  // Atualiza o campo 'requirements' do formulário sempre que a lista mudar
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      requirements: requirementsList.join(', ')
+    }));
+  }, [requirementsList]);
+
+  // Adiciona requisito ao pressionar Enter
+  const handleRequirementKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && requirementInput.trim()) {
+      e.preventDefault();
+      setRequirementsList(prev => [...prev, requirementInput.trim()]);
+      setRequirementInput('');
+    }
+  };
+
+  // Remove requisito
+  const handleRemoveRequirement = (idx: number) => {
+    setRequirementsList(prev => prev.filter((_, i) => i !== idx));
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value, type } = e.target;
-    
     if (type === 'checkbox') {
       const checkbox = e.target as HTMLInputElement;
       setFormData(prev => ({
         ...prev,
         [name]: checkbox.checked
+      }));
+    } else if (name === 'salary_range') {
+      // Aplica máscara de dinheiro
+      setFormData(prev => ({
+        ...prev,
+        salary_range: formatRS(value)
       }));
     } else {
       setFormData(prev => ({
@@ -161,7 +192,6 @@ export default function EditJobPage({ params }: EditJobPageProps) {
           <h2 className="text-lg font-semibold text-zinc-100 mb-4">
             Informações Básicas
           </h2>
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label htmlFor="title" className="block text-sm font-medium text-zinc-300 mb-2">
@@ -178,7 +208,6 @@ export default function EditJobPage({ params }: EditJobPageProps) {
                 placeholder="Ex: Desenvolvedor Frontend"
               />
             </div>
-
             <div>
               <label htmlFor="location" className="block text-sm font-medium text-zinc-300 mb-2">
                 Localização *
@@ -194,7 +223,6 @@ export default function EditJobPage({ params }: EditJobPageProps) {
                 placeholder="Ex: São Paulo, SP"
               />
             </div>
-
             <div>
               <label htmlFor="job_type" className="block text-sm font-medium text-zinc-300 mb-2">
                 Tipo de Contrato *
@@ -214,7 +242,6 @@ export default function EditJobPage({ params }: EditJobPageProps) {
                 <option value="internship">Estágio</option>
               </select>
             </div>
-
             <div>
               <label htmlFor="type_models" className="block text-sm font-medium text-zinc-300 mb-2">
                 Modelo de Trabalho *
@@ -232,7 +259,6 @@ export default function EditJobPage({ params }: EditJobPageProps) {
                 <option value="hybrid">Híbrido</option>
               </select>
             </div>
-
             <div>
               <label htmlFor="salary_range" className="block text-sm font-medium text-zinc-300 mb-2">
                 Faixa Salarial
@@ -243,11 +269,12 @@ export default function EditJobPage({ params }: EditJobPageProps) {
                 name="salary_range"
                 value={formData.salary_range}
                 onChange={handleChange}
+                inputMode="numeric"
                 className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="Ex: R$ 5.000 - R$ 8.000"
+                placeholder="Ex: R$ 5.000,00"
+                maxLength={15}
               />
             </div>
-
             <div>
               <label htmlFor="closure" className="block text-sm font-medium text-zinc-300 mb-2">
                 Data de Encerramento *
@@ -262,7 +289,6 @@ export default function EditJobPage({ params }: EditJobPageProps) {
                 className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
-
             <div>
               <label htmlFor="company" className="block text-sm font-medium text-zinc-300 mb-2">
                 Empresa *
@@ -290,13 +316,49 @@ export default function EditJobPage({ params }: EditJobPageProps) {
               )}
             </div>
           </div>
+          {/* Requisitos - igual à página de criação */}
+          <div className="mt-6">
+            <label className="block text-sm font-medium text-zinc-300 mb-2">Requisitos</label>
+            <div className="flex gap-2 mb-2">
+              <input
+                type="text"
+                value={requirementInput}
+                onChange={e => setRequirementInput(e.target.value)}
+                onKeyDown={handleRequirementKeyDown}
+                className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 focus:outline-none"
+                placeholder="Digite o requisito e pressione Enter"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  if (requirementInput.trim()) {
+                    setRequirementsList(prev => [...prev, requirementInput.trim()]);
+                    setRequirementInput('');
+                  }
+                }}
+                className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium"
+              >Adicionar</button>
+            </div>
+            <ul className="mb-2">
+              {requirementsList.map((req, idx) => (
+                <li key={idx} className="flex items-center justify-between bg-zinc-800 px-3 py-2 rounded mb-1">
+                  <span className="text-zinc-100 text-sm">{req}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveRequirement(idx)}
+                    className="text-red-400 hover:text-red-600 text-xs ml-2"
+                  >Remover</button>
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs text-zinc-400">Pressione Enter ou clique em Adicionar para cada requisito.</p>
+          </div>
         </div>
 
         <div className="bg-zinc-800 rounded-lg p-6 border border-zinc-700">
           <h2 className="text-lg font-semibold text-zinc-100 mb-4">
             Descrição e Detalhes
           </h2>
-          
           <div className="space-y-6">
             <div>
               <label htmlFor="description" className="block text-sm font-medium text-zinc-300 mb-2">
@@ -313,22 +375,6 @@ export default function EditJobPage({ params }: EditJobPageProps) {
                 placeholder="Descreva a vaga, o que a empresa faz, o ambiente de trabalho..."
               />
             </div>
-
-            <div>
-              <label htmlFor="requirements" className="block text-sm font-medium text-zinc-300 mb-2">
-                Requisitos
-              </label>
-              <textarea
-                id="requirements"
-                name="requirements"
-                value={formData.requirements}
-                onChange={handleChange}
-                rows={4}
-                className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="Liste os requisitos necessários para a vaga..."
-              />
-            </div>
-
             <div>
               <label htmlFor="responsibilities" className="block text-sm font-medium text-zinc-300 mb-2">
                 Responsabilidades

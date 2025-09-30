@@ -7,6 +7,7 @@ import { adminJobService } from '@/services/adminJobService';
 import companyService from '@/services/companyService';
 import { Job, Company } from '@/types/index';
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import AuthService from '@/services/auth';
 
 interface JobDetailsPageProps {
   params: Promise<{
@@ -18,16 +19,33 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
   const router = useRouter();
   const [job, setJob] = useState<Job | null>(null);
   const [company, setCompany] = useState<Company | null>(null);
+  interface Application {
+    id: number;
+    candidate_user_id: number;
+    candidate_profile_id: number;
+    candidate_name: string;
+    job_id: number;
+    job_title: string;
+    company_name: string;
+    status: string;
+    applied_at: string;
+    days_since_application: number;
+    phone: string;
+    city: string;
+    state: string;
+  }
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const resolvedParams = use(params);
 
   useEffect(() => {
-    const fetchJobAndCompany = async () => {
+    const fetchJobAndCompanyAndApplications = async (jobId: string) => {
       try {
-        const jobData = await adminJobService.getJobById(parseInt(resolvedParams.id));
+        const jobData = await adminJobService.getJobById(parseInt(jobId));
         setJob(jobData);
-        
+
         // Buscar dados da empresa
         if (jobData.company) {
           try {
@@ -35,8 +53,22 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
             setCompany(companyData);
           } catch (companyError) {
             console.warn('Erro ao carregar empresa:', companyError);
-            // Continua sem a empresa se não conseguir carregar
           }
+        }
+
+        // Buscar candidaturas
+        try {
+          const token = AuthService.getAccessToken();
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/applications/?job=${jobId}`, {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+          if (!response.ok) throw new Error('Erro ao buscar candidaturas');
+          const data = await response.json();
+          setApplications(data);
+        } catch (appError) {
+          console.warn('Erro ao carregar candidaturas:', appError);
         }
       } catch (err) {
         setError('Erro ao carregar vaga');
@@ -46,7 +78,11 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
       }
     };
 
-    fetchJobAndCompany();
+    if (resolvedParams && resolvedParams.id) {
+      fetchJobAndCompanyAndApplications(resolvedParams.id);
+    } else {
+      console.log('resolvedParams ou resolvedParams.id não disponível:', resolvedParams);
+    }
   }, [resolvedParams.id]);
 
   const handleDelete = async () => {
@@ -117,6 +153,15 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
     );
   }
 
+  // Filtragem dinâmica por nome ou cidade
+  const filteredApplications = applications.filter(app => {
+    const term = searchTerm.toLowerCase();
+    return (
+      app.candidate_name.toLowerCase().includes(term) ||
+      app.city.toLowerCase().includes(term)
+    );
+  });
+
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-6">
@@ -127,7 +172,6 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
           >
             ← Voltar para lista
           </Link>
-          
           <div className="flex items-center space-x-2">
             <Link
               href={`/admin-panel/jobs/${job.id}/edit`}
@@ -145,7 +189,6 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
             </button>
           </div>
         </div>
-        
         <div className="flex items-center space-x-4">
           <h1 className="text-2xl font-bold text-zinc-100">{job.title}</h1>
           <span
@@ -166,36 +209,32 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
           <h2 className="text-lg font-semibold text-zinc-100 mb-4">
             Informações Básicas
           </h2>
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* ...existing code... */}
             <div>
               <label className="block text-sm font-medium text-zinc-400 mb-1">
                 Localização
               </label>
               <p className="text-zinc-100">{job.location}</p>
             </div>
-
             <div>
               <label className="block text-sm font-medium text-zinc-400 mb-1">
                 Tipo de Contrato
               </label>
               <p className="text-zinc-100">{getJobTypeLabel(job.job_type)}</p>
             </div>
-
             <div>
               <label className="block text-sm font-medium text-zinc-400 mb-1">
                 Modelo de Trabalho
               </label>
               <p className="text-zinc-100">{getTypeModelsLabel(job.type_models)}</p>
             </div>
-
             <div>
               <label className="block text-sm font-medium text-zinc-400 mb-1">
                 Faixa Salarial
               </label>
               <p className="text-zinc-100">{job.salary_range || 'Não informado'}</p>
             </div>
-
             <div>
               <label className="block text-sm font-medium text-zinc-400 mb-1">
                 Data de Encerramento
@@ -204,7 +243,6 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
                 {new Date(job.closure).toLocaleDateString('pt-BR')}
               </p>
             </div>
-
             <div>
               <label className="block text-sm font-medium text-zinc-400 mb-1">
                 Empresa
@@ -222,7 +260,6 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
                 )}
               </p>
             </div>
-
             <div>
               <label className="block text-sm font-medium text-zinc-400 mb-1">
                 Status
@@ -232,6 +269,51 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
           </div>
         </div>
 
+        {/* Listagem de Candidaturas */}
+        <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-md p-6 border border-zinc-700">
+          <h2 className="text-lg font-semibold text-zinc-100 mb-4">Candidaturas para esta vaga</h2>
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Pesquisar por nome ou cidade..."
+              className="w-full md:w-1/2 px-4 py-2 rounded-md border border-zinc-600 bg-zinc-800 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+            />
+          </div>
+          {filteredApplications.length === 0 ? (
+            <div className="text-zinc-400">Nenhuma candidatura encontrada para esta vaga.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-zinc-700">
+                <thead>
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-zinc-400">Nome</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-zinc-400">Status</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-zinc-400">Data de Inscrição</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-zinc-400">Telefone</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-zinc-400">Cidade</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-zinc-400">Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredApplications.map(app => (
+                    <tr key={app.id} className="border-b border-zinc-700 hover:bg-zinc-800 cursor-pointer" onClick={() => router.push(`/admin-panel/candidaturas/${app.id}`)}>
+                      <td className="px-4 py-2 text-zinc-100 font-medium">{app.candidate_name}</td>
+                      <td className="px-4 py-2 text-zinc-300">{app.status}</td>
+                      <td className="px-4 py-2 text-zinc-300">{new Date(app.applied_at).toLocaleDateString('pt-BR')}</td>
+                      <td className="px-4 py-2 text-zinc-300">{app.phone}</td>
+                      <td className="px-4 py-2 text-zinc-300">{app.city}</td>
+                      <td className="px-4 py-2 text-zinc-300">{app.state}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* ...existing code... */}
         {/* Descrição */}
         <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-md p-6 border border-zinc-700">
           <h2 className="text-lg font-semibold text-zinc-100 mb-4">
@@ -241,7 +323,6 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
             <p className="text-zinc-300 whitespace-pre-wrap">{job.description}</p>
           </div>
         </div>
-
         {/* Requisitos */}
         {job.requirements && (
           <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-md p-6 border border-zinc-700">
@@ -253,7 +334,6 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
             </div>
           </div>
         )}
-
         {/* Responsabilidades */}
         {job.responsibilities && (
           <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-md p-6 border border-zinc-700">
@@ -265,13 +345,11 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
             </div>
           </div>
         )}
-
         {/* Metadados */}
         <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-md p-6 border border-zinc-700">
           <h2 className="text-lg font-semibold text-zinc-100 mb-4">
             Informações do Sistema
           </h2>
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-zinc-400 mb-1">
@@ -279,7 +357,6 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
               </label>
               <p className="text-zinc-300">{formatDate(job.created_at)}</p>
             </div>
-
             <div>
               <label className="block text-sm font-medium text-zinc-400 mb-1">
                 Última atualização

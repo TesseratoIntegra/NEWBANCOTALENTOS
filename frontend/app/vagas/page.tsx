@@ -59,11 +59,11 @@ const Home = () => {
     checkSpontaneousApplication();
   }, [isAuthenticated, user]);
 
-  // Função para carregar empresas
+  // Função para carregar todas as empresas (sem paginação)
   const loadCompanies = async () => {
     try {
-      const response = await companyService.getCompanies();
-      setCompanies(response.results);
+      const companiesList = await companyService.getAllCompanies();
+      setCompanies(Array.isArray(companiesList) ? companiesList : []);
     } catch (err) {
       console.error('Erro ao carregar empresas:', err);
     }
