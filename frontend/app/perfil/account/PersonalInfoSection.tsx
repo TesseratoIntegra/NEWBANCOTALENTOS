@@ -8,6 +8,7 @@ import candidateService from '@/services/candidateService';
 import locationService, { State, City } from '@/services/locationService';
 import { User, Camera, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'react-hot-toast';
 
 export interface PersonalInfoSectionProps {
   profile: CandidateProfile | null;
@@ -188,6 +189,7 @@ export default function PersonalInfoSection({ profile, onUpdate, saving }: Perso
 
     setFormErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
+      toast.error('Por favor, preencha todos os campos obrigatórios!');
       return;
     }
 

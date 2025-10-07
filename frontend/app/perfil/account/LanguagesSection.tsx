@@ -62,6 +62,13 @@ export default function LanguagesSection({ languages: initialLanguages, onUpdate
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!formData.language || !formData.proficiency) {
+      toast.error('Por favor, preencha todos os campos obrigatórios!');
+      return;
+    }
+    
     try {
       const submitData: Partial<CandidateLanguage> = {
         language: formData.language,

@@ -53,6 +53,12 @@ export default function ExperienceSection({ experiences: initialExperiences, onU
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate required fields
+    if (!formData.company || !formData.position || !formData.start_date) {
+      toast.error('Por favor, preencha todos os campos obrigatórios!');
+      return;
+    }
+    
     // Validate dates
     const today = new Date();
     const startDate = new Date(formData.start_date);

@@ -48,8 +48,8 @@ export default function EducationSection({ educations: initialEducations, onUpda
     e.preventDefault();
     
     // Validate required fields
-    if (!formData.degree) {
-      toast.error('Por favor, selecione um grau de formação');
+    if (!formData.degree || !formData.institution || !formData.course || !formData.start_date) {
+      toast.error('Por favor, preencha todos os campos obrigatórios!');
       return;
     }
 

@@ -33,6 +33,13 @@ export default function SkillsSection({ skills, onUpdate }: SkillsSectionProps) 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!formData.skill_name || !formData.level) {
+      toast.error('Por favor, preencha todos os campos obrigatórios!');
+      return;
+    }
+    
     try {
       const submitData: Partial<CandidateSkill> = {
         skill_name: formData.skill_name,

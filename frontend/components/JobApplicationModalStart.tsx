@@ -70,6 +70,16 @@ export default function JobApplicationModalStart({ show, onClose }: JobApplicati
 	const [occupations, setOccupations] = useState<{ id: number; title: string }[]>([]);
 	const occupationOptions: OccupationOption[] = occupations.map(o => ({ value: o.id, label: o.title }));
 
+	// Função para filtrar opções disponíveis para cada área
+	const getAvailableOptions = (currentField: 'area_1' | 'area_2' | 'area_3'): OccupationOption[] => {
+		const selectedValues: (number | '')[] = [];
+		if (currentField !== 'area_1' && form.area_1 !== '') selectedValues.push(form.area_1);
+		if (currentField !== 'area_2' && form.area_2 !== '') selectedValues.push(form.area_2);
+		if (currentField !== 'area_3' && form.area_3 !== '') selectedValues.push(form.area_3);
+		
+		return occupationOptions.filter(option => !selectedValues.includes(option.value));
+	};
+
 	// Estado para cidades
 	const [cities, setCities] = useState<City[]>([]);
 	const [loadingCities, setLoadingCities] = useState(false);
@@ -386,7 +396,7 @@ useEffect(() => {
 										<div>
 											<label className="block text-sm font-medium text-gray-700 mb-2">Área 1 *</label>
 											<Select
-												options={occupationOptions}
+												options={getAvailableOptions('area_1')}
 												value={occupationOptions.find(o => o.value === form.area_1) || null}
 												onChange={selected => handleAreaChange(selected, 'area_1')}
 												placeholder="Selecione ou busque uma área"
@@ -397,7 +407,7 @@ useEffect(() => {
 										<div>
 											<label className="block text-sm font-medium text-gray-700 mb-2">Área 2</label>
 											<Select
-												options={occupationOptions}
+												options={getAvailableOptions('area_2')}
 												value={occupationOptions.find(o => o.value === form.area_2) || null}
 												onChange={selected => handleAreaChange(selected, 'area_2')}
 												placeholder="Selecione ou busque uma área"
@@ -407,7 +417,7 @@ useEffect(() => {
 										<div>
 											<label className="block text-sm font-medium text-gray-700 mb-2">Área 3</label>
 											<Select
-												options={occupationOptions}
+												options={getAvailableOptions('area_3')}
 												value={occupationOptions.find(o => o.value === form.area_3) || null}
 												onChange={selected => handleAreaChange(selected, 'area_3')}
 												placeholder="Selecione ou busque uma área"

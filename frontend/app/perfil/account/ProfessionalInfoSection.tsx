@@ -6,6 +6,7 @@ import { CandidateProfile } from '@/types';
 import candidateService from '@/services/candidateService';
 import { ArrowRight, ArrowLeft } from 'react-bootstrap-icons';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'react-hot-toast';
 
 export interface ProfessionalInfoSectionProps {
   profile: CandidateProfile | null;
@@ -155,6 +156,7 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
     if (!formData.skills || formData.skills.trim() === '') newErrors.skills = true;
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
+      toast.error('Por favor, preencha todos os campos obrigatórios!');
       return;
     }
     // Converter campos numéricos para o tipo correto
