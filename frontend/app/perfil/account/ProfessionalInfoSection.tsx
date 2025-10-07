@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { formatRS } from '@/functions/FormatRS';
 import { CandidateProfile } from '@/types';
 import candidateService from '@/services/candidateService';
-import { Save } from 'lucide-react';
+import { ArrowRight, ArrowLeft } from 'react-bootstrap-icons';
 import { useAuth } from '@/contexts/AuthContext';
 
 export interface ProfessionalInfoSectionProps {
@@ -14,7 +14,7 @@ export interface ProfessionalInfoSectionProps {
 }
 
 export default function ProfessionalInfoSection({ profile, onUpdate, saving }: ProfessionalInfoSectionProps) {
-  const { setWizardStep } = useAuth();
+  const { setWizardStep, setCurrentStep } = useAuth();
   type EducationLevelType = "" | "fundamental" | "medio" | "tecnico" | "superior" | "pos_graduacao" | "mestrado" | "doutorado";
   interface FormDataType {
     current_position?: string;
@@ -423,6 +423,9 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
 
         {/* Botão de Salvar */}
         <div className="flex justify-center lg:justify-end pt-6 border-t border-zinc-400">
+          <div onClick={()=>{setCurrentStep(0)}} className="mr-auto bg-blue-900 hover:bg-blue-800 disabled:bg-slate-700 disabled:opacity-50 text-slate-100 px-6 py-2 rounded-md font-medium transition-colors flex items-center cursor-pointer">
+            <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
+          </div>
           <button
             type="submit"
             disabled={saving}
@@ -435,8 +438,8 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
               </>
             ) : (
               <>
-                <Save className="h-4 w-4 mr-2" />
-                Salvar Dados
+                Próximo
+                <ArrowRight className="h-4 w-4 ml-2" />
               </>
             )}
           </button>

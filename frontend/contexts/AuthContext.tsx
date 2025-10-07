@@ -15,6 +15,8 @@ interface AuthContextType {
   refreshUser: () => Promise<void>;
   wizzardStep: number;
   setWizardStep: React.Dispatch<React.SetStateAction<number>>;
+  currentStep: number;
+  setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -23,6 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [wizzardStep, setWizardStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
     // Setup axios interceptors
@@ -112,7 +115,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     logout,
     refreshUser,
     wizzardStep,
-    setWizardStep
+    setWizardStep,
+    currentStep, 
+    setCurrentStep
   };
 
   return (

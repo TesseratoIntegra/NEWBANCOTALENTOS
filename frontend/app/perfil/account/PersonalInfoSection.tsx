@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { CandidateProfile } from '@/types';
 import candidateService from '@/services/candidateService';
 import locationService, { State, City } from '@/services/locationService';
-import { Save, User, Camera } from 'lucide-react';
+import { User, Camera, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 export interface PersonalInfoSectionProps {
@@ -635,8 +635,8 @@ export default function PersonalInfoSection({ profile, onUpdate, saving }: Perso
               </>
             ) : (
               <>
-                <Save className="h-4 w-4 mr-2" />
-                Salvar Dados
+                Próximo
+                <ArrowRight className="h-4 w-4 ml-2" />
               </>
             )}
           </button>

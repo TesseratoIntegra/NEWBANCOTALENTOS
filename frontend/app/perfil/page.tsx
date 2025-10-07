@@ -14,12 +14,11 @@ import LanguagesSection from '@/app/perfil/account/LanguagesSection';
 import PreferencesSection from '@/app/perfil/account/PreferencesSection';
 import Navbar from '@/components/Navbar';
 import SplitText from '@/components/SliptText';
-import * as Icon from 'react-bootstrap-icons'
 import LoadChiap from '@/components/LoadChiap';
 // ...removido: ícones não utilizados...
 
 export default function AccountPage() {
-  const { user, wizzardStep } = useAuth();
+  const { user, currentStep, setCurrentStep } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<CandidateProfile | null>(null);
@@ -27,9 +26,6 @@ export default function AccountPage() {
   const [experiences, setExperiences] = useState<CandidateExperience[]>([]);
   const [skills, setSkills] = useState<CandidateSkill[]>([]);
   const [languages, setLanguages] = useState<CandidateLanguage[]>([]);
-  
-  // ...existing code...
-  const [currentStep, setCurrentStep] = useState(0);
 
   // Wizard steps (declarado após handleProfileUpdate)
   const formSteps = [
@@ -120,6 +116,7 @@ export default function AccountPage() {
       
       setProfile(updatedProfile);
       toast.success('Perfil atualizado com sucesso!');
+      setCurrentStep(currentStep === 1 ? 2 : currentStep === 6 ? 6 : 1)
     } catch (error) {
       console.error('Erro ao atualizar perfil:', error);
       toast.error('Erro ao atualizar perfil');
@@ -217,7 +214,7 @@ export default function AccountPage() {
         </div>
 
         {/* Wizard Navigation */}
-        <div className="flex justify-between mt-6">
+        {/* <div className="flex justify-between mt-6">
           <button
             className="px-4 py-2 bg-blue-100 hover:bg-blue-300 text-blue-900 rounded disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed flex place-items-center gap-x-2"
             onClick={() => setCurrentStep((prev) => Math.max(prev - 1, 0))}
@@ -233,7 +230,7 @@ export default function AccountPage() {
           >
             Próximo <Icon.ArrowRight/>
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );
