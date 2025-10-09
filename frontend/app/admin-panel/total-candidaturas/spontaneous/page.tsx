@@ -39,32 +39,169 @@ function DetailsModal({ application, onClose, occupations }: ModalProps & { occu
 	};
 
 	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-			<div className="bg-zinc-900 rounded-lg p-6 w-full max-w-md relative">
+		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+			<div className="bg-gradient-to-br from-zinc-800 to-zinc-900 border border-zinc-600/50 rounded-xl p-8 w-full max-w-2xl relative shadow-2xl shadow-black/50 max-h-[90vh] overflow-y-auto">
 				<button
 					onClick={onClose}
-					className="absolute top-2 right-4 text-zinc-400 hover:text-zinc-100 text-3xl cursor-pointer"
+					className="absolute top-4 right-4 text-zinc-400 hover:text-white bg-zinc-700/50 hover:bg-zinc-600/50 rounded-full w-8 h-8 flex items-center justify-center transition-all duration-200"
 					aria-label="Fechar"
 				>
-					&times;
+					<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+					</svg>
 				</button>
-				<h2 className="text-2xl font-bold text-zinc-100 mb-4">Detalhes da Candidatura</h2>
-				<div className="space-y-2 text-zinc-300 text-sm">
-					<div><strong>Nome:</strong> {application.name}</div>
-					<div><strong>CPF:</strong> {application.cpf}</div>
-					<div><strong>Email:</strong> {application.email}</div>
-					<div><strong>Telefone:</strong> {application.phone}</div>
-					<div><strong>Cidade:</strong> {application.city}</div>
-					<div><strong>Estado:</strong> {application.state}</div>
-					<div><strong>Bairro:</strong> {application.neighborhood}</div>
-					<div><strong>Número:</strong> {application.number}</div>
-					<div><strong>Complemento:</strong> {application.complement || '-'}</div>
-					<div><strong>Currículo:</strong> <a href={application.resume} target="_blank" rel="noopener noreferrer" className="text-indigo-400 underline">Ver Currículo</a></div>
-					<div><strong>Área 1:</strong> {getOccupationTitle(application.area_1)}</div>
-					<div><strong>Área 2:</strong> {getOccupationTitle(application.area_2)}</div>
-					<div><strong>Área 3:</strong> {getOccupationTitle(application.area_3)}</div>
-					<div><strong>Cadastrado em:</strong> {new Date(application.created_at).toLocaleString('pt-BR')}</div>
-					<div><strong>Atualizado em:</strong> {new Date(application.updated_at).toLocaleString('pt-BR')}</div>
+				
+				<div className="mb-6">
+					<div className="flex items-center space-x-4 mb-4">
+						<div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+							{application.name?.charAt(0)?.toUpperCase() || '?'}
+						</div>
+						<div>
+							<h2 className="text-2xl font-bold text-white mb-1">
+								{application.name || 'Nome não informado'}
+							</h2>
+							<span className="text-sm bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-full">
+								Candidatura Espontânea
+							</span>
+						</div>
+					</div>
+				</div>
+
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+					{/* Informações Pessoais */}
+					<div className="space-y-4">
+						<h3 className="text-lg font-semibold text-white mb-3 flex items-center">
+							<svg className="w-5 h-5 mr-2 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+							</svg>
+							Informações Pessoais
+						</h3>
+						
+						<div className="space-y-3">
+							<div className="bg-zinc-700/30 p-3 rounded-lg">
+								<label className="text-xs font-medium text-zinc-400 uppercase tracking-wide">CPF</label>
+								<p className="text-white mt-1">{application.cpf}</p>
+							</div>
+							
+							<div className="bg-zinc-700/30 p-3 rounded-lg">
+								<label className="text-xs font-medium text-zinc-400 uppercase tracking-wide">Email</label>
+								<p className="text-white mt-1">{application.email}</p>
+							</div>
+							
+							<div className="bg-zinc-700/30 p-3 rounded-lg">
+								<label className="text-xs font-medium text-zinc-400 uppercase tracking-wide">Telefone</label>
+								<p className="text-white mt-1">{application.phone}</p>
+							</div>
+						</div>
+					</div>
+
+					{/* Endereço */}
+					<div className="space-y-4">
+						<h3 className="text-lg font-semibold text-white mb-3 flex items-center">
+							<svg className="w-5 h-5 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+							</svg>
+							Endereço
+						</h3>
+						
+						<div className="space-y-3">
+							<div className="bg-zinc-700/30 p-3 rounded-lg">
+								<label className="text-xs font-medium text-zinc-400 uppercase tracking-wide">Cidade / Estado</label>
+								<p className="text-white mt-1">{application.city}, {application.state}</p>
+							</div>
+							
+							<div className="bg-zinc-700/30 p-3 rounded-lg">
+								<label className="text-xs font-medium text-zinc-400 uppercase tracking-wide">Bairro</label>
+								<p className="text-white mt-1">{application.neighborhood}</p>
+							</div>
+							
+							<div className="grid grid-cols-2 gap-3">
+								<div className="bg-zinc-700/30 p-3 rounded-lg">
+									<label className="text-xs font-medium text-zinc-400 uppercase tracking-wide">Número</label>
+									<p className="text-white mt-1">{application.number}</p>
+								</div>
+								<div className="bg-zinc-700/30 p-3 rounded-lg">
+									<label className="text-xs font-medium text-zinc-400 uppercase tracking-wide">Complemento</label>
+									<p className="text-white mt-1">{application.complement || '-'}</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				{/* Áreas de Interesse */}
+				<div className="mt-6">
+					<h3 className="text-lg font-semibold text-white mb-3 flex items-center">
+						<svg className="w-5 h-5 mr-2 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 112 0v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h8zm-8 0h8m-8 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+						</svg>
+						Áreas de Interesse
+					</h3>
+					
+					<div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+						<div className="bg-zinc-700/30 p-3 rounded-lg">
+							<label className="text-xs font-medium text-zinc-400 uppercase tracking-wide">Área 1</label>
+							<p className="text-white mt-1">{getOccupationTitle(application.area_1)}</p>
+						</div>
+						<div className="bg-zinc-700/30 p-3 rounded-lg">
+							<label className="text-xs font-medium text-zinc-400 uppercase tracking-wide">Área 2</label>
+							<p className="text-white mt-1">{getOccupationTitle(application.area_2)}</p>
+						</div>
+						<div className="bg-zinc-700/30 p-3 rounded-lg">
+							<label className="text-xs font-medium text-zinc-400 uppercase tracking-wide">Área 3</label>
+							<p className="text-white mt-1">{getOccupationTitle(application.area_3)}</p>
+						</div>
+					</div>
+				</div>
+
+				{/* Datas e Currículo */}
+				<div className="mt-6 pt-6 border-t border-zinc-600/50">
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+						<div>
+							<h3 className="text-lg font-semibold text-white mb-3 flex items-center">
+								<svg className="w-5 h-5 mr-2 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+								</svg>
+								Informações do Sistema
+							</h3>
+							
+							<div className="space-y-3">
+								<div className="bg-zinc-700/30 p-3 rounded-lg">
+									<label className="text-xs font-medium text-zinc-400 uppercase tracking-wide">Cadastrado em</label>
+									<p className="text-white mt-1">{new Date(application.created_at).toLocaleString('pt-BR')}</p>
+								</div>
+								
+								<div className="bg-zinc-700/30 p-3 rounded-lg">
+									<label className="text-xs font-medium text-zinc-400 uppercase tracking-wide">Atualizado em</label>
+									<p className="text-white mt-1">{new Date(application.updated_at).toLocaleString('pt-BR')}</p>
+								</div>
+							</div>
+						</div>
+
+						<div>
+							<h3 className="text-lg font-semibold text-white mb-3 flex items-center">
+								<svg className="w-5 h-5 mr-2 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+								</svg>
+								Documentos
+							</h3>
+							
+							<div className="bg-zinc-700/30 p-4 rounded-lg">
+								<a 
+									href={application.resume} 
+									target="_blank" 
+									rel="noopener noreferrer" 
+									className="flex items-center justify-center space-x-2 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-indigo-500/25"
+								>
+									<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+									</svg>
+									<span>Baixar Currículo</span>
+								</a>
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -73,10 +210,12 @@ function DetailsModal({ application, onClose, occupations }: ModalProps & { occu
 
 export default function SpontaneousApplicationsPage() {
 	const [applications, setApplications] = useState<SpontaneousApplication[]>([]);
+	const [filteredApplications, setFilteredApplications] = useState<SpontaneousApplication[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [selectedApp, setSelectedApp] = useState<SpontaneousApplication | null>(null);
 	const [occupations, setOccupations] = useState<Occupation[]>([]);
+	const [searchTerm, setSearchTerm] = useState('');
 
 	useEffect(() => {
 		const fetchApplications = async () => {
@@ -84,7 +223,9 @@ export default function SpontaneousApplicationsPage() {
 			try {
 				const response = await spontaneousService.getSpontaneousApplications();
 				// Se a resposta for paginada, use response.results, senão use response diretamente
-				setApplications(Array.isArray(response.results) ? (response.results as unknown as SpontaneousApplication[]) : (Array.isArray(response) ? (response as unknown as SpontaneousApplication[]) : []));
+				const apps = Array.isArray(response.results) ? (response.results as unknown as SpontaneousApplication[]) : (Array.isArray(response) ? (response as unknown as SpontaneousApplication[]) : []);
+				setApplications(apps);
+				setFilteredApplications(apps);
 			} catch (err) {
 				setError('Erro ao carregar candidaturas espontâneas');
 				console.error(err);
@@ -94,6 +235,24 @@ export default function SpontaneousApplicationsPage() {
 		};
 		fetchApplications();
 	}, []);
+
+	// Efeito para filtrar as aplicações baseado no termo de busca
+	useEffect(() => {
+		if (!searchTerm.trim()) {
+			setFilteredApplications(applications);
+		} else {
+			const filtered = applications.filter(app =>
+				app.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+				app.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+				app.cpf?.includes(searchTerm) ||
+				app.phone?.includes(searchTerm) ||
+				app.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+				app.state?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+				app.neighborhood?.toLowerCase().includes(searchTerm.toLowerCase())
+			);
+			setFilteredApplications(filtered);
+		}
+	}, [searchTerm, applications]);
 
 	useEffect(() => {
 		const fetchOccupations = async () => {
@@ -128,70 +287,224 @@ export default function SpontaneousApplicationsPage() {
 	}
 
 	return (
-		<div className="space-y-8">
-			<div className="text-center">
-				<h1 className="text-3xl font-bold text-zinc-100 mb-2">
-					Candidaturas Espontâneas
-				</h1>
-				<p className="text-zinc-400">
-					Veja todas as candidaturas espontâneas recebidas pela plataforma
-				</p>
-			</div>
+		<div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 p-6">
+			<div className="max-w-7xl mx-auto space-y-8">
+				{/* Header */}
+				<div className="text-center">
+					<h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-indigo-400 to-purple-500 bg-clip-text text-transparent">
+						Candidaturas Espontâneas
+					</h1>
+					<p className="text-zinc-400 text-lg">
+						Gerencie todas as candidaturas espontâneas recebidas pela plataforma
+					</p>
+				</div>
 
-			{applications.length > 0 ? (
-				<>
-				<div className="rounded-md max-h-[40rem] overflow-y-auto">
-					<div className="flex justify-between items-center mb-4">
-						<h2 className="text-xl font-semibold text-zinc-100">
-							Lista de Candidatos
-						</h2>
+				{/* Stats Cards */}
+				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+					<div className="bg-gradient-to-r from-indigo-600 to-indigo-700 p-6 rounded-lg shadow-lg">
+						<h3 className="text-white text-sm font-medium">Total de Candidatos</h3>
+						<p className="text-white text-3xl font-bold mt-2">{applications.length}</p>
 					</div>
-					<div className="space-y-3">
-						{applications.map(app => (
-							<div
-								key={app.id}
-								className="flex items-center justify-between p-4 rounded-md border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 transition-colors cursor-pointer"
-								onClick={() => setSelectedApp(app)}
-							>
-								<div>
-									<h3 className="text-lg font-medium text-white">
-										{app.name || 'Nome não informado'}
-									</h3>
-									<p className="text-sm text-zinc-400">
-										{app.cpf ? `CPF: ${app.cpf} • ` : ''}{app.email} • {app.phone}
-									</p>
-									<p className="text-sm text-zinc-400">
-										{app.city}, {app.state} • {app.neighborhood} {app.number} {app.complement && `• ${app.complement}`}
-									</p>
-									<p className="text-xs text-zinc-500 mt-1">
-										Cadastrado em: {new Date(app.created_at).toLocaleDateString('pt-BR')}<br />
-										Atualizado em: {new Date(app.updated_at).toLocaleDateString('pt-BR')}
-									</p>
-								</div>
-								<div className="flex flex-col items-end space-y-2">
-									<a
-										href={app.resume}
-										target="_blank"
-										rel="noopener noreferrer"
-										className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-xs font-medium transition-colors"
-										onClick={e => e.stopPropagation()}
-									>
-										Ver Currículo
-									</a>
-								</div>
-							</div>
-						))}
-						{selectedApp && (
-							<DetailsModal application={selectedApp} onClose={() => setSelectedApp(null)} occupations={occupations} />
-						)}
+					<div className="bg-gradient-to-r from-green-600 to-green-700 p-6 rounded-lg shadow-lg">
+						<h3 className="text-white text-sm font-medium">Candidatos Filtrados</h3>
+						<p className="text-white text-3xl font-bold mt-2">{filteredApplications.length}</p>
+					</div>
+					<div className="bg-gradient-to-r from-purple-600 to-purple-700 p-6 rounded-lg shadow-lg">
+						<h3 className="text-white text-sm font-medium">Áreas Disponíveis</h3>
+						<p className="text-white text-3xl font-bold mt-2">{occupations.length}</p>
 					</div>
 				</div>
 
-				</>
+				{applications.length > 0 ? (
+					<>
+					{/* Search and Filter Bar */}
+					<div className="bg-zinc-800/50 backdrop-blur-sm border border-zinc-700 rounded-lg p-6">
+						<div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+							<div className="flex-1 w-full md:max-w-md">
+								<div className="relative">
+									<svg 
+										className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-400 w-5 h-5"
+										fill="none" 
+										stroke="currentColor" 
+										viewBox="0 0 24 24"
+									>
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+									</svg>
+									<input
+										type="text"
+										placeholder="Buscar por nome, email, CPF, telefone, cidade..."
+										value={searchTerm}
+										onChange={(e) => setSearchTerm(e.target.value)}
+										className="w-full pl-10 pr-4 py-3 bg-zinc-700/50 border border-zinc-600 rounded-lg text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+									/>
+									{searchTerm && (
+										<button
+											onClick={() => setSearchTerm('')}
+											className="absolute right-3 top-1/2 transform -translate-y-1/2 text-zinc-400 hover:text-white transition-colors"
+										>
+											<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+											</svg>
+										</button>
+									)}
+								</div>
+							</div>
+							<div className="flex items-center space-x-3 text-zinc-300">
+								<span className="text-sm">
+									{filteredApplications.length === applications.length 
+										? `Mostrando todos os ${applications.length} candidatos`
+										: `${filteredApplications.length} de ${applications.length} candidatos`
+									}
+								</span>
+							</div>
+						</div>
+					</div>
 
-			) : (
-				<div className="text-zinc-400 text-center">Nenhuma candidatura espontânea encontrada.</div>
-			)}
+					{/* Candidates List */}
+					<div className="bg-zinc-800/30 backdrop-blur-sm border border-zinc-700 rounded-lg shadow-lg">
+						<div className="flex justify-between items-center p-6 border-b border-zinc-700">
+							<h2 className="text-xl font-semibold text-white">
+								Lista de Candidatos
+							</h2>
+						</div>
+						<div className="max-h-[32rem] overflow-y-auto p-6">
+							{filteredApplications.length > 0 ? (
+								<div className="space-y-4">
+									{filteredApplications.map(app => (
+										<div
+											key={app.id}
+											className="group relative p-6 rounded-lg border border-zinc-600/50 bg-gradient-to-r from-zinc-800/50 to-zinc-700/30 hover:from-zinc-700/60 hover:to-zinc-600/40 transition-all duration-300 cursor-pointer hover:shadow-lg hover:shadow-indigo-500/10"
+											onClick={() => setSelectedApp(app)}
+										>
+											<div className="flex items-start justify-between">
+												<div className="flex-1 space-y-3">
+													<div className="flex items-center space-x-3">
+														<div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+															{app.name?.charAt(0)?.toUpperCase() || '?'}
+														</div>
+														<div>
+															<h3 className="text-lg font-semibold text-white group-hover:text-indigo-300 transition-colors">
+																{app.name || 'Nome não informado'}
+															</h3>
+															<div className="flex flex-wrap gap-2 mt-1">
+																<span className="text-xs bg-indigo-500/20 text-indigo-300 px-2 py-1 rounded-full">
+																	Candidato Espontâneo
+																</span>
+															</div>
+														</div>
+													</div>
+													
+													<div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+														<div className="space-y-1">
+															<div className="flex items-center text-zinc-300">
+																<svg className="w-4 h-4 mr-2 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																	<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+																</svg>
+																{app.email}
+															</div>
+															<div className="flex items-center text-zinc-300">
+																<svg className="w-4 h-4 mr-2 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																	<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+																</svg>
+																{app.phone}
+															</div>
+															{app.cpf && (
+																<div className="flex items-center text-zinc-300">
+																	<svg className="w-4 h-4 mr-2 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V4a2 2 0 114 0v2m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+																	</svg>
+																	CPF: {app.cpf}
+																</div>
+															)}
+														</div>
+														
+														<div className="space-y-1">
+															<div className="flex items-center text-zinc-300">
+																<svg className="w-4 h-4 mr-2 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																	<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+																	<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+																</svg>
+																{app.city}, {app.state}
+															</div>
+															<div className="flex items-center text-zinc-400 text-xs">
+																<svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																	<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+																</svg>
+																Cadastrado: {new Date(app.created_at).toLocaleDateString('pt-BR')}
+															</div>
+														</div>
+													</div>
+												</div>
+												
+												<div className="flex flex-col items-end space-y-2">
+													<a
+														href={app.resume}
+														target="_blank"
+														rel="noopener noreferrer"
+														className="flex items-center space-x-2 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-lg hover:shadow-indigo-500/25"
+														onClick={e => e.stopPropagation()}
+													>
+														<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+															<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+														</svg>
+														<span>Currículo</span>
+													</a>
+													<button
+														onClick={(e) => {
+															e.stopPropagation();
+															setSelectedApp(app);
+														}}
+														className="flex items-center space-x-2 text-zinc-300 hover:text-white text-sm transition-colors"
+													>
+														<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+															<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+														</svg>
+														<span>Detalhes</span>
+													</button>
+												</div>
+											</div>
+										</div>
+									))}
+								</div>
+							) : (
+								<div className="text-center py-12">
+									<div className="w-16 h-16 mx-auto mb-4 bg-zinc-700 rounded-full flex items-center justify-center">
+										<svg className="w-8 h-8 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+										</svg>
+									</div>
+									<h3 className="text-lg font-medium text-zinc-300 mb-2">
+										Nenhum candidato encontrado
+									</h3>
+									<p className="text-zinc-400">
+										{searchTerm ? 'Tente ajustar os termos de busca' : 'Nenhuma candidatura espontânea foi registrada ainda'}
+									</p>
+								</div>
+							)}
+						</div>
+					</div>
+					</>
+
+				) : (
+					<div className="text-center py-12">
+						<div className="w-16 h-16 mx-auto mb-4 bg-zinc-700 rounded-full flex items-center justify-center">
+							<svg className="w-8 h-8 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+							</svg>
+						</div>
+						<h3 className="text-xl font-medium text-zinc-300 mb-2">
+							Nenhuma candidatura espontânea encontrada
+						</h3>
+						<p className="text-zinc-400">
+							Ainda não há candidatos espontâneos registrados no sistema
+						</p>
+					</div>
+				)}
+				
+				{selectedApp && (
+					<DetailsModal application={selectedApp} onClose={() => setSelectedApp(null)} occupations={occupations} />
+				)}
+			</div>
 		</div>
 	);
 }
