@@ -229,7 +229,7 @@ function Navbar() {
                             ) : (
                             <Link
                                 href="/login"
-                                className="animate-fade bg-yellow-300 hover:bg-yellow-300/80 text-zinc-900 px-4 py-2 rounded-md transition font-semibold flex justify-center place-items-center gap-2"
+                                className="ml-10 animate-fade bg-yellow-300 hover:bg-yellow-300/80 text-zinc-900 px-4 py-2 rounded-md transition font-semibold flex justify-center place-items-center gap-2"
                             >
                               <Icon.Person className='w-4 h-4'/>  Faça seu Login
                             </Link>
