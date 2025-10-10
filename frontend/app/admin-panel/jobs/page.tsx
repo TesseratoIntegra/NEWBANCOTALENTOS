@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { adminJobService } from '@/services/adminJobService';
 import companyService from '@/services/companyService';
 import { Job, Company } from '@/types/index';
-import { TrashIcon } from '@heroicons/react/24/outline';
+import { TrashIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
+import * as XLSX from 'xlsx';
 
 export default function JobsListPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -85,6 +86,47 @@ export default function JobsListPage() {
     return company ? company.name : `ID: ${companyId}`;
   };
 
+  const handleDownloadExcel = () => {
+    if (filteredJobs.length === 0) {
+      alert('Não há vagas para exportar');
+      return;
+    }
+
+    // Preparar os dados para o Excel
+    const excelData = filteredJobs.map(job => ({
+      'Vaga (Título)': job.title,
+      'Empresa': getCompanyName(job.company),
+      'Localização': job.location,
+      'Tipo': getJobTypeLabel(job.job_type),
+      'Modelo': getTypeModelsLabel(job.type_models),
+      'Status': job.is_active ? 'Ativa' : 'Inativa',
+      'Criada em': formatDate(job.created_at)
+    }));
+
+    // Criar workbook
+    const ws = XLSX.utils.json_to_sheet(excelData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Vagas');
+
+    // Ajustar largura das colunas
+    const colWidths = [
+      { wch: 30 }, // Vaga (Título)
+      { wch: 25 }, // Empresa
+      { wch: 20 }, // Localização
+      { wch: 15 }, // Tipo
+      { wch: 15 }, // Modelo
+      { wch: 10 }, // Status
+      { wch: 12 }  // Criada em
+    ];
+    ws['!cols'] = colWidths;
+
+    // Gerar nome do arquivo
+    const fileName = `vagas_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.xlsx`;
+
+    // Fazer download
+    XLSX.writeFile(wb, fileName);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-64">
@@ -110,12 +152,23 @@ export default function JobsListPage() {
             {filteredJobs.length} vaga(s) encontrada(s)
           </p>
         </div>
-        <Link
-          href="/admin-panel/jobs/create"
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md font-medium transition-colors"
-        >
-          + Nova Vaga
-        </Link>
+        <div className="flex items-center space-x-2">
+          {filteredJobs.length > 0 && (
+            <button
+              onClick={handleDownloadExcel}
+              className="flex items-center space-x-2 px-4 py-2 bg-green-600/90 hover:bg-green-700 text-white rounded-md font-medium transition-colors cursor-pointer"
+            >
+              <ArrowDownTrayIcon className="h-4 w-4" />
+              <span>Baixar Excel</span>
+            </button>
+          )}
+          <Link
+            href="/admin-panel/jobs/create"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md font-medium transition-colors"
+          >
+            + Nova Vaga
+          </Link>
+        </div>
       </div>
 
       {/* Filtros */}

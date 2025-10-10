@@ -22,7 +22,11 @@ class SpontaneousService {
       if (params?.page) queryParams.append('page', params.page.toString());
       if (params?.search) queryParams.append('search', params.search);
 
-      const response = await axios.get(`${this.baseUrl}/occupations/?${queryParams.toString()}`);
+      const response = await axios.get(`${this.baseUrl}/occupations/?${queryParams.toString()}`,{
+        headers: {
+          'Authorization': `Bearer ${AuthService.getAccessToken()}`
+        }
+      });
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar ocupações:', error);

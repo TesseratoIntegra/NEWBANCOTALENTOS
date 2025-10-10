@@ -6,8 +6,9 @@ import Link from 'next/link';
 import { adminJobService } from '@/services/adminJobService';
 import companyService from '@/services/companyService';
 import { Job, Company } from '@/types/index';
-import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { PencilIcon, TrashIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import AuthService from '@/services/auth';
+import * as XLSX from 'xlsx';
 
 interface JobDetailsPageProps {
   params: Promise<{
@@ -83,7 +84,7 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
     } else {
       console.log('resolvedParams ou resolvedParams.id não disponível:', resolvedParams);
     }
-  }, [resolvedParams.id]);
+  }, [resolvedParams]);
 
   const handleDelete = async () => {
     if (!job || !confirm('Tem certeza que deseja excluir esta vaga?')) {
@@ -97,6 +98,51 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
       alert('Erro ao excluir vaga');
       console.error(err);
     }
+  };
+
+  const handleDownloadExcel = () => {
+    if (applications.length === 0) {
+      alert('Não há candidaturas para exportar');
+      return;
+    }
+
+    // Preparar os dados para o Excel
+    const excelData = applications.map(app => ({
+      'Nome do Candidato': app.candidate_name,
+      'Vaga': job?.title || 'N/A',
+      'Status': getStatusLabel(app.status),
+      'Data de Inscrição': new Date(app.applied_at).toLocaleDateString('pt-BR'),
+      'Dias desde a candidatura': app.days_since_application,
+      'Telefone': app.phone,
+      'Estado': app.state,
+      'Cidade': app.city
+    }));
+
+    // Criar workbook
+    const ws = XLSX.utils.json_to_sheet(excelData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Candidaturas');
+
+    // Ajustar largura das colunas
+    const colWidths = [
+      { wch: 25 }, // Nome do Candidato
+      { wch: 30 }, // Vaga
+      { wch: 15 }, // Status
+      { wch: 15 }, // Data de Inscrição
+      { wch: 15 }, // Telefone
+      { wch: 20 }, // Cidade
+      { wch: 10 }, // Estado
+      { wch: 20 }, // Dias desde a candidatura
+      { wch: 15 }, // ID da Candidatura
+      { wch: 15 }  // ID do Candidato
+    ];
+    ws['!cols'] = colWidths;
+
+    // Gerar nome do arquivo
+    const fileName = `candidaturas_${job?.title?.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.xlsx`;
+
+    // Fazer download
+    XLSX.writeFile(wb, fileName);
   };
 
   const formatDate = (dateString: string) => {
@@ -127,6 +173,17 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
       hybrid: 'Híbrido'
     };
     return types[typeModels as keyof typeof types] || typeModels;
+  };
+
+  const getStatusLabel = (status: string) => {
+    const statusLabels = {
+      submitted: 'Aguardando',
+      in_process: 'Aguardando',
+      interview_scheduled: 'Entrevista Agendada',
+      approved: 'Aprovado',
+      rejected: 'Rejeitado'
+    };
+    return statusLabels[status as keyof typeof statusLabels] || status;
   };
 
   if (loading) {
@@ -271,7 +328,18 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
 
         {/* Listagem de Candidaturas */}
         <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-md p-6 border border-zinc-700">
-          <h2 className="text-lg font-semibold text-zinc-100 mb-4">Candidaturas para esta vaga</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-zinc-100">Candidaturas para esta vaga</h2>
+            {applications.length > 0 && (
+              <button
+                onClick={handleDownloadExcel}
+                className="flex items-center space-x-2 px-4 py-2 bg-green-600/90 hover:bg-green-700 text-white rounded-md font-medium transition-colors cursor-pointer"
+              >
+                <ArrowDownTrayIcon className="h-4 w-4" />
+                <span>Baixar Excel</span>
+              </button>
+            )}
+          </div>
           <div className="mb-4">
             <input
               type="text"
@@ -300,7 +368,7 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
                   {filteredApplications.map(app => (
                     <tr key={app.id} className="border-b border-zinc-700 hover:bg-zinc-800 cursor-pointer" onClick={() => router.push(`/admin-panel/candidaturas/${app.id}`)}>
                       <td className="px-4 py-2 text-zinc-100 font-medium">{app.candidate_name}</td>
-                      <td className="px-4 py-2 text-zinc-300">{app.status}</td>
+                      <td className="px-4 py-2 text-zinc-300">{getStatusLabel(app.status)}</td>
                       <td className="px-4 py-2 text-zinc-300">{new Date(app.applied_at).toLocaleDateString('pt-BR')}</td>
                       <td className="px-4 py-2 text-zinc-300">{app.phone}</td>
                       <td className="px-4 py-2 text-zinc-300">{app.city}</td>
