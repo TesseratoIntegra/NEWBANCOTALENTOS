@@ -134,7 +134,7 @@ class ApplicationListSerializer(serializers.ModelSerializer):
         model = Application
         fields = [
             'id', 'candidate_user_id', 'candidate_profile_id',
-            'candidate_name', 'job_id', 'job_title', 'company_name',
+            'candidate_name', 'job_id', 'job_title', 'resume', 'company_name',
             'status', 'applied_at', 'days_since_application', 'phone', 'city', 'state'
         ]
 
