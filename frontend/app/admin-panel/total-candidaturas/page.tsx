@@ -5,7 +5,8 @@ import * as XLSX from 'xlsx';
 import AuthService from '@/services/auth';
 import applicationService from '@/services/applicationService';
 import spontaneousService from '@/services/spontaneousService';
-import type { Application, Occupation } from '@/types';
+import candidateService from '@/services/candidateService';
+import type { Application, Occupation, CandidateProfile } from '@/types';
 
 // Interface completa para candidaturas espontâneas (baseada no código original)
 interface SpontaneousApplicationComplete {
@@ -41,6 +42,7 @@ interface UnifiedApplication {
 	email: string;
 	phone: string;
 	cpf?: string;
+	gender?: 'M' | 'F' | 'O' | 'N';
 	city: string;
 	state: string;
 	neighborhood?: string;
@@ -268,22 +270,34 @@ export default function TotalCandidaturas() {
 	const [filterType, setFilterType] = useState<'all' | 'normal' | 'spontaneous'>('all');
 
 	// Função para unificar os dados das candidaturas
-	const unifyApplicationData = (
+	const unifyApplicationData = async (
 		normalApps: ApplicationExtended[], 
 		spontaneousApps: unknown[]
-	): UnifiedApplication[] => {
+	): Promise<UnifiedApplication[]> => {
 		const unified: UnifiedApplication[] = [];
 
-		// Processar candidaturas normais
-		normalApps.forEach(app => {
+		// Processar candidaturas normais - buscar dados do perfil para obter CPF e gênero
+		for (const app of normalApps) {
 			console.log('Processando candidatura normal:', app);
+			let candidateProfile: CandidateProfile | null = null;
+
+			// Buscar perfil do candidato se tiver candidate_profile_id
+			if (app.candidate_profile_id) {
+				try {
+					candidateProfile = await candidateService.getCandidateProfile(app.candidate_profile_id);
+				} catch (error) {
+					console.error(`Erro ao buscar perfil do candidato ${app.candidate_profile_id}:`, error);
+				}
+			}
+
 			unified.push({
 				id: app.id,
 				type: 'normal',
 				name: app.candidate_name || app.name || 'Nome não informado',
 				email: app.email || 'Email não informado',
 				phone: app.phone || 'Telefone não informado',
-				cpf: undefined,
+				cpf: candidateProfile?.cpf,
+				gender: candidateProfile?.gender,
 				city: app.city || 'Cidade não informada',
 				state: app.state || 'Estado não informado',
 				neighborhood: undefined,
@@ -297,7 +311,7 @@ export default function TotalCandidaturas() {
 				candidate_profile_id: app.candidate_profile_id,
 				original_data: app
 			});
-		});
+		}
 
 		// Processar candidaturas espontâneas
 		spontaneousApps.forEach(appUnknown => {
@@ -310,6 +324,7 @@ export default function TotalCandidaturas() {
 				email: app.email || 'Email não informado',
 				phone: app.phone || 'Telefone não informado',
 				cpf: app.cpf,
+				gender: undefined, // Candidaturas espontâneas não têm gênero no modelo atual
 				city: app.city || 'Cidade não informada',
 				state: app.state || 'Estado não informado',
 				neighborhood: app.neighborhood,
@@ -371,7 +386,7 @@ export default function TotalCandidaturas() {
 				console.log('Spontaneous Apps:', spontaneousApps);
 				console.log('Occupations:', occs);
 
-				const unifiedData = unifyApplicationData(normalApps, spontaneousApps);
+				const unifiedData = await unifyApplicationData(normalApps, spontaneousApps);
 				
 				console.log('Dados unificados:', unifiedData);
 				
@@ -423,6 +438,18 @@ export default function TotalCandidaturas() {
 		return occ ? occ.title : `ID ${id}`;
 	};
 
+	// Função para formatar o gênero
+	const formatGender = (gender?: 'M' | 'F' | 'O' | 'N') => {
+		if (!gender) return '-';
+		switch (gender) {
+			case 'M': return 'Masculino';
+			case 'F': return 'Feminino';
+			case 'O': return 'Outros';
+			case 'N': return 'Não informado';
+			default: return '-';
+		}
+	};
+
 	// Função para exportar dados para Excel
 	const exportToExcel = () => {
 		if (filteredApplications.length === 0) {
@@ -438,6 +465,7 @@ export default function TotalCandidaturas() {
 				'Email': app.email,
 				'Telefone': app.phone,
 				'CPF': app.cpf || '-',
+				'Gênero': formatGender(app.gender),
 				'Cidade': app.city,
 				'Estado': app.state,
 				'Bairro': app.neighborhood || '-',
@@ -483,6 +511,7 @@ export default function TotalCandidaturas() {
 			{ wch: 30 },  // Email
 			{ wch: 15 },  // Telefone
 			{ wch: 15 },  // CPF
+			{ wch: 15 },  // Gênero
 			{ wch: 20 },  // Cidade
 			{ wch: 10 },  // Estado
 			{ wch: 20 },  // Bairro
@@ -534,8 +563,8 @@ export default function TotalCandidaturas() {
 	}
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 p-6">
-			<div className="max-w-7xl mx-auto space-y-8">
+		<div className="min-h-screen py-6">
+			<div className="w-full mx-auto space-y-8">
 				{/* Header */}
 				<div className="text-center">
 					<h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-indigo-400 to-purple-500 bg-clip-text text-transparent">
@@ -636,8 +665,8 @@ export default function TotalCandidaturas() {
 				</div>
 
 				{/* Tabela */}
-				<div className="bg-zinc-800/30 backdrop-blur-sm border border-zinc-700 rounded-lg shadow-lg overflow-hidden">
-					<div className="overflow-x-auto">
+				<div className="w-full bg-zinc-800/30 backdrop-blur-sm border border-zinc-700 rounded-lg shadow-lg overflow-hidden">
+					<div className="overflow-x-auto overflow-y-auto max-h-[600px]">
 						<table className="w-full">
 							<thead className="bg-zinc-700/50">
 								<tr>
@@ -659,9 +688,6 @@ export default function TotalCandidaturas() {
 									<th className="px-6 py-4 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">
 										Data
 									</th>
-									<th className="px-6 py-4 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">
-										Ações
-									</th>
 								</tr>
 							</thead>
 							<tbody className="divide-y divide-zinc-700">
@@ -669,7 +695,8 @@ export default function TotalCandidaturas() {
 									filteredApplications.map((app, index) => (
 										<tr 
 											key={`${app.type}-${app.id}`}
-											className={`hover:bg-zinc-700/50 transition-colors ${
+											onClick={()=> app.type !== 'spontaneous' ? window.location.href = '/admin-panel/candidaturas/'+app.id : setSelectedApp(app)}
+											className={`hover:bg-zinc-700/50 cursor-pointer transition-colors ${
 												index % 2 === 0 ? 'bg-zinc-800/20' : 'bg-transparent'
 											}`}
 										>
@@ -743,32 +770,6 @@ export default function TotalCandidaturas() {
 														hour: '2-digit', 
 														minute: '2-digit' 
 													})}
-												</div>
-											</td>
-											<td className="px-6 py-4 whitespace-nowrap">
-												<div className="flex items-center space-x-2">
-													<button
-														onClick={() => setSelectedApp(app)}
-														className="text-indigo-400 hover:text-indigo-300 transition-colors"
-														title="Ver detalhes"
-													>
-														<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-															<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-														</svg>
-													</button>
-													{app.resume && (
-														<a
-															href={app.resume}
-															target="_blank"
-															rel="noopener noreferrer"
-															className="text-green-400 hover:text-green-300 transition-colors"
-															title="Baixar currículo"
-														>
-															<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-																<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-															</svg>
-														</a>
-													)}
 												</div>
 											</td>
 										</tr>
