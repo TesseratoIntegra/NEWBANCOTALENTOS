@@ -221,6 +221,29 @@ useEffect(() => {
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
+		
+		// Validação obrigatória do currículo
+		if (!form.resume && !existingResumeUrl) {
+			toast.error("É obrigatório anexar um currículo para enviar a candidatura");
+			return;
+		}
+		
+		// Validação adicional do arquivo de currículo (se um novo arquivo foi selecionado)
+		if (form.resume) {
+			const maxSize = 5 * 1024 * 1024; // 5MB
+			const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+			
+			if (form.resume.size > maxSize) {
+				toast.error("O arquivo do currículo deve ter no máximo 5MB");
+				return;
+			}
+			
+			if (!allowedTypes.includes(form.resume.type)) {
+				toast.error("O currículo deve ser um arquivo PDF, DOC ou DOCX");
+				return;
+			}
+		}
+		
 		setLoading(true);
 		setSuccess(false);
 		const data = new FormData();
@@ -263,7 +286,39 @@ useEffect(() => {
 					},
 				});
 			}
-			if (!res.ok) throw new Error('Erro ao Salvar candidatura');
+			if (!res.ok) {
+				// Tentar capturar a mensagem de erro do backend
+				let errorMessage = 'Erro ao salvar candidatura';
+				try {
+					const errorData = await res.json();
+					
+					// Verificar diferentes formatos de erro que o backend pode retornar
+					if (errorData.detail) {
+						errorMessage = errorData.detail;
+					} else if (errorData.message) {
+						errorMessage = errorData.message;
+					} else if (errorData.error) {
+						errorMessage = errorData.error;
+					} else if (typeof errorData === 'string') {
+						errorMessage = errorData;
+					} else if (errorData.non_field_errors && Array.isArray(errorData.non_field_errors)) {
+						errorMessage = errorData.non_field_errors.join(', ');
+					} else {
+						// Se há erros de campo específico, mostrar o primeiro
+						const fieldErrors = Object.keys(errorData).filter(key => Array.isArray(errorData[key]));
+						if (fieldErrors.length > 0) {
+							const firstFieldError = fieldErrors[0];
+							errorMessage = `${firstFieldError}: ${errorData[firstFieldError].join(', ')}`;
+						}
+					}
+				} catch (parseError) {
+					// Se não conseguir fazer parse do JSON, usar mensagem padrão
+					console.error('Erro ao fazer parse da resposta de erro:', parseError);
+				}
+				
+				throw new Error(errorMessage);
+			}
+			
 			setSuccess(true);
 			toast.success(existingId ? 'Candidatura atualizada' : 'Candidatura registrada');
 			setForm({
@@ -286,9 +341,11 @@ useEffect(() => {
 			if (onClose) onClose();
 		} catch (err) {
 			if (err instanceof Error) {
-				console.log(err.message);
+				console.error('Erro detalhado:', err.message);
+				toast.error(err.message);
 			} else {
-				console.log('Erro desconhecido');
+				console.error('Erro desconhecido:', err);
+				toast.error("Erro desconhecido ao salvar candidatura.");
 			}
 		} finally {
 			setLoading(false);
@@ -431,7 +488,7 @@ useEffect(() => {
 								<div className="space-y-4">
 									<h3 className="text-lg font-semibold text-blue-900">Currículo *</h3>
 									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-2">Anexar Currículo (PDF, DOC ou DOCX - máx. 5MB)</label>
+										<label className="block text-sm font-medium text-gray-700 mb-2">Anexar Currículo (PDF, DOC ou DOCX - máx. 5MB) *</label>
 										<div className="relative">
 											<input name="resume" type="file" accept=".pdf,.doc,.docx" onChange={handleChange} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 file:mr-4 file:py-1 file:px-2 file:rounded file:border-0 file:text-sm file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer hover:file:cursor-pointer" />
 											{form.resume && (
