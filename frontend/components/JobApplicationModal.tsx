@@ -250,21 +250,42 @@ const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
       
     } catch (error: unknown) {
       console.error('Erro ao enviar candidatura:', error);
-      
+
       if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as { response?: { data?: unknown } };
+        const axiosError = error as { response?: { data?: unknown; status?: number } };
         const errorData = axiosError.response?.data;
-        
+        const errorStatus = axiosError.response?.status;
+
+        // Tratamento específico para erro 401 (não autenticado)
+        if (errorStatus === 401) {
+          toast.error('Sessão expirada. Por favor, faça login novamente.');
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 2000);
+          return;
+        }
+
         if (errorData && typeof errorData === 'object') {
           // Exibir erros específicos de cada campo
-          Object.keys(errorData).forEach(field => {
-            const fieldErrors = (errorData as Record<string, unknown>)[field];
+          const errors = errorData as Record<string, unknown>;
+          let hasDisplayedError = false;
+
+          Object.keys(errors).forEach(field => {
+            const fieldErrors = errors[field];
             if (Array.isArray(fieldErrors)) {
-              fieldErrors.forEach(err => toast.error(`${field}: ${err}`));
-            } else {
-              toast.error(`${field}: ${fieldErrors}`);
+              fieldErrors.forEach(err => {
+                toast.error(`${field === 'job' ? 'Vaga' : field}: ${err}`);
+                hasDisplayedError = true;
+              });
+            } else if (typeof fieldErrors === 'string') {
+              toast.error(`${field === 'job' ? 'Vaga' : field}: ${fieldErrors}`);
+              hasDisplayedError = true;
             }
           });
+
+          if (!hasDisplayedError) {
+            toast.error('Erro ao enviar candidatura. Tente novamente.');
+          }
         } else {
           toast.error('Erro ao enviar candidatura. Tente novamente.');
         }

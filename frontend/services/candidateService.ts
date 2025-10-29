@@ -74,12 +74,8 @@ class CandidateService {
     try {
       const formData = new FormData();
       formData.append('image_profile', imageFile);
-      
-      const response = await axios.patch(`${this.baseUrl}/candidates/profiles/${profileId}/`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+
+      const response = await axios.patch(`${this.baseUrl}/candidates/profiles/${profileId}/`, formData);
       return response.data;
     } catch (error) {
       console.error('Erro ao fazer upload da imagem de perfil:', error);

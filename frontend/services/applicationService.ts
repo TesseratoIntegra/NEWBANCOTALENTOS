@@ -105,11 +105,7 @@ class ApplicationService {
       const response = await axios.post(
         `${this.baseUrl}/applications/`,
         formData,
-        this.getAxiosConfig({
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        })
+        this.getAxiosConfig()
       );
       return response.data;
     } catch (error) {

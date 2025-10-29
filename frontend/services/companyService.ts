@@ -147,7 +147,6 @@ class CompanyService {
       const response = await axios.patch(`${this.baseUrl}/companies/${companyId}/`, formData, {
         headers: {
           Authorization: `Bearer ${AuthService.getAccessToken()}`,
-          'Content-Type': 'multipart/form-data',
         },
       });
       
