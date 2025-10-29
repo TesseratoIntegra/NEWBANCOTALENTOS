@@ -284,13 +284,29 @@ export default function PersonalInfoSection({ profile, onUpdate, saving }: Perso
     return age;
   };
 
+  // max date para date input: hoje menos 14 anos
+  const maxDateFor14 = (() => {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() - 14);
+    return d.toISOString().split('T')[0]; // formato YYYY-MM-DD
+  })();
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     if (name === 'date_of_birth') {
+      // atualiza o valor mesmo que seja menor que 14, marca erro e usa toast (não bloqueante)
+      setFormData(prev => ({ ...prev, [name]: value }));
       if (value && calculateAge(value) < 14) {
-        alert('A idade mínima é de 14 anos. Por favor, insira uma data de nascimento válida.');
-        return;
+        setFormErrors(prev => ({ ...prev, date_of_birth: 'A idade mínima é de 14 anos' }));
+        toast.error('A idade mínima é de 14 anos. Por favor, insira uma data válida.');
+      } else {
+        setFormErrors(prev => {
+          const copy = { ...prev };
+          delete copy.date_of_birth;
+          return copy;
+        });
       }
+      return;
     }
     if (name === 'zip_code') {
       const formattedValue = formatCEP(value);
@@ -427,6 +443,7 @@ export default function PersonalInfoSection({ profile, onUpdate, saving }: Perso
               name="date_of_birth"
               value={formData.date_of_birth}
               onChange={handleChange}
+              max={maxDateFor14}
               className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.date_of_birth ? 'border-red-500' : 'border-slate-400'}`}
             />
             <p className="text-xs mt-1 text-slate-600">
