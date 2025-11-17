@@ -1,6 +1,7 @@
 from django.db import models
 
 from app.models import Base
+from app.utils import UniqueFilePathGenerator
 
 
 class Occupation(models.Model):
@@ -28,7 +29,7 @@ class SpontaneousApplication(Base):
     number = models.CharField(max_length=20, verbose_name='Número')
     complement = models.CharField(max_length=100, blank=True, null=True, verbose_name='Complemento')
 
-    resume = models.FileField(upload_to='resumes/', verbose_name='Currículo')
+    resume = models.FileField(upload_to=UniqueFilePathGenerator('resumes'), verbose_name='Currículo')
 
     user = models.OneToOneField(
         'accounts.UserProfile',

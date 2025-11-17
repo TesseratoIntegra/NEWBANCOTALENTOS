@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 
 from app.models import Base
+from app.utils import UniqueFilePathGenerator
 
 
 class Application(Base):
@@ -37,7 +38,7 @@ class Application(Base):
     # Links e arquivos
     linkedin = models.URLField(blank=True, null=True, verbose_name='LinkedIn')
     portfolio = models.URLField(blank=True, null=True, verbose_name='Portfólio')
-    resume = models.FileField(upload_to='resumes/', verbose_name='Currículo')
+    resume = models.FileField(upload_to=UniqueFilePathGenerator('resumes'), verbose_name='Currículo')
 
     # Status e controle
     status = models.CharField(

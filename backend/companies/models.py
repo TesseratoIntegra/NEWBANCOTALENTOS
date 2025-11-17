@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.text import slugify
 
 from app.models import Base
+from app.utils import UniqueFilePathGenerator
 
 
 class CompanyGroup(Base):
@@ -18,7 +19,7 @@ class CompanyGroup(Base):
 
 class Company(Base):
     name = models.CharField(max_length=255, verbose_name='Nome da Empresa')
-    logo = models.ImageField(upload_to='logo/', null=True, blank=True, verbose_name='Logo')
+    logo = models.ImageField(upload_to=UniqueFilePathGenerator('logo'), null=True, blank=True, verbose_name='Logo')
     cnpj = models.CharField(max_length=18, unique=True, verbose_name='CNPJ')
     slug = models.SlugField(max_length=500, unique=True, verbose_name='Slug')
     group = models.ForeignKey(

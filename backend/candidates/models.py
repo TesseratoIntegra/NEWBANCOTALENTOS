@@ -3,6 +3,7 @@ from django.core.validators import MaxValueValidator
 from django.utils.translation import gettext_lazy as _
 
 from app.models import Base
+from app.utils import UniqueFilePathGenerator
 
 
 class CandidateProfile(Base):
@@ -33,7 +34,7 @@ class CandidateProfile(Base):
     )
     
     # Dados pessoais expandidos
-    image_profile = models.ImageField(upload_to='image_profile', blank=True, verbose_name='Foto de Perfil')
+    image_profile = models.ImageField(upload_to=UniqueFilePathGenerator('image_profile'), blank=True, verbose_name='Foto de Perfil')
     cpf = models.CharField(max_length=14, blank=True, verbose_name='CPF')
     date_of_birth = models.DateField(blank=True, null=True, verbose_name='Data de Nascimento')
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True, verbose_name='Gênero')
@@ -151,7 +152,7 @@ class CandidateEducation(Base):
     end_date = models.DateField(blank=True, null=True, verbose_name='Data de Conclusão')
     is_current = models.BooleanField(default=False, verbose_name='Está Cursando')
     description = models.TextField(blank=True, verbose_name='Descrição')
-    file = models.FileField(upload_to='file_education', blank=True, verbose_name='Certificado')
+    file = models.FileField(upload_to=UniqueFilePathGenerator('file_education'), blank=True, verbose_name='Certificado')
 
     class Meta:
         verbose_name = 'Formação Acadêmica'
