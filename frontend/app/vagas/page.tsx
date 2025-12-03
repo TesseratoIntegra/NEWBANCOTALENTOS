@@ -95,6 +95,9 @@ const Home = () => {
     // Filtro por status ativo (sempre aplicado)
     filtered = filtered.filter(job => job.is_active === true);
 
+    // Filtro por vagas não expiradas
+    filtered = filtered.filter(job => !jobService.isExpired(job.closure));
+
     // Filtro por empresa
     if (filters.company) {
       filtered = filtered.filter(job => job.company.toString() === filters.company);
@@ -125,8 +128,8 @@ const Home = () => {
       );
     }
 
-  setJobs(filtered);
-  setTotalJobs(Array.isArray(filtered) ? filtered.length : 0);
+    setJobs(filtered);
+    setTotalJobs(Array.isArray(filtered) ? filtered.length : 0);
     setCurrentPage(1);
   }, [allJobs, filters]);
 
