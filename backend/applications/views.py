@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status, permissions, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError
 
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -8,6 +9,9 @@ from django_filters import FilterSet
 from django.db.models import Q
 
 from drf_spectacular.utils import extend_schema, extend_schema_view
+
+import logging
+import json
 
 from applications.models import Application, InterviewSchedule
 from applications.serializers import (
@@ -17,6 +21,9 @@ from applications.serializers import (
 
 from applications.services.application_services import withdraw_application, update_application_status
 from applications.services.interview_services import confirm_interview, complete_interview, reschedule_interview
+
+# Configurar logger para candidaturas
+logger = logging.getLogger(__name__)
 
 
 class ApplicationFilter(FilterSet):
@@ -107,10 +114,102 @@ class ApplicationViewSet(viewsets.ModelViewSet):
             return ApplicationStatusUpdateSerializer
         return ApplicationSerializer
 
+    def create(self, request, *args, **kwargs):
+        """Override create para adicionar logging detalhado"""
+        job_id = request.data.get('job')
+        user_id = request.user.id if request.user.is_authenticated else 'anonymous'
+        user_type = getattr(request.user, 'user_type', 'unknown')
+        user_email = getattr(request.user, 'email', 'unknown')
+
+        # Log inicial da tentativa
+        logger.info(
+            f"[CANDIDATURA] Tentativa de envio - "
+            f"User ID: {user_id}, "
+            f"Email: {user_email}, "
+            f"User Type: {user_type}, "
+            f"Job ID: {job_id}, "
+            f"IP: {request.META.get('REMOTE_ADDR', 'unknown')}, "
+            f"User-Agent: {request.META.get('HTTP_USER_AGENT', 'unknown')[:100]}"
+        )
+
+        try:
+            response = super().create(request, *args, **kwargs)
+
+            # Log de sucesso
+            application_id = response.data.get('id', 'unknown')
+            logger.info(
+                f"[CANDIDATURA] Sucesso - "
+                f"Application ID: {application_id}, "
+                f"User ID: {user_id}, "
+                f"Email: {user_email}, "
+                f"Job ID: {job_id}"
+            )
+
+            return response
+
+        except ValidationError as e:
+            # Log detalhado de erro de validação
+            error_detail = {}
+            if hasattr(e, 'detail'):
+                try:
+                    # Tentar converter para dict se for possível
+                    error_detail = dict(e.detail) if isinstance(e.detail, dict) else {'detail': str(e.detail)}
+                except:
+                    error_detail = {'detail': str(e.detail)}
+
+            logger.error(
+                f"[CANDIDATURA] Erro de Validação - "
+                f"User ID: {user_id}, "
+                f"Email: {user_email}, "
+                f"Job ID: {job_id}, "
+                f"Validation Errors: {json.dumps(error_detail, ensure_ascii=False)}"
+            )
+
+            # Re-raise para o DRF processar
+            raise
+
+        except Exception as e:
+            # Log detalhado de erro genérico
+            error_type = type(e).__name__
+            error_message = str(e)
+
+            # Capturar detalhes adicionais se houver
+            error_details = {}
+            if hasattr(e, 'detail'):
+                error_details['detail'] = str(e.detail)
+            if hasattr(e, 'message_dict'):
+                error_details['message_dict'] = e.message_dict
+            if hasattr(e, 'args'):
+                error_details['args'] = str(e.args)
+
+            logger.error(
+                f"[CANDIDATURA] Erro Inesperado - "
+                f"User ID: {user_id}, "
+                f"Email: {user_email}, "
+                f"Job ID: {job_id}, "
+                f"Error Type: {error_type}, "
+                f"Error Message: {error_message}, "
+                f"Details: {json.dumps(error_details, ensure_ascii=False)}"
+            )
+
+            # Re-raise para o Django processar normalmente
+            raise
+
     def perform_destroy(self, instance):
         """Permite exclusão apenas pelo próprio candidato"""
         if self.request.user != instance.candidate:
+            logger.warning(
+                f"[CANDIDATURA] Tentativa negada de exclusão - "
+                f"User: {self.request.user.id}, "
+                f"Application Owner: {instance.candidate.id}"
+            )
             raise PermissionError('Você só pode excluir suas próprias candidaturas.')
+
+        logger.info(
+            f"[CANDIDATURA] Exclusão - "
+            f"Application ID: {instance.id}, "
+            f"User: {self.request.user.id}"
+        )
         super().perform_destroy(instance)
 
     @extend_schema(

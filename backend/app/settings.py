@@ -63,6 +63,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 SITE_ID = 1
 
 
+# CSRF e CORS Configuration
 CSRF_TRUSTED_ORIGINS = [
     "https://www.bancodetalentos.chiaperini.com.br",
     "https://bancodetalentos.chiaperini.com.br",
@@ -72,6 +73,30 @@ CORS_ALLOWED_ORIGINS = [
     "https://www.bancodetalentos.chiaperini.com.br",
     "https://bancodetalentos.chiaperini.com.br",
 ]
+
+# Configurações adicionais de CORS para melhor compatibilidade
+CORS_ALLOW_CREDENTIALS = True  # Permitir cookies e autenticação
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+# Tempo de cache para preflight requests (1 hora)
+CORS_PREFLIGHT_MAX_AGE = 3600
 
 ACCOUNT_LOGIN_METHODS = {'email'}
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
@@ -326,12 +351,27 @@ LOGGING = {
         },
     },
     'root': {
-        'handlers': ['console'],
+        'handlers': ['console', 'file'],  # Sempre salvar logs em arquivo
         'level': 'INFO',
     },
     'loggers': {
         'django': {
-            'handlers': ['console'] + (['file'] if not DEBUG else []),
+            'handlers': ['console', 'file'],  # Sempre em arquivo, independente de DEBUG
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'applications': {  # Logger específico para o app applications
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'candidates': {  # Logger específico para o app candidates
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'jobs': {  # Logger específico para o app jobs
+            'handlers': ['console', 'file'],
             'level': 'INFO',
             'propagate': False,
         },

@@ -196,10 +196,16 @@ const JobListingPage: React.FC = () => {
   };
 
   const handleOpenApplicationModal = () => {
-    if (hasApplied) {
-      toast.error('Você já se candidatou a esta vaga.');
+    // Prevenir abertura múltipla do modal
+    if (showApplicationModal) {
       return;
     }
+
+    if (hasApplied) {
+      toast.error('Você já se candidatou a esta vaga.', { duration: 4000 });
+      return;
+    }
+
     setShowApplicationModal(true);
   };
 
@@ -338,9 +344,10 @@ const JobListingPage: React.FC = () => {
                     Candidatura Enviada
                   </button>
                 ) : isProfileComplete(candidateProfile) ? (
-                  <button 
+                  <button
                     onClick={handleOpenApplicationModal}
-                    className="w-full bg-yellow-300 text-blue-950 font-bold py-3 px-6 rounded-md hover:opacity-80 transition-colors duration-200 shadow-lg cursor-pointer"
+                    disabled={showApplicationModal}
+                    className="w-full bg-yellow-300 text-blue-950 font-bold py-3 px-6 rounded-md hover:opacity-80 transition-colors duration-200 shadow-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation active:scale-95"
                   >
                     Candidatar-se Agora
                   </button>

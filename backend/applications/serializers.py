@@ -86,26 +86,42 @@ class ApplicationCreateSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, data):
-        """Validações para criação"""
+        """Validações para criação com mensagens claras e específicas"""
         request = self.context.get('request')
         user = request.user if request else None
 
-        if not user or user.user_type != 'candidate':
+        # Validação de autenticação
+        if not user or not user.is_authenticated:
+            raise serializers.ValidationError({
+                'user': 'Você precisa estar logado para se candidatar.'
+            })
+
+        # Validação de tipo de usuário
+        if user.user_type != 'candidate':
             raise serializers.ValidationError({
                 'user': 'Apenas candidatos podem se candidatar a vagas.'
             })
 
-        # Verifica se já se candidatou a esta vaga
         job = data.get('job')
-        if Application.objects.filter(candidate=user, job=job).exists():
+
+        # Verificação de candidatura duplicada (mais específica)
+        existing_application = Application.objects.filter(candidate=user, job=job).first()
+        if existing_application:
             raise serializers.ValidationError({
-                'job': 'Você já se candidatou a esta vaga.'
+                'job': f'Você já possui uma candidatura para esta vaga (enviada em {existing_application.applied_at.strftime("%d/%m/%Y às %H:%M")}).'
             })
 
-        # Verifica se a vaga ainda está ativa
-        if not job.is_active or job.closure < timezone.now().date():
+        # Verificação se a vaga está ativa
+        if not job.is_active:
             raise serializers.ValidationError({
-                'job': 'Esta vaga não está mais disponível para candidaturas.'
+                'job': 'Esta vaga não está mais ativa e não aceita novas candidaturas.'
+            })
+
+        # Verificação da data de encerramento
+        today = timezone.now().date()
+        if job.closure < today:
+            raise serializers.ValidationError({
+                'job': f'Esta vaga encerrou em {job.closure.strftime("%d/%m/%Y")} e não aceita mais candidaturas.'
             })
 
         return data

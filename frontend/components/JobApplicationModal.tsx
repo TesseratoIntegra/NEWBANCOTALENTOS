@@ -44,6 +44,8 @@ const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false); // Prevenir múltiplos cliques
+  const [uploadProgress, setUploadProgress] = useState(0); // Progresso de upload
   const [states, setStates] = useState<State[]>([]);
   const [cities, setCities] = useState<City[]>([]);
   const [selectedStateId, setSelectedStateId] = useState<number | null>(null);
@@ -67,6 +69,9 @@ const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
     if (isOpen) {
       loadCandidateProfile();
       loadStates();
+      // Reset estados ao abrir o modal
+      setIsSubmitted(false);
+      setUploadProgress(0);
     }
   }, [isOpen, jobId]);
 
@@ -199,36 +204,69 @@ const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validações básicas
-    if (!formData.name.trim()) {
-      toast.error('Nome é obrigatório.');
-      return;
-    }
-    
-    if (!formData.phone.trim()) {
-      toast.error('Telefone é obrigatório.');
-      return;
-    }
-    
-    if (!formData.state.trim()) {
-      toast.error('Estado é obrigatório.');
-      return;
-    }
-    
-    if (!formData.city.trim()) {
-      toast.error('Cidade é obrigatória.');
-      return;
-    }
-    
-    if (!formData.resume) {
-      toast.error('Currículo é obrigatório.');
+
+    console.log('[JobApplicationModal] handleSubmit iniciado');
+
+    // Prevenir múltiplos cliques/toques (especialmente importante no mobile)
+    if (isSubmitted || submitting) {
+      console.log('[JobApplicationModal] Bloqueado: já está enviando');
+      toast.error('Aguarde, sua candidatura está sendo enviada...');
       return;
     }
 
+    // Validações básicas com mensagens mobile-friendly
+    if (!formData.name.trim()) {
+      console.log('[JobApplicationModal] Validação falhou: nome vazio');
+      toast.error('Por favor, preencha seu nome completo');
+      return;
+    }
+
+    if (!formData.phone.trim()) {
+      console.log('[JobApplicationModal] Validação falhou: telefone vazio');
+      toast.error('Por favor, preencha seu telefone');
+      return;
+    }
+
+    if (!formData.state.trim()) {
+      console.log('[JobApplicationModal] Validação falhou: estado vazio');
+      toast.error('Por favor, selecione seu estado');
+      return;
+    }
+
+    if (!formData.city.trim()) {
+      console.log('[JobApplicationModal] Validação falhou: cidade vazia');
+      toast.error('Por favor, selecione sua cidade');
+      return;
+    }
+
+    if (!formData.resume) {
+      console.log('[JobApplicationModal] Validação falhou: sem currículo');
+      toast.error('Por favor, anexe seu currículo');
+      return;
+    }
+
+    console.log('[JobApplicationModal] Todas validações passaram');
+
     try {
       setSubmitting(true);
-      
+      setIsSubmitted(true);
+      setUploadProgress(10);
+
+      console.log('[JobApplicationModal] Iniciando envio para API');
+
+      // Simular progresso durante upload
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 15;
+        });
+      }, 300);
+
+      console.log('[JobApplicationModal] Chamando applicationService.createApplication');
+
       // Enviar candidatura
       await applicationService.createApplication({
         job: jobId,
@@ -243,30 +281,72 @@ const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
         salary_expectation: formData.salary_expectation ? parseFloat(formData.salary_expectation) : undefined,
         resume: formData.resume
       });
-      
+
+      console.log('[JobApplicationModal] Resposta recebida com sucesso');
+
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+
       toast.success('Candidatura enviada com sucesso!');
       onApplicationSuccess?.(); // Chama o callback se fornecido
-      onClose();
+
+      // Aguardar um pouco para mostrar 100% antes de fechar
+      setTimeout(() => {
+        onClose();
+      }, 500);
       
     } catch (error: unknown) {
-      console.error('Erro ao enviar candidatura:', error);
+      console.error('[JobApplicationModal] ERRO CAPTURADO:', error);
+      console.error('[JobApplicationModal] Tipo do erro:', typeof error);
+      console.error('[JobApplicationModal] Error stringified:', JSON.stringify(error, null, 2));
 
+      // Reset estados para permitir nova tentativa
+      setIsSubmitted(false);
+      setUploadProgress(0);
+
+      console.log('[JobApplicationModal] Verificando tipo de erro...');
+
+      // Verificar se é um erro do Axios
       if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as { response?: { data?: unknown; status?: number } };
+        console.log('[JobApplicationModal] É um erro do Axios');
+        const axiosError = error as {
+          response?: { data?: unknown; status?: number };
+          code?: string;
+          message?: string;
+        };
         const errorData = axiosError.response?.data;
         const errorStatus = axiosError.response?.status;
 
         // Tratamento específico para erro 401 (não autenticado)
         if (errorStatus === 401) {
-          toast.error('Sessão expirada. Por favor, faça login novamente.');
+          toast.error('Sua sessão expirou. Redirecionando para login...', {
+            duration: 3000,
+          });
           setTimeout(() => {
             window.location.href = '/login';
           }, 2000);
           return;
         }
 
-        if (errorData && typeof errorData === 'object') {
-          // Exibir erros específicos de cada campo
+        // Tratamento para erro 500+ (erro do servidor)
+        if (errorStatus && errorStatus >= 500) {
+          toast.error('Erro no servidor. Tente novamente em alguns minutos.', {
+            duration: 5000,
+          });
+          return;
+        }
+
+        // Tratamento para timeout
+        if (axiosError.code === 'ECONNABORTED') {
+          toast.error('Tempo esgotado. Sua conexão pode estar lenta. Tente novamente.', {
+            duration: 5000,
+          });
+          return;
+        }
+
+        // Tratamento para erro 400 (validação)
+        if (errorStatus === 400 && errorData && typeof errorData === 'object') {
+          // Exibir erros específicos de cada campo com mensagens mobile-friendly
           const errors = errorData as Record<string, unknown>;
           let hasDisplayedError = false;
 
@@ -274,25 +354,67 @@ const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
             const fieldErrors = errors[field];
             if (Array.isArray(fieldErrors)) {
               fieldErrors.forEach(err => {
-                toast.error(`${field === 'job' ? 'Vaga' : field}: ${err}`);
+                // Mensagens mais claras para mobile
+                const fieldName = field === 'job' ? 'Vaga' :
+                                  field === 'resume' ? 'Currículo' :
+                                  field === 'name' ? 'Nome' :
+                                  field === 'phone' ? 'Telefone' :
+                                  field === 'state' ? 'Estado' :
+                                  field === 'city' ? 'Cidade' :
+                                  field === 'user' ? 'Usuário' : field;
+                toast.error(`${fieldName}: ${err}`, {
+                  duration: 5000, // Mais tempo para ler no mobile
+                });
                 hasDisplayedError = true;
               });
             } else if (typeof fieldErrors === 'string') {
-              toast.error(`${field === 'job' ? 'Vaga' : field}: ${fieldErrors}`);
+              const fieldName = field === 'job' ? 'Vaga' :
+                                field === 'resume' ? 'Currículo' :
+                                field === 'name' ? 'Nome' :
+                                field === 'phone' ? 'Telefone' :
+                                field === 'state' ? 'Estado' :
+                                field === 'city' ? 'Cidade' :
+                                field === 'user' ? 'Usuário' : field;
+              toast.error(`${fieldName}: ${fieldErrors}`, {
+                duration: 5000,
+              });
               hasDisplayedError = true;
             }
           });
 
           if (!hasDisplayedError) {
-            toast.error('Erro ao enviar candidatura. Tente novamente.');
+            toast.error('Dados inválidos. Verifique os campos e tente novamente.', {
+              duration: 5000,
+            });
           }
-        } else {
-          toast.error('Erro ao enviar candidatura. Tente novamente.');
+          return;
         }
-      } else {
-        toast.error('Erro ao enviar candidatura. Verifique sua conexão e tente novamente.');
+
+        // Erro genérico com resposta do servidor
+        if (errorData && typeof errorData === 'object') {
+          const errorMessage = (errorData as { detail?: string }).detail || 'Não foi possível enviar sua candidatura.';
+          toast.error(errorMessage, {
+            duration: 5000,
+          });
+          return;
+        }
+
+        // Sem resposta do servidor (erro de rede)
+        if (!axiosError.response) {
+          toast.error('Sem conexão com o servidor. Verifique sua internet e tente novamente.', {
+            duration: 5000,
+          });
+          return;
+        }
       }
+
+      // Erro completamente desconhecido
+      console.log('[JobApplicationModal] Erro não identificado, exibindo mensagem genérica');
+      toast.error('Erro inesperado. Tente novamente.', {
+        duration: 5000,
+      });
     } finally {
+      console.log('[JobApplicationModal] Finally: setSubmitting(false)');
       setSubmitting(false);
     }
   };
@@ -542,30 +664,63 @@ const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
               </div>
             </div>
 
+            {/* Indicador de Progresso - Mobile Friendly */}
+            {submitting && uploadProgress > 0 && (
+              <div className="space-y-2 mb-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-blue-900 font-medium">
+                    {uploadProgress < 100 ? 'Enviando candidatura...' : 'Candidatura enviada!'}
+                  </span>
+                  <span className="text-blue-700 font-bold">{uploadProgress}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
+                  <div
+                    className="bg-gradient-to-r from-blue-600 to-blue-500 h-3 rounded-full transition-all duration-300 ease-out shadow-sm"
+                    style={{ width: `${uploadProgress}%` }}
+                  >
+                    <div className="h-full w-full bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
+                  </div>
+                </div>
+                {uploadProgress < 30 && (
+                  <p className="text-xs text-gray-600 text-center">Preparando arquivo...</p>
+                )}
+                {uploadProgress >= 30 && uploadProgress < 70 && (
+                  <p className="text-xs text-gray-600 text-center">Enviando currículo...</p>
+                )}
+                {uploadProgress >= 70 && uploadProgress < 100 && (
+                  <p className="text-xs text-gray-600 text-center">Finalizando envio...</p>
+                )}
+              </div>
+            )}
+
             {/* Buttons */}
-            <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-4 pt-6 border-t border-gray-200">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-2 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
+                className="w-full sm:w-auto px-6 py-3 sm:py-2 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer font-medium"
                 disabled={submitting}
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                disabled={submitting}
-                className="px-6 py-2 bg-gradient-to-r from-blue-900 to-blue-800 text-white rounded-md hover:from-blue-800 hover:to-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center shadow-lg cursor-pointer"
+                disabled={submitting || isSubmitted}
+                className="w-full sm:w-auto px-6 py-3 sm:py-2 bg-gradient-to-r from-blue-900 to-blue-800 text-white rounded-md hover:from-blue-800 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg cursor-pointer font-medium touch-manipulation"
               >
                 {submitting ? (
                   <>
-                    <Loader className="w-4 h-4 mr-2 animate-spin" />
-                    Enviando...
+                    <Loader className="w-5 h-5 sm:w-4 sm:h-4 mr-2 animate-spin" />
+                    <span className="text-base sm:text-sm">Enviando...</span>
+                  </>
+                ) : isSubmitted ? (
+                  <>
+                    <span className="text-base sm:text-sm">Enviado!</span>
                   </>
                 ) : (
                   <>
-                    <Send className="w-4 h-4 mr-2" />
-                    Enviar Candidatura
+                    <Send className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
+                    <span className="text-base sm:text-sm">Enviar Candidatura</span>
                   </>
                 )}
               </button>

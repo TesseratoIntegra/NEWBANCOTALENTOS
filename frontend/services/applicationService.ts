@@ -1,31 +1,8 @@
 // services/applicationService.ts
-import axios from 'axios';
+import apiClient from '@/lib/axios';
 import { Application, InterviewSchedule, PaginatedResponse } from '@/types';
-import AuthService from './auth';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-const API_VERSION = process.env.NEXT_PUBLIC_API_VERSION || 'v1';
 
 class ApplicationService {
-  private readonly baseUrl = `${API_BASE_URL}/api/${API_VERSION}`;
-
-  // Helper method to get axios config with auth headers
-  private getAuthHeaders() {
-    const token = AuthService.getAccessToken();
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  }
-
-  // Helper method to create axios config with auth headers
-  private getAxiosConfig(config?: { headers?: Record<string, string> }) {
-    return {
-      ...config,
-      headers: {
-        ...this.getAuthHeaders(),
-        ...config?.headers,
-      },
-    };
-  }
-
   // === APPLICATIONS ===
 
   /* Buscar candidaturas */
@@ -37,16 +14,13 @@ class ApplicationService {
   }): Promise<PaginatedResponse<Application>> {
     try {
       const queryParams = new URLSearchParams();
-      
+
       if (params?.page) queryParams.append('page', params.page.toString());
       if (params?.candidate) queryParams.append('candidate', params.candidate.toString());
       if (params?.job) queryParams.append('job', params.job.toString());
       if (params?.status) queryParams.append('status', params.status);
 
-      const response = await axios.get(
-        `${this.baseUrl}/applications/?${queryParams.toString()}`,
-        this.getAxiosConfig()
-      );
+      const response = await apiClient.get(`/applications/?${queryParams.toString()}`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar candidaturas:', error);
@@ -57,10 +31,7 @@ class ApplicationService {
   /* Buscar candidatura por ID */
   async getApplicationById(id: number): Promise<Application> {
     try {
-      const response = await axios.get(
-        `${this.baseUrl}/applications/${id}/`,
-        this.getAxiosConfig()
-      );
+      const response = await apiClient.get(`/applications/${id}/`);
       return response.data;
     } catch (error) {
       console.error(`Erro ao buscar candidatura ${id}:`, error);
@@ -83,8 +54,20 @@ class ApplicationService {
     observations?: string;
   }): Promise<Application> {
     try {
+      console.log('[applicationService] createApplication iniciado');
+      console.log('[applicationService] Dados recebidos:', {
+        job: applicationData.job,
+        name: applicationData.name,
+        phone: applicationData.phone,
+        state: applicationData.state,
+        city: applicationData.city,
+        hasResume: !!applicationData.resume,
+        resumeName: applicationData.resume?.name,
+        resumeSize: applicationData.resume?.size,
+      });
+
       const formData = new FormData();
-      
+
       // Campos obrigatórios
       formData.append('job', applicationData.job.toString());
       formData.append('name', applicationData.name);
@@ -92,7 +75,9 @@ class ApplicationService {
       formData.append('state', applicationData.state);
       formData.append('city', applicationData.city);
       formData.append('resume', applicationData.resume);
-      
+
+      console.log('[applicationService] FormData montado com campos obrigatórios');
+
       // Campos opcionais
       if (applicationData.linkedin) formData.append('linkedin', applicationData.linkedin);
       if (applicationData.portfolio) formData.append('portfolio', applicationData.portfolio);
@@ -101,15 +86,29 @@ class ApplicationService {
       if (applicationData.salary_expectation) {
         formData.append('salary_expectation', applicationData.salary_expectation.toString());
       }
-      
-      const response = await axios.post(
-        `${this.baseUrl}/applications/`,
-        formData,
-        this.getAxiosConfig()
-      );
+
+      console.log('[applicationService] Fazendo POST para /applications/');
+
+      // IMPORTANTE: NÃO definir Content-Type manualmente para FormData!
+      // O browser precisa adicionar o boundary automaticamente.
+      // Definir manualmente causa ERR_NETWORK em mobile.
+      const response = await apiClient.post('/applications/', formData);
+
+      console.log('[applicationService] Resposta recebida:', response.status);
+      console.log('[applicationService] Dados da resposta:', response.data);
+
       return response.data;
     } catch (error) {
-      console.error('Erro ao criar candidatura:', error);
+      console.error('[applicationService] ERRO ao criar candidatura:', error);
+      console.error('[applicationService] Tipo de erro:', typeof error);
+      if (error && typeof error === 'object') {
+        console.error('[applicationService] Propriedades do erro:', Object.keys(error));
+        if ('response' in error) {
+          const axiosError = error as any;
+          console.error('[applicationService] Status da resposta:', axiosError.response?.status);
+          console.error('[applicationService] Dados da resposta de erro:', axiosError.response?.data);
+        }
+      }
       throw error;
     }
   }
@@ -117,11 +116,7 @@ class ApplicationService {
   /* Atualizar candidatura */
   async updateApplication(id: number, applicationData: Partial<Application>): Promise<Application> {
     try {
-      const response = await axios.patch(
-        `${this.baseUrl}/applications/${id}/`,
-        applicationData,
-        this.getAxiosConfig()
-      );
+      const response = await apiClient.patch(`/applications/${id}/`, applicationData);
       return response.data;
     } catch (error) {
       console.error(`Erro ao atualizar candidatura ${id}:`, error);
@@ -132,10 +127,7 @@ class ApplicationService {
   /* Deletar candidatura */
   async deleteApplication(id: number): Promise<void> {
     try {
-      await axios.delete(
-        `${this.baseUrl}/applications/${id}/`,
-        this.getAxiosConfig()
-      );
+      await apiClient.delete(`/applications/${id}/`);
     } catch (error) {
       console.error(`Erro ao deletar candidatura ${id}:`, error);
       throw error;
@@ -149,14 +141,11 @@ class ApplicationService {
   }): Promise<PaginatedResponse<Application> | Application[]> {
     try {
       const queryParams = new URLSearchParams();
-      
+
       if (params?.page) queryParams.append('page', params.page.toString());
       if (params?.status) queryParams.append('status', params.status);
 
-      const response = await axios.get(
-        `${this.baseUrl}/applications/my_applications/?${queryParams.toString()}`,
-        this.getAxiosConfig()
-      );
+      const response = await apiClient.get(`/applications/my_applications/?${queryParams.toString()}`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar minhas candidaturas:', error);
@@ -174,15 +163,12 @@ class ApplicationService {
   }): Promise<PaginatedResponse<InterviewSchedule>> {
     try {
       const queryParams = new URLSearchParams();
-      
+
       if (params?.page) queryParams.append('page', params.page.toString());
       if (params?.application) queryParams.append('application', params.application.toString());
       if (params?.status) queryParams.append('status', params.status);
 
-      const response = await axios.get(
-        `${this.baseUrl}/interviews-schedules/?${queryParams.toString()}`,
-        this.getAxiosConfig()
-      );
+      const response = await apiClient.get(`/interviews-schedules/?${queryParams.toString()}`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar entrevistas agendadas:', error);
@@ -193,10 +179,7 @@ class ApplicationService {
   /* Buscar entrevista por ID */
   async getInterviewScheduleById(id: number): Promise<InterviewSchedule> {
     try {
-      const response = await axios.get(
-        `${this.baseUrl}/interviews-schedules/${id}/`,
-        this.getAxiosConfig()
-      );
+      const response = await apiClient.get(`/interviews-schedules/${id}/`);
       return response.data;
     } catch (error) {
       console.error(`Erro ao buscar entrevista ${id}:`, error);
@@ -207,11 +190,7 @@ class ApplicationService {
   /* Criar nova entrevista */
   async createInterviewSchedule(interviewData: Partial<InterviewSchedule>): Promise<InterviewSchedule> {
     try {
-      const response = await axios.post(
-        `${this.baseUrl}/interviews-schedules/`,
-        interviewData,
-        this.getAxiosConfig()
-      );
+      const response = await apiClient.post('/interviews-schedules/', interviewData);
       return response.data;
     } catch (error) {
       console.error('Erro ao criar entrevista:', error);
@@ -222,11 +201,7 @@ class ApplicationService {
   /* Atualizar entrevista */
   async updateInterviewSchedule(id: number, interviewData: Partial<InterviewSchedule>): Promise<InterviewSchedule> {
     try {
-      const response = await axios.patch(
-        `${this.baseUrl}/interviews-schedules/${id}/`,
-        interviewData,
-        this.getAxiosConfig()
-      );
+      const response = await apiClient.patch(`/interviews-schedules/${id}/`, interviewData);
       return response.data;
     } catch (error) {
       console.error(`Erro ao atualizar entrevista ${id}:`, error);
@@ -237,10 +212,7 @@ class ApplicationService {
   /* Deletar entrevista */
   async deleteInterviewSchedule(id: number): Promise<void> {
     try {
-      await axios.delete(
-        `${this.baseUrl}/interviews-schedules/${id}/`,
-        this.getAxiosConfig()
-      );
+      await apiClient.delete(`/interviews-schedules/${id}/`);
     } catch (error) {
       console.error(`Erro ao deletar entrevista ${id}:`, error);
       throw error;
@@ -254,14 +226,11 @@ class ApplicationService {
   }): Promise<PaginatedResponse<InterviewSchedule>> {
     try {
       const queryParams = new URLSearchParams();
-      
+
       if (params?.page) queryParams.append('page', params.page.toString());
       if (params?.status) queryParams.append('status', params.status);
 
-      const response = await axios.get(
-        `${this.baseUrl}/interviews-schedules/me/?${queryParams.toString()}`,
-        this.getAxiosConfig()
-      );
+      const response = await apiClient.get(`/interviews-schedules/me/?${queryParams.toString()}`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar minhas entrevistas:', error);

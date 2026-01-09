@@ -17,16 +17,33 @@ const API_VERSION = process.env.NEXT_PUBLIC_API_VERSION || 'v1';
 class CandidateService {
   private readonly baseUrl = `${API_BASE_URL}/api/${API_VERSION}`;
 
+  // Helper method to get axios config with auth headers
+  private getAuthHeaders() {
+    const token = AuthService.getAccessToken();
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }
+
+  // Helper method to create axios config with auth headers
+  private getAxiosConfig(config?: { headers?: Record<string, string>; params?: any }) {
+    return {
+      ...config,
+      headers: {
+        ...this.getAuthHeaders(),
+        ...config?.headers,
+      },
+    };
+  }
+
   // === CANDIDATE PROFILE ===
-  
+
   /* Buscar perfil do candidato */
   async getCandidateProfile(candidateId?: number): Promise<CandidateProfile> {
     try {
-      const url = candidateId 
+      const url = candidateId
         ? `${this.baseUrl}/candidates/profiles/${candidateId}/`
         : `${this.baseUrl}/candidates/profiles/me/`;
-      
-      const response = await axios.get(url);
+
+      const response = await axios.get(url, this.getAxiosConfig());
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar perfil do candidato:', error);
@@ -37,9 +54,7 @@ class CandidateService {
   async getAllCandidates(): Promise<CandidateProfile> {
     try {
       const url = `${this.baseUrl}/candidates/profiles/`;
-      const token = AuthService.getAccessToken();
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const response = await axios.get(url, { headers });
+      const response = await axios.get(url, this.getAxiosConfig());
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar candidatos:', error);
@@ -50,7 +65,7 @@ class CandidateService {
   /* Criar perfil do candidato */
   async createCandidateProfile(profileData: Partial<CandidateProfile>): Promise<CandidateProfile> {
     try {
-      const response = await axios.post(`${this.baseUrl}/candidates/profiles/`, profileData);
+      const response = await axios.post(`${this.baseUrl}/candidates/profiles/`, profileData, this.getAxiosConfig());
       return response.data;
     } catch (error) {
       console.error('Erro ao criar perfil do candidato:', error);
@@ -61,7 +76,7 @@ class CandidateService {
   /* Atualizar perfil do candidato */
   async updateCandidateProfile(profileId: number, profileData: Partial<CandidateProfile>): Promise<CandidateProfile> {
     try {
-      const response = await axios.patch(`${this.baseUrl}/candidates/profiles/${profileId}/`, profileData);
+      const response = await axios.patch(`${this.baseUrl}/candidates/profiles/${profileId}/`, profileData, this.getAxiosConfig());
       return response.data;
     } catch (error) {
       console.error('Erro ao atualizar perfil do candidato:', error);
@@ -75,7 +90,7 @@ class CandidateService {
       const formData = new FormData();
       formData.append('image_profile', imageFile);
 
-      const response = await axios.patch(`${this.baseUrl}/candidates/profiles/${profileId}/`, formData);
+      const response = await axios.patch(`${this.baseUrl}/candidates/profiles/${profileId}/`, formData, this.getAxiosConfig());
       return response.data;
     } catch (error) {
       console.error('Erro ao fazer upload da imagem de perfil:', error);
@@ -89,7 +104,7 @@ class CandidateService {
   async getCandidateEducations(candidateId?: number): Promise<PaginatedResponse<CandidateEducation>> {
     try {
       const params = candidateId ? { candidate: candidateId } : {};
-      const response = await axios.get(`${this.baseUrl}/candidates/educations/`, { params });
+      const response = await axios.get(`${this.baseUrl}/candidates/educations/`, this.getAxiosConfig({ params }));
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar educação do candidato:', error);
@@ -100,7 +115,7 @@ class CandidateService {
   /* Criar educação do candidato */
   async createCandidateEducation(educationData: Partial<CandidateEducation>): Promise<CandidateEducation> {
     try {
-      const response = await axios.post(`${this.baseUrl}/candidates/educations/`, educationData);
+      const response = await axios.post(`${this.baseUrl}/candidates/educations/`, educationData, this.getAxiosConfig());
       return response.data;
     } catch (error) {
       console.error('Erro ao criar educação do candidato:', error);
@@ -111,7 +126,7 @@ class CandidateService {
   /* Atualizar educação do candidato */
   async updateCandidateEducation(educationId: number, educationData: Partial<CandidateEducation>): Promise<CandidateEducation> {
     try {
-      const response = await axios.patch(`${this.baseUrl}/candidates/educations/${educationId}/`, educationData);
+      const response = await axios.patch(`${this.baseUrl}/candidates/educations/${educationId}/`, educationData, this.getAxiosConfig());
       return response.data;
     } catch (error) {
       console.error('Erro ao atualizar educação do candidato:', error);
@@ -122,7 +137,7 @@ class CandidateService {
   /* Deletar educação do candidato */
   async deleteCandidateEducation(educationId: number): Promise<void> {
     try {
-      await axios.delete(`${this.baseUrl}/candidates/educations/${educationId}/`);
+      await axios.delete(`${this.baseUrl}/candidates/educations/${educationId}/`, this.getAxiosConfig());
     } catch (error) {
       console.error('Erro ao deletar educação do candidato:', error);
       throw error;
@@ -135,7 +150,7 @@ class CandidateService {
   async getCandidateExperiences(candidateId?: number): Promise<PaginatedResponse<CandidateExperience>> {
     try {
       const params = candidateId ? { candidate: candidateId } : {};
-      const response = await axios.get(`${this.baseUrl}/candidates/experiences/`, { params });
+      const response = await axios.get(`${this.baseUrl}/candidates/experiences/`, this.getAxiosConfig({ params }));
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar experiência do candidato:', error);
@@ -146,7 +161,7 @@ class CandidateService {
   /* Criar experiência do candidato */
   async createCandidateExperience(experienceData: Partial<CandidateExperience>): Promise<CandidateExperience> {
     try {
-      const response = await axios.post(`${this.baseUrl}/candidates/experiences/`, experienceData);
+      const response = await axios.post(`${this.baseUrl}/candidates/experiences/`, experienceData, this.getAxiosConfig());
       return response.data;
     } catch (error) {
       console.error('Erro ao criar experiência do candidato:', error);
@@ -157,7 +172,7 @@ class CandidateService {
   /* Atualizar experiência do candidato */
   async updateCandidateExperience(experienceId: number, experienceData: Partial<CandidateExperience>): Promise<CandidateExperience> {
     try {
-      const response = await axios.patch(`${this.baseUrl}/candidates/experiences/${experienceId}/`, experienceData);
+      const response = await axios.patch(`${this.baseUrl}/candidates/experiences/${experienceId}/`, experienceData, this.getAxiosConfig());
       return response.data;
     } catch (error) {
       console.error('Erro ao atualizar experiência do candidato:', error);
@@ -168,7 +183,7 @@ class CandidateService {
   /* Deletar experiência do candidato */
   async deleteCandidateExperience(experienceId: number): Promise<void> {
     try {
-      await axios.delete(`${this.baseUrl}/candidates/experiences/${experienceId}/`);
+      await axios.delete(`${this.baseUrl}/candidates/experiences/${experienceId}/`, this.getAxiosConfig());
     } catch (error) {
       console.error('Erro ao deletar experiência do candidato:', error);
       throw error;
@@ -181,7 +196,7 @@ class CandidateService {
   async getCandidateSkills(candidateId?: number): Promise<PaginatedResponse<CandidateSkill>> {
     try {
       const params = candidateId ? { candidate: candidateId } : {};
-      const response = await axios.get(`${this.baseUrl}/candidates/skills/`, { params });
+      const response = await axios.get(`${this.baseUrl}/candidates/skills/`, this.getAxiosConfig({ params }));
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar habilidades do candidato:', error);
@@ -191,7 +206,7 @@ class CandidateService {
     /** Buscar todos os idiomas (sem paginação) */
     async fetchAllLanguages(): Promise<CandidateLanguage[]> {
       try {
-        const response = await axios.get(`${this.baseUrl}/candidates/languages/`);
+        const response = await axios.get(`${this.baseUrl}/candidates/languages/`, this.getAxiosConfig());
         return response.data;
       } catch (error) {
         console.error('Erro ao buscar todos os idiomas:', error);
@@ -202,7 +217,7 @@ class CandidateService {
   /* Criar habilidade do candidato */
   async createCandidateSkill(skillData: Partial<CandidateSkill>): Promise<CandidateSkill> {
     try {
-      const response = await axios.post(`${this.baseUrl}/candidates/skills/`, skillData);
+      const response = await axios.post(`${this.baseUrl}/candidates/skills/`, skillData, this.getAxiosConfig());
       return response.data;
     } catch (error) {
       console.error('Erro ao criar habilidade do candidato:', error);
@@ -213,7 +228,7 @@ class CandidateService {
   /* Atualizar habilidade do candidato */
   async updateCandidateSkill(skillId: number, skillData: Partial<CandidateSkill>): Promise<CandidateSkill> {
     try {
-      const response = await axios.patch(`${this.baseUrl}/candidates/skills/${skillId}/`, skillData);
+      const response = await axios.patch(`${this.baseUrl}/candidates/skills/${skillId}/`, skillData, this.getAxiosConfig());
       return response.data;
     } catch (error) {
       console.error('Erro ao atualizar habilidade do candidato:', error);
@@ -224,7 +239,7 @@ class CandidateService {
   /* Deletar habilidade do candidato */
   async deleteCandidateSkill(skillId: number): Promise<void> {
     try {
-      await axios.delete(`${this.baseUrl}/candidates/skills/${skillId}/`);
+      await axios.delete(`${this.baseUrl}/candidates/skills/${skillId}/`, this.getAxiosConfig());
     } catch (error) {
       console.error('Erro ao deletar habilidade do candidato:', error);
       throw error;
@@ -237,7 +252,7 @@ class CandidateService {
   async getCandidateLanguages(candidateId?: number): Promise<PaginatedResponse<CandidateLanguage>> {
     try {
       const params = candidateId ? { candidate: candidateId } : {};
-      const response = await axios.get(`${this.baseUrl}/candidates/languages/`, { params });
+      const response = await axios.get(`${this.baseUrl}/candidates/languages/`, this.getAxiosConfig({ params }));
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar idiomas do candidato:', error);
@@ -248,7 +263,7 @@ class CandidateService {
   /* Criar idioma do candidato */
   async createCandidateLanguage(languageData: Partial<CandidateLanguage>): Promise<CandidateLanguage> {
     try {
-      const response = await axios.post(`${this.baseUrl}/candidates/languages/`, languageData);
+      const response = await axios.post(`${this.baseUrl}/candidates/languages/`, languageData, this.getAxiosConfig());
       return response.data;
     } catch (error) {
       console.error('Erro ao criar idioma do candidato:', error);
@@ -259,7 +274,7 @@ class CandidateService {
   /* Atualizar idioma do candidato */
   async updateCandidateLanguage(languageId: number, languageData: Partial<CandidateLanguage>): Promise<CandidateLanguage> {
     try {
-      const response = await axios.patch(`${this.baseUrl}/candidates/languages/${languageId}/`, languageData);
+      const response = await axios.patch(`${this.baseUrl}/candidates/languages/${languageId}/`, languageData, this.getAxiosConfig());
       return response.data;
     } catch (error) {
       console.error('Erro ao atualizar idioma do candidato:', error);
@@ -270,7 +285,7 @@ class CandidateService {
   /* Deletar idioma do candidato */
   async deleteCandidateLanguage(languageId: number): Promise<void> {
     try {
-      await axios.delete(`${this.baseUrl}/candidates/languages/${languageId}/`);
+      await axios.delete(`${this.baseUrl}/candidates/languages/${languageId}/`, this.getAxiosConfig());
     } catch (error) {
       console.error('Erro ao deletar idioma do candidato:', error);
       throw error;
