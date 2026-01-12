@@ -75,14 +75,6 @@ const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
     }
   }, [isOpen, jobId]);
 
-  // Fechar modal automaticamente se usuário já se candidatou
-  useEffect(() => {
-    if (isOpen && hasApplied) {
-      onClose();
-      toast.error('Você já se candidatou a esta vaga.');
-    }
-  }, [isOpen, hasApplied, onClose]);
-
   // Carregar cidades quando estado é selecionado
   useEffect(() => {
     if (selectedStateId) {
@@ -182,16 +174,27 @@ const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Verificar se o arquivo é válido (não é apenas uma referência do Google Drive)
+      if (file.size === 0) {
+        toast.error(' Este arquivo não pode ser enviado. Se você selecionou do Google Drive, faça o download do arquivo no seu celular primeiro e tente novamente.', {
+          duration: 7000,
+        });
+        e.target.value = ''; // Limpar o input
+        return;
+      }
+
       // Verificar se é PDF ou DOC/DOCX
       const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
       if (!allowedTypes.includes(file.type)) {
         toast.error('Apenas arquivos PDF, DOC ou DOCX são permitidos.');
+        e.target.value = ''; // Limpar o input
         return;
       }
       
       // Verificar tamanho (máximo 5MB)
       if (file.size > 5 * 1024 * 1024) {
         toast.error('O arquivo deve ter no máximo 5MB.');
+        e.target.value = ''; // Limpar o input
         return;
       }
       
@@ -242,6 +245,15 @@ const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
     if (!formData.resume) {
       console.log('[JobApplicationModal] Validação falhou: sem currículo');
       toast.error('Por favor, anexe seu currículo');
+      return;
+    }
+
+    // Validação adicional: verificar se o arquivo não é apenas uma referência (Google Drive)
+    if (formData.resume.size === 0) {
+      console.log('[JobApplicationModal] Validação falhou: arquivo vazio (possivelmente do Google Drive)');
+      toast.error(' O arquivo selecionado não pode ser enviado. Se você selecionou do Google Drive, faça o download do arquivo no seu celular primeiro e tente novamente.', {
+        duration: 7000,
+      });
       return;
     }
 
@@ -306,6 +318,24 @@ const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
 
       console.log('[JobApplicationModal] Verificando tipo de erro...');
 
+      // Verificar se é erro relacionado a arquivo (Google Drive, arquivo vazio, etc)
+      const errorMessage = (error as { message?: string })?.message || '';
+      const errorString = error?.toString() || '';
+      
+      if (
+        errorMessage.toLowerCase().includes('file') ||
+        errorMessage.toLowerCase().includes('empty') ||
+        errorMessage.toLowerCase().includes('network') ||
+        errorString.toLowerCase().includes('file') ||
+        errorString.toLowerCase().includes('empty')
+      ) {
+        console.log('[JobApplicationModal] Erro detectado como problema de arquivo');
+        toast.error('Problema ao enviar o arquivo. Se você selecionou do Google Drive, faça o download do arquivo no seu celular primeiro e tente novamente.', {
+          duration: 7000,
+        });
+        return;
+      }
+
       // Verificar se é um erro do Axios
       if (error && typeof error === 'object' && 'response' in error) {
         console.log('[JobApplicationModal] É um erro do Axios');
@@ -354,6 +384,17 @@ const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
             const fieldErrors = errors[field];
             if (Array.isArray(fieldErrors)) {
               fieldErrors.forEach(err => {
+                // Verificar se o erro é relacionado ao currículo/arquivo
+                if (field === 'resume' && typeof err === 'string') {
+                  if (err.toLowerCase().includes('empty') || err.toLowerCase().includes('vazio') || err.toLowerCase().includes('invalid')) {
+                    toast.error('Problema com o arquivo. Se você selecionou do Google Drive, faça o download do arquivo no seu celular primeiro e tente novamente.', {
+                      duration: 7000,
+                    });
+                    hasDisplayedError = true;
+                    return;
+                  }
+                }
+
                 // Mensagens mais claras para mobile
                 const fieldName = field === 'job' ? 'Vaga' :
                                   field === 'resume' ? 'Currículo' :
@@ -368,6 +409,17 @@ const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
                 hasDisplayedError = true;
               });
             } else if (typeof fieldErrors === 'string') {
+              // Verificar se o erro é relacionado ao currículo/arquivo
+              if (field === 'resume') {
+                if (fieldErrors.toLowerCase().includes('empty') || fieldErrors.toLowerCase().includes('vazio') || fieldErrors.toLowerCase().includes('invalid')) {
+                  toast.error('Problema com o arquivo. Se você selecionou do Google Drive, faça o download do arquivo no seu celular primeiro e tente novamente.', {
+                    duration: 7000,
+                  });
+                  hasDisplayedError = true;
+                  return;
+                }
+              }
+
               const fieldName = field === 'job' ? 'Vaga' :
                                 field === 'resume' ? 'Currículo' :
                                 field === 'name' ? 'Nome' :
@@ -392,8 +444,26 @@ const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
 
         // Erro genérico com resposta do servidor
         if (errorData && typeof errorData === 'object') {
-          const errorMessage = (errorData as { detail?: string }).detail || 'Não foi possível enviar sua candidatura.';
-          toast.error(errorMessage, {
+          const errorMessage = (errorData as { detail?: string }).detail || '';
+          const errorStr = JSON.stringify(errorData).toLowerCase();
+          
+          // Verificar se é erro relacionado a arquivo
+          if (
+            errorMessage.toLowerCase().includes('file') ||
+            errorMessage.toLowerCase().includes('arquivo') ||
+            errorMessage.toLowerCase().includes('empty') ||
+            errorMessage.toLowerCase().includes('vazio') ||
+            errorStr.includes('file') ||
+            errorStr.includes('empty') ||
+            errorStr.includes('resume')
+          ) {
+            toast.error('⚠️ Problema com o arquivo. Se você selecionou do Google Drive, faça o download do arquivo no seu celular primeiro e tente novamente.', {
+              duration: 7000,
+            });
+            return;
+          }
+          
+          toast.error(errorMessage || 'Não foi possível enviar sua candidatura.', {
             duration: 5000,
           });
           return;
@@ -401,17 +471,17 @@ const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
 
         // Sem resposta do servidor (erro de rede)
         if (!axiosError.response) {
-          toast.error('Sem conexão com o servidor. Verifique sua internet e tente novamente.', {
-            duration: 5000,
+          toast.error('Problema ao enviar. Se você selecionou um arquivo do Google Drive, faça o download no seu celular primeiro e tente novamente.', {
+            duration: 7000,
           });
           return;
         }
       }
 
-      // Erro completamente desconhecido
-      console.log('[JobApplicationModal] Erro não identificado, exibindo mensagem genérica');
-      toast.error('Erro inesperado. Tente novamente.', {
-        duration: 5000,
+      // Erro completamente desconhecido - pode ser problema com arquivo
+      console.log('[JobApplicationModal] Erro não identificado, verificando se pode ser arquivo do Google Drive');
+      toast.error(' Não foi possível enviar sua candidatura. Se você selecionou do Google Drive, faça o download do arquivo no seu celular primeiro e tente novamente.', {
+        duration: 7000,
       });
     } finally {
       console.log('[JobApplicationModal] Finally: setSubmitting(false)');
