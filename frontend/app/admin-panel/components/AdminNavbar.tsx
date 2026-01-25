@@ -34,8 +34,8 @@ const AdminNavbar = () => {
       icon: FileText,
     },
     {
-      name: 'Candidaturas Totais',
-      href: '/admin-panel/total-candidaturas',
+      name: 'Talentos Cadastrados',
+      href: '/admin-panel/talentos',
       icon: FileEarmarkPerson,
     },
   ];

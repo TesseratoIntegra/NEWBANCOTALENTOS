@@ -51,9 +51,31 @@ class CandidateService {
     }
   }
 
-  async getAllCandidates(): Promise<CandidateProfile> {
+  async getAllCandidates(params?: {
+    page?: number;
+    search?: string;
+    education_level?: string;
+    available_for_work?: boolean;
+    accepts_remote_work?: boolean;
+    accepts_relocation?: boolean;
+    can_travel?: boolean;
+    experience_years_min?: number;
+    experience_years_max?: number;
+  }): Promise<PaginatedResponse<CandidateProfile>> {
     try {
-      const url = `${this.baseUrl}/candidates/profiles/`;
+      const queryParams = new URLSearchParams();
+
+      if (params?.page) queryParams.append('page', params.page.toString());
+      if (params?.search) queryParams.append('search', params.search);
+      if (params?.education_level) queryParams.append('education_level', params.education_level);
+      if (params?.available_for_work !== undefined) queryParams.append('available_for_work', params.available_for_work.toString());
+      if (params?.accepts_remote_work !== undefined) queryParams.append('accepts_remote_work', params.accepts_remote_work.toString());
+      if (params?.accepts_relocation !== undefined) queryParams.append('accepts_relocation', params.accepts_relocation.toString());
+      if (params?.can_travel !== undefined) queryParams.append('can_travel', params.can_travel.toString());
+      if (params?.experience_years_min !== undefined) queryParams.append('experience_years__gte', params.experience_years_min.toString());
+      if (params?.experience_years_max !== undefined) queryParams.append('experience_years__lte', params.experience_years_max.toString());
+
+      const url = `${this.baseUrl}/candidates/profiles/?${queryParams.toString()}`;
       const response = await axios.get(url, this.getAxiosConfig());
       return response.data;
     } catch (error) {
@@ -90,7 +112,11 @@ class CandidateService {
       const formData = new FormData();
       formData.append('image_profile', imageFile);
 
-      const response = await axios.patch(`${this.baseUrl}/candidates/profiles/${profileId}/`, formData, this.getAxiosConfig());
+      const response = await axios.patch(
+        `${this.baseUrl}/candidates/profiles/${profileId}/`,
+        formData,
+        this.getAxiosConfig()
+      );
       return response.data;
     } catch (error) {
       console.error('Erro ao fazer upload da imagem de perfil:', error);

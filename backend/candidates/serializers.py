@@ -221,8 +221,10 @@ class CandidateProfileListSerializer(serializers.ModelSerializer):
         model = CandidateProfile
         fields = [
             'id', 'user_name', 'user_email', 'cpf', 'current_position', 'current_company',
-            'age', 'education_level', 'experience_years', 'desired_salary_min', 
+            'city', 'state', 'image_profile', 'skills', 'professional_summary',
+            'age', 'education_level', 'experience_years', 'desired_salary_min',
             'desired_salary_max', 'available_for_work', 'accepts_remote_work',
+            'accepts_relocation', 'can_travel',
             'experience_summary', 'education_summary', 'created_at'
         ]
 

@@ -6,6 +6,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django_filters import FilterSet
 
 from django.db.models import Q
+from django.db import IntegrityError
 
 from drf_spectacular.utils import extend_schema, extend_schema_view
 
@@ -87,12 +88,9 @@ class CandidateProfileViewSet(viewsets.ModelViewSet):
             # Candidatos veem apenas seu próprio perfil
             return CandidateProfile.objects.filter(user=user).select_related('user')
 
-        elif user.user_type == 'recruiter':
-            # Recrutadores veem todos os perfis disponíveis
-            return CandidateProfile.objects.filter(
-                available_for_work=True,
-                user__is_active=True
-            ).select_related('user').prefetch_related(
+        elif user.user_type == 'recruiter' or user.is_staff or user.is_superuser:
+            # Recrutadores, staff e superusers veem todos os perfis
+            return CandidateProfile.objects.all().select_related('user').prefetch_related(
                 'educations', 'experiences', 'languages', 'detailed_skills'
             )
 
@@ -125,7 +123,16 @@ class CandidateProfileViewSet(viewsets.ModelViewSet):
         """Permite apenas que o próprio candidato edite seu perfil"""
         if self.request.user != serializer.instance.user:
             raise PermissionError('Você só pode editar seu próprio perfil.')
-        serializer.save()
+
+        instance = serializer.save()
+
+        # Forçar persistência do image_profile se enviado via FILES
+        # (corrige problema onde o serializer não persiste o campo corretamente)
+        if 'image_profile' in self.request.FILES:
+            instance.image_profile = self.request.FILES['image_profile']
+            instance.save(update_fields=['image_profile', 'updated_at'])
+
+        return instance
 
     def perform_destroy(self, instance):
         """Permite apenas que o próprio candidato delete seu perfil"""
@@ -164,10 +171,11 @@ class CandidateProfileViewSet(viewsets.ModelViewSet):
     )
     @action(detail=False, methods=['get'])
     def search(self, request):
-        """Busca avançada para recrutadores"""
-        if request.user.user_type != 'recruiter':
+        """Busca avançada para recrutadores, staff e superusers"""
+        user = request.user
+        if not (user.user_type == 'recruiter' or user.is_staff or user.is_superuser):
             return Response(
-                {'error': 'Apenas recrutadores podem buscar candidatos.'},
+                {'error': 'Apenas recrutadores e admins podem buscar candidatos.'},
                 status=status.HTTP_403_FORBIDDEN
             )
 
@@ -242,13 +250,21 @@ class CandidateEducationViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        """Retorna formações do candidato logado"""
-        if self.request.user.user_type == 'candidate':
+        """Retorna formações do candidato logado ou de candidato específico (para admin/recruiter)"""
+        user = self.request.user
+        candidate_id = self.request.query_params.get('candidate')
+
+        if user.user_type == 'candidate':
             try:
-                profile = CandidateProfile.objects.get(user=self.request.user)
+                profile = CandidateProfile.objects.get(user=user)
                 return CandidateEducation.objects.filter(candidate=profile)
             except CandidateProfile.DoesNotExist:
                 return CandidateEducation.objects.none()
+
+        elif user.user_type == 'recruiter' or user.is_staff or user.is_superuser:
+            if candidate_id:
+                return CandidateEducation.objects.filter(candidate_id=candidate_id)
+            return CandidateEducation.objects.all()
 
         return CandidateEducation.objects.none()
 
@@ -287,13 +303,21 @@ class CandidateExperienceViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        """Retorna experiências do candidato logado"""
-        if self.request.user.user_type == 'candidate':
+        """Retorna experiências do candidato logado ou de candidato específico (para admin/recruiter)"""
+        user = self.request.user
+        candidate_id = self.request.query_params.get('candidate')
+
+        if user.user_type == 'candidate':
             try:
-                profile = CandidateProfile.objects.get(user=self.request.user)
+                profile = CandidateProfile.objects.get(user=user)
                 return CandidateExperience.objects.filter(candidate=profile)
             except CandidateProfile.DoesNotExist:
                 return CandidateExperience.objects.none()
+
+        elif user.user_type == 'recruiter' or user.is_staff or user.is_superuser:
+            if candidate_id:
+                return CandidateExperience.objects.filter(candidate_id=candidate_id)
+            return CandidateExperience.objects.all()
 
         return CandidateExperience.objects.none()
 
@@ -332,13 +356,21 @@ class CandidateLanguageViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        """Retorna idiomas do candidato logado"""
-        if self.request.user.user_type == 'candidate':
+        """Retorna idiomas do candidato logado ou de candidato específico (para admin/recruiter)"""
+        user = self.request.user
+        candidate_id = self.request.query_params.get('candidate')
+
+        if user.user_type == 'candidate':
             try:
-                profile = CandidateProfile.objects.get(user=self.request.user)
+                profile = CandidateProfile.objects.get(user=user)
                 return CandidateLanguage.objects.filter(candidate=profile)
             except CandidateProfile.DoesNotExist:
                 return CandidateLanguage.objects.none()
+
+        elif user.user_type == 'recruiter' or user.is_staff or user.is_superuser:
+            if candidate_id:
+                return CandidateLanguage.objects.filter(candidate_id=candidate_id)
+            return CandidateLanguage.objects.all()
 
         return CandidateLanguage.objects.none()
 
@@ -355,6 +387,10 @@ class CandidateLanguageViewSet(viewsets.ModelViewSet):
         except CandidateProfile.DoesNotExist:
             raise serializers.ValidationError({
                 'candidate': 'Perfil de candidato não encontrado. Crie um perfil primeiro.'
+            })
+        except IntegrityError:
+            raise serializers.ValidationError({
+                'language': 'Você já possui este idioma cadastrado.'
             })
 
 
@@ -377,13 +413,21 @@ class CandidateSkillViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        """Retorna habilidades do candidato logado"""
-        if self.request.user.user_type == 'candidate':
+        """Retorna habilidades do candidato logado ou de candidato específico (para admin/recruiter)"""
+        user = self.request.user
+        candidate_id = self.request.query_params.get('candidate')
+
+        if user.user_type == 'candidate':
             try:
-                profile = CandidateProfile.objects.get(user=self.request.user)
+                profile = CandidateProfile.objects.get(user=user)
                 return CandidateSkill.objects.filter(candidate=profile)
             except CandidateProfile.DoesNotExist:
                 return CandidateSkill.objects.none()
+
+        elif user.user_type == 'recruiter' or user.is_staff or user.is_superuser:
+            if candidate_id:
+                return CandidateSkill.objects.filter(candidate_id=candidate_id)
+            return CandidateSkill.objects.all()
 
         return CandidateSkill.objects.none()
 
@@ -400,4 +444,8 @@ class CandidateSkillViewSet(viewsets.ModelViewSet):
         except CandidateProfile.DoesNotExist:
             raise serializers.ValidationError({
                 'candidate': 'Perfil de candidato não encontrado. Crie um perfil primeiro.'
+            })
+        except IntegrityError:
+            raise serializers.ValidationError({
+                'skill_name': 'Você já possui uma habilidade com este nome cadastrada.'
             })
