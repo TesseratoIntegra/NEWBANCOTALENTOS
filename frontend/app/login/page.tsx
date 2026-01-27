@@ -140,13 +140,13 @@ export default function LoginPage() {
             return;
         }
 
-        // Validação de senha forte
-        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{6,}$/;
+        // Validação de senha forte (mínimo 8 caracteres para compatibilidade com Django)
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,}$/;
         if (!passwordRegex.test(createPassword)) {
             Swal.fire({
                 icon: "error",
                 title: "Senha inválida!",
-                text: "A senha deve ter no mínimo 6 caracteres, incluindo uma letra maiúscula, uma minúscula e um caractere especial.",
+                text: "A senha deve ter no mínimo 8 caracteres, incluindo uma letra maiúscula, uma minúscula e um caractere especial.",
                 theme: 'light',
             });
             return;

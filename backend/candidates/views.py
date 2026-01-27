@@ -84,15 +84,21 @@ class CandidateProfileViewSet(viewsets.ModelViewSet):
         """Filtra perfis baseado no tipo de usuário"""
         user = self.request.user
 
-        if user.user_type == 'candidate':
-            # Candidatos veem apenas seu próprio perfil
-            return CandidateProfile.objects.filter(user=user).select_related('user')
-
-        elif user.user_type == 'recruiter' or user.is_staff or user.is_superuser:
-            # Recrutadores, staff e superusers veem todos os perfis
+        # Staff/Superuser sempre vê tudo (independente de user_type)
+        if user.is_staff or user.is_superuser:
             return CandidateProfile.objects.all().select_related('user').prefetch_related(
                 'educations', 'experiences', 'languages', 'detailed_skills'
             )
+
+        # Recrutadores também veem todos os perfis
+        if user.user_type == 'recruiter':
+            return CandidateProfile.objects.all().select_related('user').prefetch_related(
+                'educations', 'experiences', 'languages', 'detailed_skills'
+            )
+
+        # Candidatos veem apenas seu próprio perfil
+        if user.user_type == 'candidate':
+            return CandidateProfile.objects.filter(user=user).select_related('user')
 
         return CandidateProfile.objects.none()
 
@@ -254,17 +260,25 @@ class CandidateEducationViewSet(viewsets.ModelViewSet):
         user = self.request.user
         candidate_id = self.request.query_params.get('candidate')
 
+        # Staff/Superuser sempre vê tudo
+        if user.is_staff or user.is_superuser:
+            if candidate_id:
+                return CandidateEducation.objects.filter(candidate_id=candidate_id)
+            return CandidateEducation.objects.all()
+
+        # Recrutadores também veem tudo
+        if user.user_type == 'recruiter':
+            if candidate_id:
+                return CandidateEducation.objects.filter(candidate_id=candidate_id)
+            return CandidateEducation.objects.all()
+
+        # Candidatos veem apenas suas formações
         if user.user_type == 'candidate':
             try:
                 profile = CandidateProfile.objects.get(user=user)
                 return CandidateEducation.objects.filter(candidate=profile)
             except CandidateProfile.DoesNotExist:
                 return CandidateEducation.objects.none()
-
-        elif user.user_type == 'recruiter' or user.is_staff or user.is_superuser:
-            if candidate_id:
-                return CandidateEducation.objects.filter(candidate_id=candidate_id)
-            return CandidateEducation.objects.all()
 
         return CandidateEducation.objects.none()
 
@@ -307,17 +321,25 @@ class CandidateExperienceViewSet(viewsets.ModelViewSet):
         user = self.request.user
         candidate_id = self.request.query_params.get('candidate')
 
+        # Staff/Superuser sempre vê tudo
+        if user.is_staff or user.is_superuser:
+            if candidate_id:
+                return CandidateExperience.objects.filter(candidate_id=candidate_id)
+            return CandidateExperience.objects.all()
+
+        # Recrutadores também veem tudo
+        if user.user_type == 'recruiter':
+            if candidate_id:
+                return CandidateExperience.objects.filter(candidate_id=candidate_id)
+            return CandidateExperience.objects.all()
+
+        # Candidatos veem apenas suas experiências
         if user.user_type == 'candidate':
             try:
                 profile = CandidateProfile.objects.get(user=user)
                 return CandidateExperience.objects.filter(candidate=profile)
             except CandidateProfile.DoesNotExist:
                 return CandidateExperience.objects.none()
-
-        elif user.user_type == 'recruiter' or user.is_staff or user.is_superuser:
-            if candidate_id:
-                return CandidateExperience.objects.filter(candidate_id=candidate_id)
-            return CandidateExperience.objects.all()
 
         return CandidateExperience.objects.none()
 
@@ -360,17 +382,25 @@ class CandidateLanguageViewSet(viewsets.ModelViewSet):
         user = self.request.user
         candidate_id = self.request.query_params.get('candidate')
 
+        # Staff/Superuser sempre vê tudo
+        if user.is_staff or user.is_superuser:
+            if candidate_id:
+                return CandidateLanguage.objects.filter(candidate_id=candidate_id)
+            return CandidateLanguage.objects.all()
+
+        # Recrutadores também veem tudo
+        if user.user_type == 'recruiter':
+            if candidate_id:
+                return CandidateLanguage.objects.filter(candidate_id=candidate_id)
+            return CandidateLanguage.objects.all()
+
+        # Candidatos veem apenas seus idiomas
         if user.user_type == 'candidate':
             try:
                 profile = CandidateProfile.objects.get(user=user)
                 return CandidateLanguage.objects.filter(candidate=profile)
             except CandidateProfile.DoesNotExist:
                 return CandidateLanguage.objects.none()
-
-        elif user.user_type == 'recruiter' or user.is_staff or user.is_superuser:
-            if candidate_id:
-                return CandidateLanguage.objects.filter(candidate_id=candidate_id)
-            return CandidateLanguage.objects.all()
 
         return CandidateLanguage.objects.none()
 
@@ -417,17 +447,25 @@ class CandidateSkillViewSet(viewsets.ModelViewSet):
         user = self.request.user
         candidate_id = self.request.query_params.get('candidate')
 
+        # Staff/Superuser sempre vê tudo
+        if user.is_staff or user.is_superuser:
+            if candidate_id:
+                return CandidateSkill.objects.filter(candidate_id=candidate_id)
+            return CandidateSkill.objects.all()
+
+        # Recrutadores também veem tudo
+        if user.user_type == 'recruiter':
+            if candidate_id:
+                return CandidateSkill.objects.filter(candidate_id=candidate_id)
+            return CandidateSkill.objects.all()
+
+        # Candidatos veem apenas suas habilidades
         if user.user_type == 'candidate':
             try:
                 profile = CandidateProfile.objects.get(user=user)
                 return CandidateSkill.objects.filter(candidate=profile)
             except CandidateProfile.DoesNotExist:
                 return CandidateSkill.objects.none()
-
-        elif user.user_type == 'recruiter' or user.is_staff or user.is_superuser:
-            if candidate_id:
-                return CandidateSkill.objects.filter(candidate_id=candidate_id)
-            return CandidateSkill.objects.all()
 
         return CandidateSkill.objects.none()
 
