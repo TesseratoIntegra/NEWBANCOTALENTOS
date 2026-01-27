@@ -12,11 +12,12 @@ import { toast } from 'react-hot-toast';
 
 export interface PersonalInfoSectionProps {
   profile: CandidateProfile | null;
-  onUpdate: (data: Partial<CandidateProfile>) => Promise<void>;
+  onUpdate: (data: Partial<CandidateProfile>) => Promise<CandidateProfile | null>;
+  onProfileChange: (profile: CandidateProfile) => void;
   saving: boolean;
 }
 
-export default function PersonalInfoSection({ profile, onUpdate, saving }: PersonalInfoSectionProps) {
+export default function PersonalInfoSection({ profile, onUpdate, onProfileChange, saving }: PersonalInfoSectionProps) {
   const { wizzardStep, setWizardStep } = useAuth();
   const [formData, setFormData] = useState<Partial<CandidateProfile>>({
     cpf: '',
@@ -73,7 +74,11 @@ export default function PersonalInfoSection({ profile, onUpdate, saving }: Perso
       
       // Se existe uma imagem de perfil, configura o preview
       if (profile.image_profile) {
-        setImagePreview(profile.image_profile);
+        // Garante URL completa (backend pode retornar path relativo)
+        const imageUrl = profile.image_profile.startsWith('http')
+          ? profile.image_profile
+          : `${process.env.NEXT_PUBLIC_API_BASE_URL}${profile.image_profile}`;
+        setImagePreview(imageUrl);
       }
     }
       // Checa se algum campo está vazio
@@ -193,15 +198,28 @@ export default function PersonalInfoSection({ profile, onUpdate, saving }: Perso
       return;
     }
 
-    // Se há uma imagem para upload, faz o upload primeiro
-    if (profileImage && profile?.id) {
+    // Primeiro salva/cria o perfil
+    const savedProfile = await onUpdate(formData);
+
+    // Depois faz upload da imagem se houver
+    if (profileImage && savedProfile?.id) {
       try {
-        await candidateService.uploadProfileImage(profile.id, profileImage);
+        const updatedProfile = await candidateService.uploadProfileImage(savedProfile.id, profileImage);
+        setProfileImage(null);
+        onProfileChange(updatedProfile);
+        // Garante URL completa para o preview
+        if (updatedProfile.image_profile) {
+          const imageUrl = updatedProfile.image_profile.startsWith('http')
+            ? updatedProfile.image_profile
+            : `${process.env.NEXT_PUBLIC_API_BASE_URL}${updatedProfile.image_profile}`;
+          setImagePreview(imageUrl);
+        }
+        toast.success('Foto de perfil atualizada!');
       } catch (error) {
         console.error('Erro ao fazer upload da imagem:', error);
+        toast.error('Erro ao salvar foto de perfil');
       }
     }
-    await onUpdate(formData);
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -381,12 +399,13 @@ export default function PersonalInfoSection({ profile, onUpdate, saving }: Perso
               onClick={handleImageClick}
             >
               {imagePreview ? (
-                <Image 
-                  src={imagePreview} 
-                  alt="Foto de perfil" 
+                <Image
+                  src={imagePreview}
+                  alt="Foto de perfil"
                   width={128}
                   height={128}
                   className="w-full h-full object-cover"
+                  unoptimized
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">

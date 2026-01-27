@@ -70,8 +70,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (userData: RegisterRequest): Promise<void> => {
     try {
       setIsLoading(true);
-      const tokens = await AuthService.register(userData);
-      setUser(tokens.user);
+      // Registro apenas cria o usuário, não retorna tokens
+      await AuthService.register(userData);
+      // O login será feito separadamente após o registro
     } catch (error) {
       console.error('Erro no registro:', error);
       throw error;

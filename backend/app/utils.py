@@ -54,7 +54,8 @@ class UniqueFilePathGenerator:
         final_filename = f"{safe_name}_{unique_id}{ext.lower()}"
 
         # Retorna o caminho completo: sub_path/nome-sanitizado_uuid.extensao
-        return os.path.join(self.sub_path, final_filename)
+        # Usa / ao invés de os.path.join para garantir compatibilidade com URLs
+        return f"{self.sub_path}/{final_filename}"
 
 
 def sanitize_filename(filename):

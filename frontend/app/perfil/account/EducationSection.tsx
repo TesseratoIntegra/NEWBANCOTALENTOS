@@ -162,14 +162,16 @@ export default function EducationSection({ educations: initialEducations, onUpda
     <div className="lg:p-6">
       <div className="lg:flex justify-between items-center mb-6">
         <h2 className="text-center lg:text-right text-xl lg:text-2xl font-bold text-blue-900">Formação Acadêmica</h2>
-        <button
-          onClick={() => setIsAdding(true)}
-          disabled={isAdding}
-          className="w-full mt-3 lg:mt-0 lg:w-auto bg-blue-900 hover:bg-blue-800 disabled:bg-slate-800 disabled:opacity-50 text-slate-100 px-4 py-2 rounded-md font-medium transition-colors flex items-center cursor-pointer justify-center lg:justify-start"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Adicionar Formação
-        </button>
+        {educations.length > 0 && (
+          <button
+            onClick={() => setIsAdding(true)}
+            disabled={isAdding}
+            className="w-full mt-3 lg:mt-0 lg:w-auto bg-blue-900 hover:bg-blue-800 disabled:bg-slate-800 disabled:opacity-50 text-slate-100 px-4 py-2 rounded-md font-medium transition-colors flex items-center cursor-pointer justify-center lg:justify-start"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Adicionar Formação
+          </button>
+        )}
       </div>
 
       {/* Formulário */}
@@ -308,7 +310,7 @@ export default function EducationSection({ educations: initialEducations, onUpda
 
       {/* Lista de Formações */}
       <div className="space-y-4">
-        {educations.length === 0 ? (
+        {educations.length === 0 && !isAdding ? (
           <div className="text-center py-8">
             <p className="text-slate-700 mb-4">Nenhuma formação cadastrada</p>
             <button
@@ -318,7 +320,7 @@ export default function EducationSection({ educations: initialEducations, onUpda
               Adicionar Primeira Formação
             </button>
           </div>
-        ) : (
+        ) : educations.length > 0 ? (
           educations.map((education) => (
             <div key={education.id} className="bg-white border border-blue-900/50 rounded-lg p-4">
               <div className="flex justify-between items-start">
@@ -366,7 +368,7 @@ export default function EducationSection({ educations: initialEducations, onUpda
               </div>
             </div>
           ))
-        )}
+        ) : null}
 
         {/* Botão de Salvar */}
         <div className="flex justify-center lg:justify-end pt-6 border-t border-zinc-400">

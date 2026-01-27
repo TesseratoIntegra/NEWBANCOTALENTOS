@@ -172,14 +172,16 @@ export default function ExperienceSection({ experiences: initialExperiences, onU
     <div className="lg:p-6">
       <div className="lg:flex justify-between items-center mb-6">
         <h2 className="text-center lg:text-right text-xl lg:text-2xl font-bold text-blue-900">Experiência Profissional</h2>
-        <button
-          onClick={() => setIsAdding(true)}
-          disabled={isAdding}
-          className="w-full mt-3 lg:mt-0 lg:w-auto bg-blue-900 hover:bg-blue-800 disabled:bg-slate-700 disabled:opacity-50 text-slate-100 px-4 py-2 rounded-md font-medium transition-colors flex items-center cursor-pointer justify-center lg:justify-start"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Adicionar Experiência
-        </button>
+        {experiences.length > 0 && (
+          <button
+            onClick={() => setIsAdding(true)}
+            disabled={isAdding}
+            className="w-full mt-3 lg:mt-0 lg:w-auto bg-blue-900 hover:bg-blue-800 disabled:bg-slate-700 disabled:opacity-50 text-slate-100 px-4 py-2 rounded-md font-medium transition-colors flex items-center cursor-pointer justify-center lg:justify-start"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Adicionar Experiência
+          </button>
+        )}
       </div>
 
       {/* Formulário */}
@@ -326,7 +328,7 @@ export default function ExperienceSection({ experiences: initialExperiences, onU
 
       {/* Lista de Experiências */}
       <div className="space-y-4">
-        {experiences.length === 0 ? (
+        {experiences.length === 0 && !isAdding ? (
           <div className="text-center py-8">
             <p className="text-slate-700 mb-4">Nenhuma experiência cadastrada</p>
             <button
@@ -336,7 +338,7 @@ export default function ExperienceSection({ experiences: initialExperiences, onU
               Adicionar Primeira Experiência
             </button>
           </div>
-        ) : (
+        ) : experiences.length > 0 ? (
           experiences.map((experience) => (
             <div key={experience.id} className="bg-white rounded-md p-4 border border-blue-900/50">
               <div className="flex justify-between items-start">
@@ -393,7 +395,7 @@ export default function ExperienceSection({ experiences: initialExperiences, onU
               </div>
             </div>
           ))
-        )}
+        ) : null}
         <div className="flex justify-center lg:justify-end pt-6 border-t border-zinc-400">
           <div onClick={()=>{setCurrentStep(2)}} className="mr-auto bg-blue-900 hover:bg-blue-800 disabled:bg-slate-700 disabled:opacity-50 text-slate-100 px-6 py-2 rounded-md font-medium transition-colors flex items-center cursor-pointer">
             <Icon.ArrowLeft className="h-4 w-4 mr-2" /> Voltar

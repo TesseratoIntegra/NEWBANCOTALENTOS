@@ -4,14 +4,18 @@ import { useState, useEffect } from 'react';
 import { CandidateProfile } from '@/types';
 import candidateService from '@/services/candidateService';
 import { Save } from 'lucide-react';
+import * as Icon from 'react-bootstrap-icons';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface PreferencesSectionProps {
   profile: CandidateProfile | null;
-  onUpdate: (data: Partial<CandidateProfile>) => Promise<void>;
+  onUpdate: (data: Partial<CandidateProfile>) => Promise<CandidateProfile | null>;
   saving: boolean;
+  onComplete?: () => void;
 }
 
-export default function PreferencesSection({ profile, onUpdate, saving }: PreferencesSectionProps) {
+export default function PreferencesSection({ profile, onUpdate, saving, onComplete }: PreferencesSectionProps) {
+  const { setCurrentStep } = useAuth();
   const [formData, setFormData] = useState<Partial<CandidateProfile>>({
     available_for_work: true,
     can_travel: false,
@@ -38,7 +42,10 @@ export default function PreferencesSection({ profile, onUpdate, saving }: Prefer
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onUpdate(formData);
+    const result = await onUpdate(formData);
+    if (result && onComplete) {
+      onComplete();
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -177,8 +184,14 @@ export default function PreferencesSection({ profile, onUpdate, saving }: Prefer
           </div>
         </div>
 
-        {/* Botão de Salvar */}
-        <div className="flex justify-end pt-6 border-t border-zinc-400">
+        {/* Botões */}
+        <div className="flex justify-center lg:justify-end pt-6 border-t border-zinc-400">
+          <div
+            onClick={() => setCurrentStep(5)}
+            className="mr-auto bg-blue-900 hover:bg-blue-800 disabled:bg-slate-700 disabled:opacity-50 text-slate-100 px-6 py-2 rounded-md font-medium transition-colors flex items-center cursor-pointer"
+          >
+            <Icon.ArrowLeft className="h-4 w-4 mr-2" /> Voltar
+          </div>
           <button
             type="submit"
             disabled={saving}
@@ -192,7 +205,7 @@ export default function PreferencesSection({ profile, onUpdate, saving }: Prefer
             ) : (
               <>
                 <Save className="h-4 w-4 mr-2" />
-                Salvar Preferências
+                {onComplete ? 'Concluir Perfil' : 'Salvar Preferências'}
               </>
             )}
           </button>

@@ -6,7 +6,11 @@ from decouple import Config, RepositoryEnv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-ROOT_ENV = BASE_DIR.parent / ".env" 
+ROOT_ENV = BASE_DIR.parent / ".env"
+
+# Criar pasta de logs se não existir
+LOGS_DIR = BASE_DIR / 'logs'
+LOGS_DIR.mkdir(exist_ok=True) 
 
 # Força o decouple a usar o .env da raiz (evita confusão com backend/.env)
 if ROOT_ENV.exists():
@@ -67,11 +71,19 @@ SITE_ID = 1
 CSRF_TRUSTED_ORIGINS = [
     "https://www.bancodetalentos.chiaperini.com.br",
     "https://bancodetalentos.chiaperini.com.br",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:3025",
+    "http://127.0.0.1:3025",
 ]
 
 CORS_ALLOWED_ORIGINS = [
     "https://www.bancodetalentos.chiaperini.com.br",
     "https://bancodetalentos.chiaperini.com.br",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:3025",
+    "http://127.0.0.1:3025",
 ]
 
 # Configurações adicionais de CORS para melhor compatibilidade
@@ -216,23 +228,25 @@ TEMPLATES = [
 WSGI_APPLICATION = 'app.wsgi.application'
 
 # Database
-if DEBUG:
-    # Ambiente de Desenvolvimento: SQLite
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
-else:
+# Usa PostgreSQL se POSTGRES_HOST estiver definido, senão SQLite
+POSTGRES_HOST = config('POSTGRES_HOST', default='')
+if POSTGRES_HOST:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
             'NAME': config('POSTGRES_DB', 'bancodetalentos'),
             'USER': config('POSTGRES_USER', 'postgres'),
             'PASSWORD': config('POSTGRES_PASSWORD', 'postgres'),
-            'HOST': config('POSTGRES_HOST', 'localhost'),
+            'HOST': POSTGRES_HOST,
             'PORT': config('POSTGRES_PORT', '5432'),
+        }
+    }
+else:
+    # Ambiente de Desenvolvimento local: SQLite
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
 

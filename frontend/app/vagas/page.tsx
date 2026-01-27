@@ -37,6 +37,7 @@ const Home = () => {
   const [allJobs, setAllJobs] = useState<Job[]>([]);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
+  /* Candidatura Espontânea - DESATIVADA TEMPORARIAMENTE
   useEffect(() => {
     async function checkSpontaneousApplication() {
       if (isAuthenticated && user?.user_type === 'candidate') {
@@ -58,6 +59,7 @@ const Home = () => {
     }
     checkSpontaneousApplication();
   }, [isAuthenticated, user]);
+  */
 
   // Função para carregar todas as empresas (sem paginação)
   const loadCompanies = async () => {
@@ -570,7 +572,9 @@ const Home = () => {
 
       <Footer />
 
+      {/* Candidatura Espontânea Modal - DESATIVADO TEMPORARIAMENTE
       {isAuthenticated && user?.user_type === 'candidate' && <JobApplicationModalStart show={showModal} onClose={() => setShowModal(false)} />}
+      */}
 
     </div>
   );

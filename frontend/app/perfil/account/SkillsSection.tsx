@@ -57,9 +57,17 @@ export default function SkillsSection({ skills, onUpdate }: SkillsSectionProps) 
         toast.success('Habilidade adicionada com sucesso!');
       }
       resetForm();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao salvar habilidade:', error);
-      toast.error('Erro ao salvar habilidade');
+      // Extrai mensagem de erro do backend (ex: duplicata)
+      const axiosError = error as { response?: { data?: Record<string, string | string[]> } };
+      if (axiosError.response?.data) {
+        const errorData = axiosError.response.data;
+        const errorMessage = Object.values(errorData).flat().join(', ');
+        toast.error(errorMessage || 'Erro ao salvar habilidade');
+      } else {
+        toast.error('Erro ao salvar habilidade');
+      }
     }
   };
 
@@ -120,14 +128,16 @@ export default function SkillsSection({ skills, onUpdate }: SkillsSectionProps) 
     <div className="p-6">
       <div className="lg:flex justify-between items-center mb-6">
         <h2 className="text-center lg:text-right text-xl lg:text-2xl font-bold text-blue-900">Habilidades Técnicas</h2>
-        <button
-          onClick={() => setIsAdding(true)}
-          disabled={isAdding}
-          className="w-full mt-3 lg:mt-0 lg:w-auto bg-blue-900 hover:bg-blue-800 disabled:bg-slate-700 disabled:opacity-50 text-slate-100 px-4 py-2 rounded-md font-medium transition-colors flex items-center cursor-pointer"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Adicionar Habilidade
-        </button>
+        {skills.length > 0 && (
+          <button
+            onClick={() => setIsAdding(true)}
+            disabled={isAdding}
+            className="w-full mt-3 lg:mt-0 lg:w-auto bg-blue-900 hover:bg-blue-800 disabled:bg-slate-700 disabled:opacity-50 text-slate-100 px-4 py-2 rounded-md font-medium transition-colors flex items-center cursor-pointer"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Adicionar Habilidade
+          </button>
+        )}
       </div>
 
       {/* Formulário */}
@@ -217,7 +227,7 @@ export default function SkillsSection({ skills, onUpdate }: SkillsSectionProps) 
 
       {/* Lista de Habilidades */}
       <div className="space-y-4">
-        {skills.length === 0 ? (
+        {skills.length === 0 && !isAdding ? (
           <div className="text-center py-8">
             <p className="text-slate-700 mb-4">Nenhuma habilidade cadastrada</p>
             <button
@@ -227,46 +237,44 @@ export default function SkillsSection({ skills, onUpdate }: SkillsSectionProps) 
               Adicionar Primeira Habilidade
             </button>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {skills.map((skill) => (
-              <div key={skill.id} className="bg-white rounded-md border border-blue-900/50 p-4">
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-slate-700">{skill.skill_name}</h3>
-                    <div className="flex items-center mt-2">
-                      <span className={`inline-block w-3 h-3 rounded-full ${getLevelColor(skill.level)} mr-2`}></span>
-                      <span className="text-zinc-700 text-sm">
-                        {skillLevels.find(level => level.value === skill.level)?.label || skill.level}
-                      </span>
-                    </div>
-                    {skill.years_experience && (
-                      <p className="text-zinc-600 text-sm mt-1">
-                        {skill.years_experience} {skill.years_experience === 1 ? 'ano' : 'anos'} de experiência
-                      </p>
-                    )}
+        ) : skills.length > 0 ? (
+          skills.map((skill) => (
+            <div key={skill.id} className="bg-white rounded-lg border border-blue-900/50 p-4">
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-blue-900">{skill.skill_name}</h3>
+                  <div className="flex items-center mt-2">
+                    <span className={`inline-block w-3 h-3 rounded-full ${getLevelColor(skill.level)} mr-2`}></span>
+                    <span className="text-zinc-700 text-sm">
+                      {skillLevels.find(level => level.value === skill.level)?.label || skill.level}
+                    </span>
                   </div>
-                  <div className="flex gap-2 ml-2">
-                    <button
-                      onClick={() => handleEdit(skill)}
-                      className="text-blue-600 hover:text-blue-500 p-1 cursor-pointer"
-                      title="Editar"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(skill.id)}
-                      className="text-red-600 hover:text-red-500 p-1 cursor-pointer"
-                      title="Excluir"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
+                  {skill.years_experience && (
+                    <p className="text-zinc-600 text-sm mt-1">
+                      {skill.years_experience} {skill.years_experience === 1 ? 'ano' : 'anos'} de experiência
+                    </p>
+                  )}
+                </div>
+                <div className="flex gap-2 ml-4">
+                  <button
+                    onClick={() => handleEdit(skill)}
+                    className="text-blue-800 hover:text-blue-600 p-1 cursor-pointer"
+                    title="Editar"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(skill.id)}
+                    className="text-red-600 hover:text-red-500 p-1 cursor-pointer"
+                    title="Excluir"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+            </div>
+          ))
+        ) : null}
 
         <div className="flex justify-center lg:justify-end pt-6 border-t border-zinc-400">
           <div onClick={()=>{setCurrentStep(3)}} className="mr-auto bg-blue-900 hover:bg-blue-800 disabled:bg-slate-700 disabled:opacity-50 text-slate-100 px-6 py-2 rounded-md font-medium transition-colors flex items-center cursor-pointer">

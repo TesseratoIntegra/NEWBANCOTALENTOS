@@ -7,6 +7,7 @@ import Image from "next/image";
 import ResetPassword from './components/ResetPassword';
 import { useRouter } from "next/navigation";
 import AuthService from '@/services/auth';
+import candidateService from '@/services/candidateService';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginPage() {
@@ -77,8 +78,8 @@ export default function LoginPage() {
 
         try {
             // Usar o hook useAuth para login
-            await login({ email: userValue, password: passwordValue });
-    
+            const result = await login({ email: userValue, password: passwordValue });
+
             Swal.fire({
                 icon: "success",
                 title: "Login bem sucedido!",
@@ -86,10 +87,22 @@ export default function LoginPage() {
                 theme: 'light',
             });
 
-            // Pequena espera para garantir que o contexto seja atualizado
-            setTimeout(() => {
+            // Verificar se é candidato e se tem perfil
+            const storedUser = AuthService.getUser();
+            if (storedUser?.user_type === 'candidate') {
+                try {
+                    // Tenta buscar o perfil do candidato
+                    await candidateService.getCandidateProfile();
+                    // Se tem perfil, vai para home
+                    router.push('/');
+                } catch {
+                    // Se não tem perfil, vai para criar
+                    router.push('/perfil/criar');
+                }
+            } else {
+                // Não é candidato, vai para home
                 router.push('/');
-            }, 100);
+            }
 
         } catch (error) {
             Swal.fire({
@@ -150,19 +163,18 @@ export default function LoginPage() {
                 password2: createPassword2
             });
 
+            // Fazer login automático após registro
+            await login({ email: createEmail, password: createPassword });
+
             Swal.fire({
                 icon: "success",
-                title: "Usuário criado!",
-                text: "Por favor, faça seu login.",
+                title: "Conta criada com sucesso!",
+                text: "Vamos completar seu perfil.",
                 theme: 'light',
             });
-            // Limpar os campos
-            setCreateEmail('');
-            setCreateName('');
-            setCreatePassword('');
-            setCreatePassword2('');
-            setNextStep(false);
-            window.location.href = '/login';
+
+            // Redirecionar direto para o wizard de criação de perfil
+            router.push('/perfil/criar');
         } catch (error: unknown) {
             const apiError = error as { response?: { data?: { email?: string[] } } };
             

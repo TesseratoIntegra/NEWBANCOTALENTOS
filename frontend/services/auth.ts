@@ -140,17 +140,11 @@ class AuthService {
     return { user, access, refresh };
   }
 
-  // Função para registro
-  async register(userData: RegisterRequest): Promise<AuthTokens> {
+  // Função para registro (não retorna tokens, apenas cria o usuário)
+  async register(userData: RegisterRequest): Promise<{ user: User }> {
     const response = await axios.post(`${BASE_API_URL}/registers/`, userData);
-    
-    const { access, refresh, user } = response.data;
-    
-    this.setAccessToken(access);
-    this.setRefreshToken(refresh);
-    this.setUser(user);
-    
-    return { user, access, refresh };
+    // O backend de registro retorna apenas { message, user }, sem tokens
+    return { user: response.data.user };
   }
 
   // Função para obter usuário atual

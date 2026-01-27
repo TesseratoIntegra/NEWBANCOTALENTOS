@@ -10,7 +10,7 @@ import { toast } from 'react-hot-toast';
 
 export interface ProfessionalInfoSectionProps {
   profile: CandidateProfile | null;
-  onUpdate: (data: Partial<CandidateProfile>) => Promise<void>;
+  onUpdate: (data: Partial<CandidateProfile>) => Promise<CandidateProfile | null>;
   saving: boolean;
 }
 

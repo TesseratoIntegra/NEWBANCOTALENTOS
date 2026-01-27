@@ -2,15 +2,16 @@ FROM node:22-alpine
 
 WORKDIR /app
 
-# Instala dependências de produção
+# Copia arquivos de dependências
 COPY package.json package-lock.json ./
+
+# Instala dependências
 RUN npm ci
 
-# Copia o código e gera o build
+# Copia o resto do código
 COPY . .
-RUN npm run build
 
 EXPOSE 3000
-ENV NODE_ENV=production
 
-CMD ["npm", "run", "start"]
+# Modo desenvolvimento com hot-reload
+CMD ["npm", "run", "dev"]

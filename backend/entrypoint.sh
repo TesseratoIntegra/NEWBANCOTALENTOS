@@ -3,10 +3,10 @@
 echo "🟢 Entrypoint iniciado"
 
 echo "📦 Aplicando migrações..."
-python manage.py migrate --noinput
+python manage.py migrate --no-input
 
 echo "📂 Coletando arquivos estáticos..."
-python manage.py collectstatic --noinput
+python manage.py collectstatic --no-input
 
 echo "🛠️ Verificando superusuário..."
 

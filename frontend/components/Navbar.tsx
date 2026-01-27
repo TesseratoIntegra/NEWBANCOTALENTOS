@@ -197,24 +197,28 @@ function Navbar() {
                                 />
                             ))}
 
+                            {/* Candidatura Espontânea - DESATIVADA TEMPORARIAMENTE
                             {isAuthenticated && user?.user_type === 'candidate' && (
                                 <SpontaneousApplicationButton
                                     canClickJobStart={canClickJobStart}
                                     onClick={handleJobStartClick}
                                 />
                             )}
+                            */}
 
                         </nav>
-                        
+
+                        {/* Modal Candidatura Espontânea - DESATIVADO TEMPORARIAMENTE
                         {isAuthenticated && user?.user_type === 'candidate' && (
                             <JobApplicationModalStart show={jobStart} onClose={handleCloseJobStart} />
                         )}
+                        */}
                         
                         {isAuthenticated ? (
                             user?.user_type === 'candidate' ? (
                                 <div className="flex items-center space-x-2 ml-5">
                                     <Link href='/perfil' className="animate-fade text-zinc-200 hover:text-zinc-800 border border-zinc-100/40 px-4 py-2 rounded-md cursor-pointer text-sm duration-300 flex justify-center place-items-center gap-2 hover:bg-yellow-300">
-                                        <Icon.Person className="w-4 h-4" /> Minha Conta
+                                        <Icon.Person className="w-4 h-4" /> Meu Perfil
                                     </Link>
                                     <LogoutBtn />
                                 </div>
@@ -264,6 +268,7 @@ function Navbar() {
                             />
                         ))}
 
+                        {/* Candidatura Espontânea Mobile - DESATIVADA TEMPORARIAMENTE
                         {isAuthenticated && user?.user_type === 'candidate' && (
                             <div className="ml-3">
                                 <SpontaneousApplicationButton
@@ -272,12 +277,15 @@ function Navbar() {
                                 />
                             </div>
                         )}
+                        */}
 
                     </nav>
-                    
+
+                    {/* Modal Candidatura Espontânea Mobile - DESATIVADO TEMPORARIAMENTE
                     {isAuthenticated && user?.user_type === 'candidate' && (
                         <JobApplicationModalStart show={jobStart} onClose={handleCloseJobStart} />
                     )}
+                    */}
                     <div className="mt-4 pt-4 border-t border-blue-900/20">
                         {isAuthenticated ? (
                             user?.user_type === 'candidate' ? (
@@ -287,7 +295,7 @@ function Navbar() {
                                         onClick={handleMobileMenuClose}
                                         className="bg-blue-700 text-yellow-400 px-4 py-2 rounded-md cursor-pointer text-sm duration-300 flex justify-center place-items-center gap-2 hover:bg-blue-800"
                                     >
-                                        <Icon.Person className="w-4 h-4" /> Minha Conta
+                                        <Icon.Person className="w-4 h-4" /> Meu Perfil
                                     </Link>
                                     <LogoutBtn />
                                 </div>
