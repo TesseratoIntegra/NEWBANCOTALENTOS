@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Plus, List, Home, FileText } from 'lucide-react';
+import { Plus, List, Home, FileText, ClipboardList } from 'lucide-react';
 
 
 import { useState } from 'react';
@@ -37,6 +37,11 @@ const AdminNavbar = () => {
       name: 'Talentos Cadastrados',
       href: '/admin-panel/talentos',
       icon: FileEarmarkPerson,
+    },
+    {
+      name: 'Processos Seletivos',
+      href: '/admin-panel/processos-seletivos',
+      icon: ClipboardList,
     },
   ];
 

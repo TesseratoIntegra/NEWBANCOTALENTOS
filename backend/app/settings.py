@@ -60,6 +60,7 @@ LOCAL_APPS = [
     'jobs',
     'spontaneous',
     'candidates',
+    'selection_process',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

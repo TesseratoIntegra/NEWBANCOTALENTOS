@@ -287,3 +287,164 @@ export interface APIError {
   non_field_errors?: string[];
   [key: string]: string | string[] | undefined;
 }
+
+// ============================================
+// SELECTION PROCESS TYPES
+// ============================================
+
+export interface SelectionProcess {
+  id: number;
+  title: string;
+  description?: string;
+  job?: number;
+  job_title?: string;
+  company: number;
+  company_name?: string;
+  created_by?: number;
+  created_by_name?: string;
+  status: 'draft' | 'active' | 'paused' | 'completed' | 'cancelled';
+  start_date?: string;
+  end_date?: string;
+  stages_count?: number;
+  candidates_count?: number;
+  candidates_approved?: number;
+  candidates_rejected?: number;
+  candidates_in_progress?: number;
+  stages?: ProcessStage[];
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProcessStage {
+  id: number;
+  process: number;
+  name: string;
+  description?: string;
+  order: number;
+  is_eliminatory: boolean;
+  questions_count?: number;
+  questions?: StageQuestion[];
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface StageQuestion {
+  id: number;
+  stage: number;
+  question_text: string;
+  question_type: 'multiple_choice' | 'open_text';
+  options?: string[];
+  order: number;
+  is_required: boolean;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CandidateInProcess {
+  id: number;
+  process: number;
+  process_title?: string;
+  candidate_profile: number;
+  candidate_name?: string;
+  candidate_email?: string;
+  candidate_image?: string;
+  current_stage?: number;
+  current_stage_name?: string;
+  current_stage_order?: number;
+  status: 'pending' | 'in_progress' | 'approved' | 'rejected' | 'withdrawn';
+  added_by?: number;
+  added_by_name?: string;
+  added_at: string;
+  recruiter_notes?: string;
+  stage_responses?: CandidateStageResponse[];
+  average_rating?: number;
+  completed_stages?: number;
+  total_stages?: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CandidateStageResponse {
+  id: number;
+  candidate_in_process: number;
+  stage: number;
+  stage_name?: string;
+  stage_order?: number;
+  evaluation: 'pending' | 'approved' | 'rejected';
+  answers?: Record<number, string>;
+  recruiter_feedback?: string;
+  rating?: number;
+  evaluated_by?: number;
+  evaluated_by_name?: string;
+  evaluated_at?: string;
+  is_completed: boolean;
+  completed_at?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProcessStatistics {
+  total_candidates: number;
+  candidates_by_status: {
+    pending: number;
+    in_progress: number;
+    approved: number;
+    rejected: number;
+    withdrawn: number;
+  };
+  candidates_by_stage: Array<{
+    stage_id: number;
+    stage_name: string;
+    stage_order: number;
+    candidates_count: number;
+  }>;
+  average_rating: number | null;
+  completion_rate: number;
+}
+
+export interface AvailableCandidate {
+  id: number;
+  name: string;
+  email: string;
+  current_position?: string;
+  image_profile?: string;
+}
+
+// Create/Update types
+export interface CreateSelectionProcess {
+  title: string;
+  description?: string;
+  job?: number;
+  status?: 'draft' | 'active';
+  start_date?: string;
+  end_date?: string;
+}
+
+export interface CreateProcessStage {
+  process: number;
+  name: string;
+  description?: string;
+  order: number;
+  is_eliminatory?: boolean;
+}
+
+export interface CreateStageQuestion {
+  stage: number;
+  question_text: string;
+  question_type: 'multiple_choice' | 'open_text';
+  options?: string[];
+  order?: number;
+  is_required?: boolean;
+}
+
+export interface StageEvaluation {
+  evaluation: 'approved' | 'rejected';
+  answers?: Record<number, string>;
+  recruiter_feedback?: string;
+  rating?: number;
+}

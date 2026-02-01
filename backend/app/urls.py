@@ -30,6 +30,7 @@ urlpatterns = [
     path('api/v1/', include('jobs.urls')),
     path('api/v1/', include('spontaneous.urls')),
     path('api/v1/', include('candidates.urls')),
+    path('api/v1/', include('selection_process.urls')),
 
     # dj-rest-auth
     path('api/v1/accounts/', include('dj_rest_auth.urls')),
