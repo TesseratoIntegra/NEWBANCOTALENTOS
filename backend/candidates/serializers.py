@@ -125,10 +125,13 @@ class CandidateProfileSerializer(serializers.ModelSerializer):
     user_name = serializers.CharField(source='user.name', read_only=True)
     user_email = serializers.CharField(source='user.email', read_only=True)
 
+    # Dados da revisão do perfil
+    reviewed_by_name = serializers.CharField(source='profile_reviewed_by.name', read_only=True)
+
     class Meta:
         model = CandidateProfile
         fields = '__all__'
-        read_only_fields = ['user', 'created_at', 'updated_at']
+        read_only_fields = ['user', 'created_at', 'updated_at', 'profile_reviewed_by', 'profile_reviewed_at']
 
     def validate_date_of_birth(self, value):
         """Valida data de nascimento"""
@@ -227,7 +230,8 @@ class CandidateProfileListSerializer(serializers.ModelSerializer):
             'age', 'education_level', 'experience_years', 'desired_salary_min',
             'desired_salary_max', 'available_for_work', 'accepts_remote_work',
             'accepts_relocation', 'can_travel',
-            'experience_summary', 'education_summary', 'applications_count', 'applications_summary', 'created_at'
+            'experience_summary', 'education_summary', 'applications_count', 'applications_summary',
+            'profile_status', 'profile_observations', 'profile_reviewed_at', 'created_at'
         ]
 
     def get_experience_summary(self, obj):
@@ -273,3 +277,29 @@ class CandidateProfileListSerializer(serializers.ModelSerializer):
             }
             for app in applications
         ]
+
+
+class ProfileStatusUpdateSerializer(serializers.Serializer):
+    """Serializer para atualização do status do perfil pelo recrutador"""
+
+    status = serializers.ChoiceField(
+        choices=['approved', 'rejected', 'changes_requested'],
+        help_text='Novo status do perfil'
+    )
+    observations = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        help_text='Observações do recrutador (obrigatório se não aprovar)'
+    )
+
+    def validate(self, data):
+        """Valida que observações são obrigatórias se não for aprovar"""
+        status = data.get('status')
+        observations = data.get('observations', '')
+
+        if status in ['rejected', 'changes_requested'] and not observations.strip():
+            raise serializers.ValidationError({
+                'observations': 'Observações são obrigatórias quando o perfil não é aprovado.'
+            })
+
+        return data

@@ -11,7 +11,7 @@ import { toast } from 'react-hot-toast';
 import Navbar from '@/components/Navbar';
 import LoadChiap from '@/components/LoadChiap';
 import * as Icon from 'react-bootstrap-icons';
-import { MapPin, Mail, Phone, Linkedin, Github, Globe, Briefcase, GraduationCap, Award, Languages, Settings, Edit2, Plus, Trash2, X } from 'lucide-react';
+import { MapPin, Mail, Phone, Linkedin, Github, Globe, Briefcase, GraduationCap, Award, Languages, Settings, Edit2, Plus, Trash2, X, AlertCircle, CheckCircle } from 'lucide-react';
 
 // Componentes de Modal
 import EditPersonalInfoModal from '@/components/profile/modals/EditPersonalInfoModal';
@@ -222,10 +222,74 @@ export default function ProfileViewPage() {
     );
   }
 
+  const getProfileStatusInfo = (status?: string) => {
+    const statusMap: Record<string, { label: string; bgColor: string; textColor: string; borderColor: string }> = {
+      pending: { label: 'Em análise', bgColor: 'bg-amber-50', textColor: 'text-amber-800', borderColor: 'border-amber-200' },
+      approved: { label: 'Aprovado', bgColor: 'bg-green-50', textColor: 'text-green-800', borderColor: 'border-green-200' },
+      rejected: { label: 'Reprovado', bgColor: 'bg-red-50', textColor: 'text-red-800', borderColor: 'border-red-200' },
+      changes_requested: { label: 'Pendências', bgColor: 'bg-orange-50', textColor: 'text-orange-800', borderColor: 'border-orange-200' },
+    };
+    return statusMap[status || 'pending'] || statusMap.pending;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-zinc-100 to-white">
       <Navbar />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-16">
+
+        {/* Profile Status Alert */}
+        {profile && (profile.profile_status === 'changes_requested' || profile.profile_status === 'rejected') && profile.profile_observations && (
+          <div className={`rounded-lg p-4 mb-6 border ${
+            profile.profile_status === 'rejected'
+              ? 'bg-red-50 border-red-200'
+              : 'bg-orange-50 border-orange-200'
+          }`}>
+            <div className="flex items-start gap-3">
+              <AlertCircle className={`h-5 w-5 flex-shrink-0 mt-0.5 ${
+                profile.profile_status === 'rejected' ? 'text-red-600' : 'text-orange-600'
+              }`} />
+              <div className="flex-1">
+                <h3 className={`font-semibold ${
+                  profile.profile_status === 'rejected' ? 'text-red-800' : 'text-orange-800'
+                }`}>
+                  {profile.profile_status === 'rejected'
+                    ? 'Perfil Reprovado'
+                    : 'Pendências no Perfil'}
+                </h3>
+                <p className="text-slate-700 mt-1 text-sm whitespace-pre-line">
+                  {profile.profile_observations}
+                </p>
+                {profile.profile_reviewed_at && (
+                  <p className="text-slate-500 text-xs mt-2">
+                    Enviado em {new Date(profile.profile_reviewed_at).toLocaleDateString('pt-BR', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                )}
+                <p className="text-slate-600 text-sm mt-3">
+                  <strong>Atualize seu perfil</strong> de acordo com as observações acima para continuar no processo seletivo.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Profile Status Badge (if approved) */}
+        {profile?.profile_status === 'approved' && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              <div>
+                <h3 className="font-semibold text-green-800">Perfil Aprovado</h3>
+                <p className="text-green-700 text-sm">Seu perfil foi aprovado no processo seletivo. Continue se candidatando às vagas!</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Header do Perfil */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">

@@ -126,6 +126,25 @@ class CandidateService {
     }
   }
 
+  /* Atualizar status do perfil (aprovar/reprovar) - apenas recrutadores/admin */
+  async updateProfileStatus(
+    candidateId: number,
+    status: 'approved' | 'rejected' | 'changes_requested',
+    observations?: string
+  ): Promise<{ message: string; profile_status: string; profile_observations: string; profile_reviewed_at: string }> {
+    try {
+      const response = await axios.patch(
+        `${this.baseUrl}/candidates/profiles/${candidateId}/update-profile-status/`,
+        { status, observations },
+        this.getAxiosConfig()
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao atualizar status do perfil:', error);
+      throw error;
+    }
+  }
+
   // === EDUCATION ===
 
   /* Buscar educação do candidato */
@@ -374,6 +393,27 @@ class CandidateService {
       { value: 'night', label: 'Noite' },
       { value: 'flexible', label: 'Flexível' }
     ];
+  }
+
+  /* Obter opções de status do perfil */
+  getProfileStatusOptions(): Array<{ value: string; label: string }> {
+    return [
+      { value: 'pending', label: 'Em análise' },
+      { value: 'approved', label: 'Aprovado' },
+      { value: 'rejected', label: 'Reprovado' },
+      { value: 'changes_requested', label: 'Pendências' }
+    ];
+  }
+
+  /* Obter label e cor do status do perfil */
+  getProfileStatusLabel(status: string): { label: string; color: string; bgColor: string } {
+    const statusMap: Record<string, { label: string; color: string; bgColor: string }> = {
+      pending: { label: 'Em análise', color: 'text-amber-700', bgColor: 'bg-amber-100' },
+      approved: { label: 'Aprovado', color: 'text-green-700', bgColor: 'bg-green-100' },
+      rejected: { label: 'Reprovado', color: 'text-red-700', bgColor: 'bg-red-100' },
+      changes_requested: { label: 'Pendências', color: 'text-orange-700', bgColor: 'bg-orange-100' },
+    };
+    return statusMap[status] || statusMap.pending;
   }
 }
 

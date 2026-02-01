@@ -8,14 +8,14 @@ from app.utils import UniqueFilePathGenerator
 
 class CandidateProfile(Base):
     """Perfil detalhado do candidato - complementa o UserProfile"""
-    
+
     GENDER_CHOICES = [
         ('M', 'Masculino'),
         ('F', 'Feminino'),
         ('O', 'Outro'),
         ('N', 'Prefiro não informar'),
     ]
-    
+
     EDUCATION_LEVEL_CHOICES = [
         ('fundamental', 'Ensino Fundamental'),
         ('medio', 'Ensino Médio'),
@@ -24,6 +24,13 @@ class CandidateProfile(Base):
         ('pos_graduacao', 'Pós-graduação'),
         ('mestrado', 'Mestrado'),
         ('doutorado', 'Doutorado'),
+    ]
+
+    PROFILE_STATUS_CHOICES = [
+        ('pending', 'Em análise'),
+        ('approved', 'Aprovado'),
+        ('rejected', 'Reprovado'),
+        ('changes_requested', 'Pendências'),
     ]
 
     user = models.OneToOneField(
@@ -104,6 +111,37 @@ class CandidateProfile(Base):
         ],
         default='flexible',
         verbose_name='Turno Preferido'
+    )
+    has_vehicle = models.BooleanField(default=False, verbose_name='Possui Veículo')
+    has_cnh = models.BooleanField(default=False, verbose_name='Possui CNH')
+
+    # Contato de emergência
+    emergency_contact_name = models.CharField(max_length=255, blank=True, verbose_name='Nome do Contato de Emergência')
+    emergency_contact_phone = models.CharField(max_length=20, blank=True, verbose_name='Telefone do Contato de Emergência')
+
+    # Status do perfil (processo seletivo)
+    profile_status = models.CharField(
+        max_length=20,
+        choices=PROFILE_STATUS_CHOICES,
+        default='pending',
+        verbose_name='Status do Perfil'
+    )
+    profile_observations = models.TextField(
+        blank=True,
+        verbose_name='Observações do Recrutador'
+    )
+    profile_reviewed_by = models.ForeignKey(
+        'accounts.UserProfile',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='profiles_reviewed',
+        verbose_name='Revisado por'
+    )
+    profile_reviewed_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name='Data da Revisão'
     )
 
     class Meta:

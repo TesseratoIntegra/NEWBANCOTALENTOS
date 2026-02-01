@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { toast } from 'react-hot-toast';
 import {
   ArrowLeft,
   User,
@@ -26,10 +27,13 @@ import {
   BookOpen,
   Languages,
   Award,
-  FileText
+  FileText,
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
 import candidateService from '@/services/candidateService';
 import applicationService from '@/services/applicationService';
+import ProfileStatusModal from '@/components/admin/ProfileStatusModal';
 import {
   CandidateProfile,
   CandidateEducation,
@@ -53,6 +57,7 @@ export default function TalentoDetalhesPage() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showStatusModal, setShowStatusModal] = useState(false);
 
   const educationLevels = candidateService.getEducationLevels();
   const skillLevels = candidateService.getSkillLevels();
@@ -130,6 +135,41 @@ export default function TalentoDetalhesPage() {
     return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   };
 
+  const getProfileStatusInfo = (status?: string) => {
+    const statusMap: Record<string, { label: string; bgColor: string; textColor: string; borderColor: string }> = {
+      pending: { label: 'Em análise', bgColor: 'bg-amber-900/50', textColor: 'text-amber-300', borderColor: 'border-amber-700' },
+      approved: { label: 'Aprovado', bgColor: 'bg-green-900/50', textColor: 'text-green-300', borderColor: 'border-green-700' },
+      rejected: { label: 'Reprovado', bgColor: 'bg-red-900/50', textColor: 'text-red-300', borderColor: 'border-red-700' },
+      changes_requested: { label: 'Pendências', bgColor: 'bg-orange-900/50', textColor: 'text-orange-300', borderColor: 'border-orange-700' },
+    };
+    return statusMap[status || 'pending'] || statusMap.pending;
+  };
+
+  const handleUpdateProfileStatus = async (
+    status: 'approved' | 'rejected' | 'changes_requested',
+    observations: string
+  ) => {
+    try {
+      await candidateService.updateProfileStatus(candidateId, status, observations);
+      toast.success(
+        status === 'approved'
+          ? 'Perfil aprovado com sucesso!'
+          : status === 'changes_requested'
+          ? 'Observações enviadas ao candidato!'
+          : 'Perfil reprovado.'
+      );
+      // Atualizar o perfil localmente
+      setProfile((prev) =>
+        prev ? { ...prev, profile_status: status, profile_observations: observations } : prev
+      );
+      setShowStatusModal(false);
+    } catch (err) {
+      console.error('Erro ao atualizar status:', err);
+      toast.error('Erro ao atualizar status do perfil.');
+      throw err;
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-12">
@@ -157,14 +197,43 @@ export default function TalentoDetalhesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Back Button */}
-      <Link
-        href="/admin-panel/talentos"
-        className="inline-flex items-center gap-2 text-zinc-400 hover:text-white transition-colors"
-      >
-        <ArrowLeft className="h-5 w-5" />
-        Voltar para lista
-      </Link>
+      {/* Back Button and Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <Link
+          href="/admin-panel/talentos"
+          className="inline-flex items-center gap-2 text-zinc-400 hover:text-white transition-colors"
+        >
+          <ArrowLeft className="h-5 w-5" />
+          Voltar para lista
+        </Link>
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-3">
+          {profile.profile_status === 'approved' ? (
+            <span className="inline-flex items-center gap-2 px-4 py-2 bg-green-900/50 text-green-300 rounded-lg border border-green-700">
+              <CheckCircle className="h-5 w-5" />
+              Perfil Aprovado
+            </span>
+          ) : (
+            <>
+              <button
+                onClick={() => handleUpdateProfileStatus('approved', '')}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+              >
+                <CheckCircle className="h-5 w-5" />
+                Aprovar Perfil
+              </button>
+              <button
+                onClick={() => setShowStatusModal(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors"
+              >
+                <AlertCircle className="h-5 w-5" />
+                Observações
+              </button>
+            </>
+          )}
+        </div>
+      </div>
 
       {/* Profile Header */}
       <div className="bg-zinc-800 rounded-lg p-6 border border-zinc-700">
@@ -265,6 +334,18 @@ export default function TalentoDetalhesPage() {
 
           {/* Status Tags */}
           <div className="flex flex-wrap gap-2 md:flex-col md:items-end">
+            {/* Profile Status Badge */}
+            {(() => {
+              const statusInfo = getProfileStatusInfo(profile.profile_status);
+              return (
+                <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${statusInfo.bgColor} ${statusInfo.textColor} border ${statusInfo.borderColor}`}>
+                  {profile.profile_status === 'approved' ? <CheckCircle className="h-4 w-4" /> :
+                   profile.profile_status === 'rejected' ? <X className="h-4 w-4" /> :
+                   <AlertCircle className="h-4 w-4" />}
+                  {statusInfo.label}
+                </span>
+              );
+            })()}
             <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm ${
               profile.available_for_work
                 ? 'bg-green-900/50 text-green-300 border border-green-700'
@@ -300,6 +381,42 @@ export default function TalentoDetalhesPage() {
           </div>
         </div>
       </div>
+
+      {/* Profile Observations Alert */}
+      {profile.profile_observations && (
+        <div className={`rounded-lg p-4 border ${
+          profile.profile_status === 'rejected'
+            ? 'bg-red-900/30 border-red-500/50'
+            : 'bg-orange-900/30 border-orange-500/50'
+        }`}>
+          <div className="flex items-start gap-3">
+            <AlertCircle className={`h-5 w-5 flex-shrink-0 mt-0.5 ${
+              profile.profile_status === 'rejected' ? 'text-red-400' : 'text-orange-400'
+            }`} />
+            <div>
+              <h3 className={`font-medium ${
+                profile.profile_status === 'rejected' ? 'text-red-300' : 'text-orange-300'
+              }`}>
+                {profile.profile_status === 'rejected' ? 'Motivo da Reprovação' : 'Observações Enviadas'}
+              </h3>
+              <p className="text-zinc-300 mt-1 text-sm whitespace-pre-line">
+                {profile.profile_observations}
+              </p>
+              {profile.profile_reviewed_at && (
+                <p className="text-zinc-500 text-xs mt-2">
+                  Enviado em {new Date(profile.profile_reviewed_at).toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}
@@ -517,6 +634,15 @@ export default function TalentoDetalhesPage() {
           )}
         </div>
       </div>
+
+      {/* Profile Status Modal */}
+      <ProfileStatusModal
+        show={showStatusModal}
+        candidateName={profile.user_name || 'Candidato'}
+        currentStatus={getProfileStatusInfo(profile.profile_status).label}
+        onConfirm={handleUpdateProfileStatus}
+        onClose={() => setShowStatusModal(false)}
+      />
     </div>
   );
 }

@@ -3,21 +3,23 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from django_filters.rest_framework import DjangoFilterBackend
-from django_filters import FilterSet, NumberFilter
+from django_filters import FilterSet, NumberFilter, CharFilter
 
 from django.db.models import Q
 from django.db import IntegrityError
+from django.utils import timezone
 
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
 
 from candidates.models import (
-    CandidateProfile, CandidateEducation, CandidateExperience, 
+    CandidateProfile, CandidateEducation, CandidateExperience,
     CandidateLanguage, CandidateSkill
 )
 from candidates.serializers import (
     CandidateProfileSerializer, CandidateProfileCreateUpdateSerializer, CandidateProfileListSerializer,
-    CandidateEducationSerializer, CandidateExperienceSerializer, 
-    CandidateLanguageSerializer, CandidateSkillSerializer
+    CandidateEducationSerializer, CandidateExperienceSerializer,
+    CandidateLanguageSerializer, CandidateSkillSerializer,
+    ProfileStatusUpdateSerializer
 )
 
 
@@ -26,6 +28,9 @@ class CandidateProfileFilter(FilterSet):
 
     # Filtro para buscar candidatos que se candidataram a uma vaga específica
     applied_to_job = NumberFilter(method='filter_by_job')
+
+    # Filtro por status do perfil
+    profile_status = CharFilter(field_name='profile_status')
 
     class Meta:
         model = CandidateProfile
@@ -39,6 +44,7 @@ class CandidateProfileFilter(FilterSet):
             'desired_salary_min': ['gte', 'lte'],
             'desired_salary_max': ['gte', 'lte'],
             'preferred_work_shift': ['exact'],
+            'profile_status': ['exact', 'in'],
         }
 
     def filter_by_job(self, queryset, name, value):
@@ -234,6 +240,49 @@ class CandidateProfileViewSet(viewsets.ModelViewSet):
 
         serializer = CandidateProfileListSerializer(queryset, many=True)
         return Response(serializer.data)
+
+    @extend_schema(
+        tags=['Candidatos - Perfis'],
+        summary='Atualizar status do perfil',
+        description='Atualiza o status do perfil do candidato (aprovar, reprovar, solicitar alterações). Apenas recrutadores e admins.',
+        request=ProfileStatusUpdateSerializer,
+        responses={200: {'description': 'Status atualizado com sucesso'}},
+    )
+    @action(detail=True, methods=['patch'], url_path='update-profile-status')
+    def update_profile_status(self, request, pk=None):
+        """
+        Atualiza status do perfil (aprovar/reprovar/solicitar alterações)
+        Apenas recrutadores e admins podem usar este endpoint
+        """
+        user = request.user
+
+        # Verificar permissão
+        if not (user.user_type == 'recruiter' or user.is_staff or user.is_superuser):
+            return Response(
+                {'error': 'Apenas recrutadores e admins podem atualizar status de perfil.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        profile = self.get_object()
+
+        # Validar dados
+        serializer = ProfileStatusUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # Atualizar perfil
+        profile.profile_status = serializer.validated_data['status']
+        profile.profile_observations = serializer.validated_data.get('observations', '')
+        profile.profile_reviewed_by = user
+        profile.profile_reviewed_at = timezone.now()
+        profile.save()
+
+        # Retornar perfil atualizado
+        return Response({
+            'message': 'Status do perfil atualizado com sucesso.',
+            'profile_status': profile.profile_status,
+            'profile_observations': profile.profile_observations,
+            'profile_reviewed_at': profile.profile_reviewed_at.isoformat(),
+        })
 
 
 @extend_schema_view(

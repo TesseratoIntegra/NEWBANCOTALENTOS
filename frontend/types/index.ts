@@ -134,6 +134,11 @@ export interface CandidateProfile {
     status: string;
     applied_at?: string;
   }>;
+  // Campos do processo seletivo de perfil
+  profile_status?: 'pending' | 'approved' | 'rejected' | 'changes_requested';
+  profile_observations?: string;
+  profile_reviewed_at?: string;
+  reviewed_by_name?: string;
   created_at: string;
   updated_at: string;
 }
