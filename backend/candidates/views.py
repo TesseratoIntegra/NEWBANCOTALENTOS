@@ -145,7 +145,16 @@ class CandidateProfileViewSet(viewsets.ModelViewSet):
         if self.request.user != serializer.instance.user:
             raise PermissionError('Você só pode editar seu próprio perfil.')
 
+        instance = serializer.instance
+        previous_status = instance.profile_status
+
         instance = serializer.save()
+
+        # Se o perfil estava com status 'changes_requested' e foi atualizado,
+        # mudar automaticamente para 'awaiting_review' para notificar o recrutador
+        if previous_status == 'changes_requested':
+            instance.profile_status = 'awaiting_review'
+            instance.save(update_fields=['profile_status', 'updated_at'])
 
         # Forçar persistência do image_profile se enviado via FILES
         # (corrige problema onde o serializer não persiste o campo corretamente)

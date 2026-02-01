@@ -28,9 +28,10 @@ class CandidateProfile(Base):
 
     PROFILE_STATUS_CHOICES = [
         ('pending', 'Em análise'),
+        ('awaiting_review', 'Aguardando Revisão'),
         ('approved', 'Aprovado'),
         ('rejected', 'Reprovado'),
-        ('changes_requested', 'Pendências'),
+        ('changes_requested', 'Aguardando Candidato'),
     ]
 
     user = models.OneToOneField(

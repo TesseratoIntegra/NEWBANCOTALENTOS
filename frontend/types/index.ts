@@ -135,7 +135,7 @@ export interface CandidateProfile {
     applied_at?: string;
   }>;
   // Campos do processo seletivo de perfil
-  profile_status?: 'pending' | 'approved' | 'rejected' | 'changes_requested';
+  profile_status?: 'pending' | 'awaiting_review' | 'approved' | 'rejected' | 'changes_requested';
   profile_observations?: string;
   profile_reviewed_at?: string;
   reviewed_by_name?: string;

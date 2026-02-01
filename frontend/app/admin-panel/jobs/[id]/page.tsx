@@ -67,7 +67,8 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
           });
           if (!response.ok) throw new Error('Erro ao buscar candidaturas');
           const data = await response.json();
-          setApplications(data);
+          // API retorna dados paginados com results ou array direto
+          setApplications(Array.isArray(data) ? data : (data.results || []));
         } catch (appError) {
           console.warn('Erro ao carregar candidaturas:', appError);
         }

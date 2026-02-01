@@ -62,6 +62,7 @@ class CandidateService {
     experience_years_min?: number;
     experience_years_max?: number;
     applied_to_job?: number;
+    profile_status?: string;
   }): Promise<PaginatedResponse<CandidateProfile>> {
     try {
       const queryParams = new URLSearchParams();
@@ -76,6 +77,7 @@ class CandidateService {
       if (params?.experience_years_min !== undefined) queryParams.append('experience_years__gte', params.experience_years_min.toString());
       if (params?.experience_years_max !== undefined) queryParams.append('experience_years__lte', params.experience_years_max.toString());
       if (params?.applied_to_job !== undefined) queryParams.append('applied_to_job', params.applied_to_job.toString());
+      if (params?.profile_status) queryParams.append('profile_status', params.profile_status);
 
       const url = `${this.baseUrl}/candidates/profiles/?${queryParams.toString()}`;
       const response = await axios.get(url, this.getAxiosConfig());
@@ -399,9 +401,10 @@ class CandidateService {
   getProfileStatusOptions(): Array<{ value: string; label: string }> {
     return [
       { value: 'pending', label: 'Em análise' },
+      { value: 'awaiting_review', label: 'Aguardando Revisão' },
       { value: 'approved', label: 'Aprovado' },
       { value: 'rejected', label: 'Reprovado' },
-      { value: 'changes_requested', label: 'Pendências' }
+      { value: 'changes_requested', label: 'Aguardando Candidato' }
     ];
   }
 
@@ -409,9 +412,10 @@ class CandidateService {
   getProfileStatusLabel(status: string): { label: string; color: string; bgColor: string } {
     const statusMap: Record<string, { label: string; color: string; bgColor: string }> = {
       pending: { label: 'Em análise', color: 'text-amber-700', bgColor: 'bg-amber-100' },
+      awaiting_review: { label: 'Aguardando Revisão', color: 'text-blue-700', bgColor: 'bg-blue-100' },
       approved: { label: 'Aprovado', color: 'text-green-700', bgColor: 'bg-green-100' },
       rejected: { label: 'Reprovado', color: 'text-red-700', bgColor: 'bg-red-100' },
-      changes_requested: { label: 'Pendências', color: 'text-orange-700', bgColor: 'bg-orange-100' },
+      changes_requested: { label: 'Aguardando Candidato', color: 'text-orange-700', bgColor: 'bg-orange-100' },
     };
     return statusMap[status] || statusMap.pending;
   }

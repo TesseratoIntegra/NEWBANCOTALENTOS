@@ -138,9 +138,10 @@ export default function TalentoDetalhesPage() {
   const getProfileStatusInfo = (status?: string) => {
     const statusMap: Record<string, { label: string; bgColor: string; textColor: string; borderColor: string }> = {
       pending: { label: 'Em análise', bgColor: 'bg-amber-900/50', textColor: 'text-amber-300', borderColor: 'border-amber-700' },
+      awaiting_review: { label: 'Aguardando Revisão', bgColor: 'bg-blue-900/50', textColor: 'text-blue-300', borderColor: 'border-blue-700' },
       approved: { label: 'Aprovado', bgColor: 'bg-green-900/50', textColor: 'text-green-300', borderColor: 'border-green-700' },
       rejected: { label: 'Reprovado', bgColor: 'bg-red-900/50', textColor: 'text-red-300', borderColor: 'border-red-700' },
-      changes_requested: { label: 'Pendências', bgColor: 'bg-orange-900/50', textColor: 'text-orange-300', borderColor: 'border-orange-700' },
+      changes_requested: { label: 'Aguardando Candidato', bgColor: 'bg-orange-900/50', textColor: 'text-orange-300', borderColor: 'border-orange-700' },
     };
     return statusMap[status || 'pending'] || statusMap.pending;
   };
@@ -341,6 +342,7 @@ export default function TalentoDetalhesPage() {
                 <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${statusInfo.bgColor} ${statusInfo.textColor} border ${statusInfo.borderColor}`}>
                   {profile.profile_status === 'approved' ? <CheckCircle className="h-4 w-4" /> :
                    profile.profile_status === 'rejected' ? <X className="h-4 w-4" /> :
+                   profile.profile_status === 'awaiting_review' ? <Clock className="h-4 w-4" /> :
                    <AlertCircle className="h-4 w-4" />}
                   {statusInfo.label}
                 </span>

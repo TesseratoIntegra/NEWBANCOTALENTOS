@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Search, Filter, Users, MapPin, Briefcase, GraduationCap, Check, X, ChevronLeft, ChevronRight, Eye, FileText } from 'lucide-react';
+import { Search, Filter, Users, MapPin, Briefcase, GraduationCap, Check, X, ChevronLeft, ChevronRight, Eye, FileText, UserCheck } from 'lucide-react';
 import Link from 'next/link';
 import candidateService from '@/services/candidateService';
 import jobService from '@/services/jobService';
@@ -21,12 +21,14 @@ export default function TalentosPage() {
   const [availableForWork, setAvailableForWork] = useState<string>('');
   const [acceptsRemote, setAcceptsRemote] = useState<string>('');
   const [selectedJobId, setSelectedJobId] = useState<string>('');
+  const [profileStatus, setProfileStatus] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
 
   // Jobs for filter
   const [jobs, setJobs] = useState<Job[]>([]);
 
   const educationLevels = candidateService.getEducationLevels();
+  const profileStatusOptions = candidateService.getProfileStatusOptions();
 
   // Fetch jobs for filter dropdown
   useEffect(() => {
@@ -57,6 +59,7 @@ export default function TalentosPage() {
       if (acceptsRemote === 'true') params.accepts_remote_work = true;
       if (acceptsRemote === 'false') params.accepts_remote_work = false;
       if (selectedJobId) params.applied_to_job = parseInt(selectedJobId);
+      if (profileStatus) params.profile_status = profileStatus;
 
       const response: PaginatedResponse<CandidateProfile> = await candidateService.getAllCandidates(params);
 
@@ -69,7 +72,7 @@ export default function TalentosPage() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, searchTerm, educationLevel, availableForWork, acceptsRemote, selectedJobId]);
+  }, [currentPage, searchTerm, educationLevel, availableForWork, acceptsRemote, selectedJobId, profileStatus]);
 
   useEffect(() => {
     fetchCandidates();
@@ -87,6 +90,7 @@ export default function TalentosPage() {
     setAvailableForWork('');
     setAcceptsRemote('');
     setSelectedJobId('');
+    setProfileStatus('');
     setCurrentPage(1);
   };
 
@@ -101,6 +105,18 @@ export default function TalentosPage() {
       withdrawn: { label: 'Retirado', color: 'bg-zinc-700 text-zinc-400' },
     };
     return statusMap[status] || { label: status, color: 'bg-zinc-700 text-zinc-400' };
+  };
+
+  // Helper para obter label do status do perfil
+  const getProfileStatusInfo = (status?: string) => {
+    const statusMap: Record<string, { label: string; bgColor: string; textColor: string }> = {
+      pending: { label: 'Em análise', bgColor: 'bg-amber-900/50', textColor: 'text-amber-300' },
+      awaiting_review: { label: 'Aguardando Revisão', bgColor: 'bg-blue-900/50', textColor: 'text-blue-300' },
+      approved: { label: 'Aprovado', bgColor: 'bg-green-900/50', textColor: 'text-green-300' },
+      rejected: { label: 'Reprovado', bgColor: 'bg-red-900/50', textColor: 'text-red-300' },
+      changes_requested: { label: 'Aguardando Candidato', bgColor: 'bg-orange-900/50', textColor: 'text-orange-300' },
+    };
+    return statusMap[status || 'pending'] || statusMap.pending;
   };
 
   const getEducationLabel = (level?: string) => {
@@ -127,45 +143,85 @@ export default function TalentosPage() {
         </div>
       </div>
 
-      {/* Filtros - Vaga e Busca lado a lado */}
-      <div className="flex flex-col lg:flex-row gap-4 lg:items-start">
-        {/* Filtro por Vaga - 35% */}
-        <div className="lg:w-[35%] bg-zinc-800 rounded-lg p-4 flex gap-2">
-          <div className="relative flex-1">
-            <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-zinc-400" />
-            <select
-              value={selectedJobId}
-              onChange={(e) => { setSelectedJobId(e.target.value); setCurrentPage(1); }}
-              className="w-full pl-10 pr-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none cursor-pointer"
-            >
-              <option value="">Todas as vagas</option>
-              {jobs.map(job => (
-                <option key={job.id} value={job.id}>
-                  {job.title} {job.company_name ? `- ${job.company_name}` : ''}
-                </option>
-              ))}
-            </select>
+      {/* Filtros Principais - 3 colunas de 1/3 */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Filtro por Vaga */}
+        <div className="bg-zinc-800 rounded-lg p-4">
+          <label className="block text-sm font-medium text-zinc-300 mb-2">
+            Filtrar por Vaga
+          </label>
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-zinc-400" />
+              <select
+                value={selectedJobId}
+                onChange={(e) => { setSelectedJobId(e.target.value); setCurrentPage(1); }}
+                className="w-full pl-10 pr-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none cursor-pointer"
+              >
+                <option value="">Todas as vagas</option>
+                {jobs.map(job => (
+                  <option key={job.id} value={job.id}>
+                    {job.title} {job.company_name ? `- ${job.company_name}` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {selectedJobId && (
+              <button
+                onClick={() => { setSelectedJobId(''); setCurrentPage(1); }}
+                className="px-3 py-2 text-zinc-300 hover:text-white hover:bg-zinc-700 rounded-lg transition-colors"
+                title="Limpar filtro"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            )}
           </div>
-          {selectedJobId && (
-            <button
-              onClick={() => { setSelectedJobId(''); setCurrentPage(1); }}
-              className="px-3 py-2 text-zinc-300 hover:text-white hover:bg-zinc-700 rounded-lg transition-colors"
-              title="Limpar filtro"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          )}
         </div>
 
-        {/* Search and Filters - 65% */}
-        <div className="lg:w-[65%] bg-zinc-800 rounded-lg p-4 space-y-4">
-          {/* Search Bar */}
+        {/* Filtro por Status do Perfil */}
+        <div className="bg-zinc-800 rounded-lg p-4">
+          <label className="block text-sm font-medium text-zinc-300 mb-2">
+            Status do Perfil
+          </label>
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <UserCheck className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-zinc-400" />
+              <select
+                value={profileStatus}
+                onChange={(e) => { setProfileStatus(e.target.value); setCurrentPage(1); }}
+                className="w-full pl-10 pr-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none cursor-pointer"
+              >
+                <option value="">Todos os status</option>
+                {profileStatusOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {profileStatus && (
+              <button
+                onClick={() => { setProfileStatus(''); setCurrentPage(1); }}
+                className="px-3 py-2 text-zinc-300 hover:text-white hover:bg-zinc-700 rounded-lg transition-colors"
+                title="Limpar filtro"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Busca */}
+        <div className="bg-zinc-800 rounded-lg p-4">
+          <label className="block text-sm font-medium text-zinc-300 mb-2">
+            Buscar Talento
+          </label>
           <form onSubmit={handleSearch} className="flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-zinc-400" />
               <input
                 type="text"
-                placeholder="Buscar por nome, cargo, habilidades..."
+                placeholder="Nome, cargo, habilidades..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
@@ -177,80 +233,84 @@ export default function TalentosPage() {
             >
               Buscar
             </button>
-            <button
-              type="button"
-              onClick={() => setShowFilters(!showFilters)}
-              className={`px-4 py-2 border rounded-lg transition-colors flex items-center gap-2 ${
-                showFilters
-                  ? 'bg-indigo-600 border-indigo-600 text-white'
-                  : 'border-zinc-600 text-zinc-300 hover:bg-zinc-700'
-              }`}
-            >
-              <Filter className="h-4 w-4" />
-              Filtros
-            </button>
           </form>
-
-          {/* Filter Options */}
-          {showFilters && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-zinc-700">
-              <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">
-                  Escolaridade
-                </label>
-                <select
-                  value={educationLevel}
-                  onChange={(e) => { setEducationLevel(e.target.value); setCurrentPage(1); }}
-                  className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="">Todas</option>
-                  {educationLevels.map(level => (
-                    <option key={level.value} value={level.value}>{level.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">
-                  Disponível para trabalho
-                </label>
-                <select
-                  value={availableForWork}
-                  onChange={(e) => { setAvailableForWork(e.target.value); setCurrentPage(1); }}
-                  className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="">Todos</option>
-                  <option value="true">Sim</option>
-                  <option value="false">Não</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">
-                  Aceita remoto
-                </label>
-                <select
-                  value={acceptsRemote}
-                  onChange={(e) => { setAcceptsRemote(e.target.value); setCurrentPage(1); }}
-                  className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="">Todos</option>
-                  <option value="true">Sim</option>
-                  <option value="false">Não</option>
-                </select>
-              </div>
-
-              <div className="flex items-end">
-                <button
-                  onClick={clearFilters}
-                  className="w-full px-4 py-2 border border-zinc-600 text-zinc-300 rounded-lg hover:bg-zinc-700 transition-colors"
-                >
-                  Limpar filtros
-                </button>
-              </div>
-            </div>
-          )}
         </div>
+      </div>
+
+      {/* Filtros Avançados */}
+      <div className="bg-zinc-800 rounded-lg p-4">
+        <button
+          type="button"
+          onClick={() => setShowFilters(!showFilters)}
+          className={`flex items-center gap-2 text-sm font-medium transition-colors ${
+            showFilters
+              ? 'text-indigo-400'
+              : 'text-zinc-300 hover:text-white'
+          }`}
+        >
+          <Filter className="h-4 w-4" />
+          {showFilters ? 'Ocultar filtros avançados' : 'Mostrar filtros avançados'}
+        </button>
+
+        {/* Filter Options */}
+        {showFilters && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 mt-4 border-t border-zinc-700">
+            <div>
+              <label className="block text-sm font-medium text-zinc-300 mb-1">
+                Escolaridade
+              </label>
+              <select
+                value={educationLevel}
+                onChange={(e) => { setEducationLevel(e.target.value); setCurrentPage(1); }}
+                className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="">Todas</option>
+                {educationLevels.map(level => (
+                  <option key={level.value} value={level.value}>{level.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-zinc-300 mb-1">
+                Disponível para trabalho
+              </label>
+              <select
+                value={availableForWork}
+                onChange={(e) => { setAvailableForWork(e.target.value); setCurrentPage(1); }}
+                className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="">Todos</option>
+                <option value="true">Sim</option>
+                <option value="false">Não</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-zinc-300 mb-1">
+                Aceita remoto
+              </label>
+              <select
+                value={acceptsRemote}
+                onChange={(e) => { setAcceptsRemote(e.target.value); setCurrentPage(1); }}
+                className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="">Todos</option>
+                <option value="true">Sim</option>
+                <option value="false">Não</option>
+              </select>
+            </div>
+
+            <div className="flex items-end">
+              <button
+                onClick={clearFilters}
+                className="w-full px-4 py-2 border border-zinc-600 text-zinc-300 rounded-lg hover:bg-zinc-700 transition-colors"
+              >
+                Limpar todos os filtros
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Error State */}
@@ -302,6 +362,15 @@ export default function TalentosPage() {
                   <p className="text-sm text-indigo-400 truncate">
                     {candidate.current_position || 'Cargo não informado'}
                   </p>
+                  {/* Badge de status do perfil */}
+                  {(() => {
+                    const statusInfo = getProfileStatusInfo(candidate.profile_status);
+                    return (
+                      <span className={`inline-block mt-1 px-2 py-0.5 rounded text-xs font-medium ${statusInfo.bgColor} ${statusInfo.textColor}`}>
+                        {statusInfo.label}
+                      </span>
+                    );
+                  })()}
                 </div>
               </div>
 

@@ -225,9 +225,10 @@ export default function ProfileViewPage() {
   const getProfileStatusInfo = (status?: string) => {
     const statusMap: Record<string, { label: string; bgColor: string; textColor: string; borderColor: string }> = {
       pending: { label: 'Em análise', bgColor: 'bg-amber-50', textColor: 'text-amber-800', borderColor: 'border-amber-200' },
+      awaiting_review: { label: 'Aguardando Revisão', bgColor: 'bg-blue-50', textColor: 'text-blue-800', borderColor: 'border-blue-200' },
       approved: { label: 'Aprovado', bgColor: 'bg-green-50', textColor: 'text-green-800', borderColor: 'border-green-200' },
       rejected: { label: 'Reprovado', bgColor: 'bg-red-50', textColor: 'text-red-800', borderColor: 'border-red-200' },
-      changes_requested: { label: 'Pendências', bgColor: 'bg-orange-50', textColor: 'text-orange-800', borderColor: 'border-orange-200' },
+      changes_requested: { label: 'Aguardando Candidato', bgColor: 'bg-orange-50', textColor: 'text-orange-800', borderColor: 'border-orange-200' },
     };
     return statusMap[status || 'pending'] || statusMap.pending;
   };
@@ -286,6 +287,19 @@ export default function ProfileViewPage() {
               <div>
                 <h3 className="font-semibold text-green-800">Perfil Aprovado</h3>
                 <p className="text-green-700 text-sm">Seu perfil foi aprovado no processo seletivo. Continue se candidatando às vagas!</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Profile Status Badge (if awaiting review) */}
+        {profile?.profile_status === 'awaiting_review' && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="h-5 w-5 text-blue-600" />
+              <div>
+                <h3 className="font-semibold text-blue-800">Aguardando Revisão</h3>
+                <p className="text-blue-700 text-sm">Seu perfil foi atualizado e está aguardando revisão do recrutador. Você será notificado quando houver uma resposta.</p>
               </div>
             </div>
           </div>

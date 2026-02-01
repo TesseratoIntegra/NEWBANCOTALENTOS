@@ -35,7 +35,12 @@ export default function EditExperienceModal({ experience, onClose, onSave }: Edi
     e.preventDefault();
     setSaving(true);
     try {
-      await onSave(formData);
+      // Prepara os dados para envio, convertendo string vazia para null
+      const dataToSend = {
+        ...formData,
+        end_date: formData.is_current || !formData.end_date ? null : formData.end_date,
+      };
+      await onSave(dataToSend);
     } catch (error) {
       console.error('Erro ao salvar experiência:', error);
     } finally {
