@@ -25,15 +25,18 @@ import {
   Building,
   BookOpen,
   Languages,
-  Award
+  Award,
+  FileText
 } from 'lucide-react';
 import candidateService from '@/services/candidateService';
+import applicationService from '@/services/applicationService';
 import {
   CandidateProfile,
   CandidateEducation,
   CandidateExperience,
   CandidateSkill,
   CandidateLanguage,
+  Application,
   PaginatedResponse
 } from '@/types';
 
@@ -47,6 +50,7 @@ export default function TalentoDetalhesPage() {
   const [experiences, setExperiences] = useState<CandidateExperience[]>([]);
   const [skills, setSkills] = useState<CandidateSkill[]>([]);
   const [languages, setLanguages] = useState<CandidateLanguage[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -73,6 +77,17 @@ export default function TalentoDetalhesPage() {
         setExperiences(expData.results || []);
         setSkills(skillData.results || []);
         setLanguages(langData.results || []);
+
+        // Buscar candidaturas do usuário (usando user_id ou user)
+        const userId = profileData.user_id || profileData.user;
+        if (userId) {
+          try {
+            const appsData = await applicationService.getApplications({ candidate: userId });
+            setApplications(appsData.results || []);
+          } catch (appErr) {
+            console.error('Erro ao buscar candidaturas:', appErr);
+          }
+        }
       } catch (err) {
         console.error('Erro ao buscar dados do talento:', err);
         setError('Erro ao carregar dados do talento.');
@@ -353,6 +368,50 @@ export default function TalentoDetalhesPage() {
                     )}
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+
+          {/* Candidaturas */}
+          <div className="bg-zinc-800 rounded-lg p-6 border border-zinc-700">
+            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <FileText className="h-5 w-5 text-indigo-400" />
+              Candidaturas ({applications.length})
+            </h2>
+            {applications.length === 0 ? (
+              <p className="text-zinc-500 text-sm">Nenhuma candidatura registrada</p>
+            ) : (
+              <div className="space-y-3">
+                {applications.map((app) => {
+                  const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
+                    submitted: { bg: 'bg-amber-900/50', text: 'text-amber-300', label: 'Em análise' },
+                    in_process: { bg: 'bg-blue-900/50', text: 'text-blue-300', label: 'Em processo' },
+                    interview_scheduled: { bg: 'bg-purple-900/50', text: 'text-purple-300', label: 'Entrevista' },
+                    approved: { bg: 'bg-green-900/50', text: 'text-green-300', label: 'Aprovado' },
+                    rejected: { bg: 'bg-red-900/50', text: 'text-red-300', label: 'Reprovado' },
+                    withdrawn: { bg: 'bg-zinc-700', text: 'text-zinc-400', label: 'Retirado' },
+                  };
+                  const config = statusConfig[app.status] || statusConfig.submitted;
+
+                  return (
+                    <div key={app.id} className="flex items-center justify-between p-3 bg-zinc-700/50 rounded-lg">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-white truncate">
+                          {app.job_title || `Vaga #${app.job}`}
+                        </p>
+                        {app.company_name && (
+                          <p className="text-sm text-zinc-400 truncate">{app.company_name}</p>
+                        )}
+                        <p className="text-xs text-zinc-500 mt-1">
+                          {new Date(app.applied_at).toLocaleDateString('pt-BR')}
+                        </p>
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ml-3 ${config.bg} ${config.text}`}>
+                        {config.label}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

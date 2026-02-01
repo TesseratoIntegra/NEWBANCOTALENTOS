@@ -35,26 +35,14 @@ export default function LanguagesSection({ languages: initialLanguages, onUpdate
   useEffect(() => {
     const fetchLanguages = async () => {
       try {
-        const langs = await candidateService.fetchAllLanguages();
+        const response = await candidateService.getCandidateLanguages();
+        // Se a resposta for paginada, use response.results, senão response direto
+        const langs = Array.isArray(response) ? response : response.results || [];
         setUserLanguages(langs);
         onUpdate(langs);
       } catch (error) {
         console.error('Erro ao buscar idiomas:', error);
-      }
-    };
-    fetchLanguages();
-  }, [onUpdate]);
-
-
-  // Buscar idiomas da API ao montar
-  useEffect(() => {
-    const fetchLanguages = async () => {
-      try {
-        const langs = await candidateService.fetchAllLanguages();
-        setUserLanguages(langs);
-        if (onUpdate) onUpdate(langs);
-      } catch (error) {
-        console.error('Erro ao buscar idiomas:', error);
+        toast.error('Erro ao buscar idiomas');
       }
     };
     fetchLanguages();

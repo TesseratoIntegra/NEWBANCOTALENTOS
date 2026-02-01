@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from django_filters.rest_framework import DjangoFilterBackend
-from django_filters import FilterSet
+from django_filters import FilterSet, NumberFilter
 
 from django.db.models import Q
 from django.db import IntegrityError
@@ -24,6 +24,9 @@ from candidates.serializers import (
 class CandidateProfileFilter(FilterSet):
     """Filtros customizados para perfis de candidatos"""
 
+    # Filtro para buscar candidatos que se candidataram a uma vaga específica
+    applied_to_job = NumberFilter(method='filter_by_job')
+
     class Meta:
         model = CandidateProfile
         fields = {
@@ -37,6 +40,12 @@ class CandidateProfileFilter(FilterSet):
             'desired_salary_max': ['gte', 'lte'],
             'preferred_work_shift': ['exact'],
         }
+
+    def filter_by_job(self, queryset, name, value):
+        """Filtra candidatos que se candidataram a uma vaga específica"""
+        if value:
+            return queryset.filter(user__applications__job_id=value).distinct()
+        return queryset
 
 
 @extend_schema_view(

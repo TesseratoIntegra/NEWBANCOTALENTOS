@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import candidateService from '@/services/candidateService';
-import { CandidateProfile, CandidateEducation, CandidateExperience, CandidateSkill, CandidateLanguage } from '@/types';
+import applicationService from '@/services/applicationService';
+import { CandidateProfile, CandidateEducation, CandidateExperience, CandidateSkill, CandidateLanguage, Application } from '@/types';
 import { toast } from 'react-hot-toast';
 import Navbar from '@/components/Navbar';
 import LoadChiap from '@/components/LoadChiap';
@@ -20,6 +21,9 @@ import EditEducationModal from '@/components/profile/modals/EditEducationModal';
 import EditSkillModal from '@/components/profile/modals/EditSkillModal';
 import EditLanguageModal from '@/components/profile/modals/EditLanguageModal';
 import EditPreferencesModal from '@/components/profile/modals/EditPreferencesModal';
+import ApplicationsSection from '@/components/profile/ApplicationsSection';
+import Link from 'next/link';
+import { FileText } from 'lucide-react';
 
 export default function ProfileViewPage() {
   const router = useRouter();
@@ -30,6 +34,7 @@ export default function ProfileViewPage() {
   const [experiences, setExperiences] = useState<CandidateExperience[]>([]);
   const [skills, setSkills] = useState<CandidateSkill[]>([]);
   const [languages, setLanguages] = useState<CandidateLanguage[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
 
   // Estados dos modais
   const [editPersonalModal, setEditPersonalModal] = useState(false);
@@ -49,12 +54,13 @@ export default function ProfileViewPage() {
   const loadProfile = async () => {
     try {
       setLoading(true);
-      const [profileData, educationsData, experiencesData, skillsData, languagesData] = await Promise.all([
+      const [profileData, educationsData, experiencesData, skillsData, languagesData, applicationsData] = await Promise.all([
         candidateService.getCandidateProfile().catch(() => null),
         candidateService.getCandidateEducations().catch(() => []),
         candidateService.getCandidateExperiences().catch(() => []),
         candidateService.getCandidateSkills().catch(() => []),
-        candidateService.getCandidateLanguages().catch(() => [])
+        candidateService.getCandidateLanguages().catch(() => []),
+        applicationService.getMyApplications().catch(() => [])
       ]);
 
       // Se não tem perfil, redirecionar para o wizard de criação
@@ -68,6 +74,7 @@ export default function ProfileViewPage() {
       setExperiences(Array.isArray(experiencesData) ? experiencesData : experiencesData.results || []);
       setSkills(Array.isArray(skillsData) ? skillsData : skillsData.results || []);
       setLanguages(Array.isArray(languagesData) ? languagesData : languagesData.results || []);
+      setApplications(Array.isArray(applicationsData) ? applicationsData : applicationsData.results || []);
     } catch (error) {
       console.error('Erro ao carregar perfil:', error);
       toast.error('Erro ao carregar informações do perfil');
@@ -594,6 +601,23 @@ export default function ProfileViewPage() {
               </span>
             </div>
           </div>
+        </div>
+
+        {/* Minhas Candidaturas */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-blue-900 flex items-center gap-2">
+              <FileText className="w-5 h-5" />
+              Minhas Candidaturas
+            </h2>
+            <Link
+              href="/candidaturas"
+              className="text-blue-500 hover:text-blue-700 text-sm font-medium"
+            >
+              Ver todas
+            </Link>
+          </div>
+          <ApplicationsSection applications={applications} />
         </div>
 
       </div>

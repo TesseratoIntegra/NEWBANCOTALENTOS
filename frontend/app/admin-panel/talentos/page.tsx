@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Search, Filter, Users, MapPin, Briefcase, GraduationCap, Check, X, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
+import { Search, Filter, Users, MapPin, Briefcase, GraduationCap, Check, X, ChevronLeft, ChevronRight, Eye, FileText } from 'lucide-react';
 import Link from 'next/link';
 import candidateService from '@/services/candidateService';
-import { CandidateProfile, PaginatedResponse } from '@/types';
+import jobService from '@/services/jobService';
+import { CandidateProfile, PaginatedResponse, Job } from '@/types';
 
 export default function TalentosPage() {
   const [candidates, setCandidates] = useState<CandidateProfile[]>([]);
@@ -19,9 +20,26 @@ export default function TalentosPage() {
   const [educationLevel, setEducationLevel] = useState('');
   const [availableForWork, setAvailableForWork] = useState<string>('');
   const [acceptsRemote, setAcceptsRemote] = useState<string>('');
+  const [selectedJobId, setSelectedJobId] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
 
+  // Jobs for filter
+  const [jobs, setJobs] = useState<Job[]>([]);
+
   const educationLevels = candidateService.getEducationLevels();
+
+  // Fetch jobs for filter dropdown
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        const response = await jobService.getJobs({ page: 1 });
+        setJobs(response.results || []);
+      } catch (err) {
+        console.error('Erro ao buscar vagas:', err);
+      }
+    };
+    fetchJobs();
+  }, []);
 
   const fetchCandidates = useCallback(async () => {
     try {
@@ -38,6 +56,7 @@ export default function TalentosPage() {
       if (availableForWork === 'false') params.available_for_work = false;
       if (acceptsRemote === 'true') params.accepts_remote_work = true;
       if (acceptsRemote === 'false') params.accepts_remote_work = false;
+      if (selectedJobId) params.applied_to_job = parseInt(selectedJobId);
 
       const response: PaginatedResponse<CandidateProfile> = await candidateService.getAllCandidates(params);
 
@@ -50,7 +69,7 @@ export default function TalentosPage() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, searchTerm, educationLevel, availableForWork, acceptsRemote]);
+  }, [currentPage, searchTerm, educationLevel, availableForWork, acceptsRemote, selectedJobId]);
 
   useEffect(() => {
     fetchCandidates();
@@ -67,7 +86,21 @@ export default function TalentosPage() {
     setEducationLevel('');
     setAvailableForWork('');
     setAcceptsRemote('');
+    setSelectedJobId('');
     setCurrentPage(1);
+  };
+
+  // Helper para obter label do status da candidatura
+  const getStatusLabel = (status: string) => {
+    const statusMap: Record<string, { label: string; color: string }> = {
+      submitted: { label: 'Em análise', color: 'bg-amber-900/50 text-amber-300' },
+      in_process: { label: 'Em processo', color: 'bg-blue-900/50 text-blue-300' },
+      interview_scheduled: { label: 'Entrevista', color: 'bg-purple-900/50 text-purple-300' },
+      approved: { label: 'Aprovado', color: 'bg-green-900/50 text-green-300' },
+      rejected: { label: 'Reprovado', color: 'bg-red-900/50 text-red-300' },
+      withdrawn: { label: 'Retirado', color: 'bg-zinc-700 text-zinc-400' },
+    };
+    return statusMap[status] || { label: status, color: 'bg-zinc-700 text-zinc-400' };
   };
 
   const getEducationLabel = (level?: string) => {
@@ -94,99 +127,130 @@ export default function TalentosPage() {
         </div>
       </div>
 
-      {/* Search and Filters */}
-      <div className="bg-zinc-800 rounded-lg p-4 space-y-4">
-        {/* Search Bar */}
-        <form onSubmit={handleSearch} className="flex gap-2">
+      {/* Filtros - Vaga e Busca lado a lado */}
+      <div className="flex flex-col lg:flex-row gap-4 lg:items-start">
+        {/* Filtro por Vaga - 35% */}
+        <div className="lg:w-[35%] bg-zinc-800 rounded-lg p-4 flex gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-zinc-400" />
-            <input
-              type="text"
-              placeholder="Buscar por nome, cargo, habilidades..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            />
+            <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-zinc-400" />
+            <select
+              value={selectedJobId}
+              onChange={(e) => { setSelectedJobId(e.target.value); setCurrentPage(1); }}
+              className="w-full pl-10 pr-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none cursor-pointer"
+            >
+              <option value="">Todas as vagas</option>
+              {jobs.map(job => (
+                <option key={job.id} value={job.id}>
+                  {job.title} {job.company_name ? `- ${job.company_name}` : ''}
+                </option>
+              ))}
+            </select>
           </div>
-          <button
-            type="submit"
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
-          >
-            Buscar
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowFilters(!showFilters)}
-            className={`px-4 py-2 border rounded-lg transition-colors flex items-center gap-2 ${
-              showFilters
-                ? 'bg-indigo-600 border-indigo-600 text-white'
-                : 'border-zinc-600 text-zinc-300 hover:bg-zinc-700'
-            }`}
-          >
-            <Filter className="h-4 w-4" />
-            Filtros
-          </button>
-        </form>
+          {selectedJobId && (
+            <button
+              onClick={() => { setSelectedJobId(''); setCurrentPage(1); }}
+              className="px-3 py-2 text-zinc-300 hover:text-white hover:bg-zinc-700 rounded-lg transition-colors"
+              title="Limpar filtro"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
+        </div>
 
-        {/* Filter Options */}
-        {showFilters && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-zinc-700">
-            <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-1">
-                Escolaridade
-              </label>
-              <select
-                value={educationLevel}
-                onChange={(e) => { setEducationLevel(e.target.value); setCurrentPage(1); }}
-                className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="">Todas</option>
-                {educationLevels.map(level => (
-                  <option key={level.value} value={level.value}>{level.label}</option>
-                ))}
-              </select>
+        {/* Search and Filters - 65% */}
+        <div className="lg:w-[65%] bg-zinc-800 rounded-lg p-4 space-y-4">
+          {/* Search Bar */}
+          <form onSubmit={handleSearch} className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-zinc-400" />
+              <input
+                type="text"
+                placeholder="Buscar por nome, cargo, habilidades..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
             </div>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+            >
+              Buscar
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowFilters(!showFilters)}
+              className={`px-4 py-2 border rounded-lg transition-colors flex items-center gap-2 ${
+                showFilters
+                  ? 'bg-indigo-600 border-indigo-600 text-white'
+                  : 'border-zinc-600 text-zinc-300 hover:bg-zinc-700'
+              }`}
+            >
+              <Filter className="h-4 w-4" />
+              Filtros
+            </button>
+          </form>
 
-            <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-1">
-                Disponível para trabalho
-              </label>
-              <select
-                value={availableForWork}
-                onChange={(e) => { setAvailableForWork(e.target.value); setCurrentPage(1); }}
-                className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="">Todos</option>
-                <option value="true">Sim</option>
-                <option value="false">Não</option>
-              </select>
-            </div>
+          {/* Filter Options */}
+          {showFilters && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-zinc-700">
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-1">
+                  Escolaridade
+                </label>
+                <select
+                  value={educationLevel}
+                  onChange={(e) => { setEducationLevel(e.target.value); setCurrentPage(1); }}
+                  className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">Todas</option>
+                  {educationLevels.map(level => (
+                    <option key={level.value} value={level.value}>{level.label}</option>
+                  ))}
+                </select>
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-1">
-                Aceita remoto
-              </label>
-              <select
-                value={acceptsRemote}
-                onChange={(e) => { setAcceptsRemote(e.target.value); setCurrentPage(1); }}
-                className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="">Todos</option>
-                <option value="true">Sim</option>
-                <option value="false">Não</option>
-              </select>
-            </div>
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-1">
+                  Disponível para trabalho
+                </label>
+                <select
+                  value={availableForWork}
+                  onChange={(e) => { setAvailableForWork(e.target.value); setCurrentPage(1); }}
+                  className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">Todos</option>
+                  <option value="true">Sim</option>
+                  <option value="false">Não</option>
+                </select>
+              </div>
 
-            <div className="flex items-end">
-              <button
-                onClick={clearFilters}
-                className="w-full px-4 py-2 border border-zinc-600 text-zinc-300 rounded-lg hover:bg-zinc-700 transition-colors"
-              >
-                Limpar filtros
-              </button>
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-1">
+                  Aceita remoto
+                </label>
+                <select
+                  value={acceptsRemote}
+                  onChange={(e) => { setAcceptsRemote(e.target.value); setCurrentPage(1); }}
+                  className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">Todos</option>
+                  <option value="true">Sim</option>
+                  <option value="false">Não</option>
+                </select>
+              </div>
+
+              <div className="flex items-end">
+                <button
+                  onClick={clearFilters}
+                  className="w-full px-4 py-2 border border-zinc-600 text-zinc-300 rounded-lg hover:bg-zinc-700 transition-colors"
+                >
+                  Limpar filtros
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Error State */}
@@ -286,6 +350,33 @@ export default function TalentosPage() {
                   Remoto
                 </span>
               </div>
+
+              {/* Candidaturas */}
+              {candidate.applications_summary && candidate.applications_summary.length > 0 && (
+                <div className="mb-4 space-y-2">
+                  <span className="text-xs text-zinc-500 font-medium">Candidaturas:</span>
+                  <div className="flex flex-wrap gap-1">
+                    {candidate.applications_summary.slice(0, 3).map((app) => {
+                      const statusInfo = getStatusLabel(app.status);
+                      return (
+                        <span
+                          key={app.id}
+                          className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs ${statusInfo.color}`}
+                          title={`${app.job_title}${app.company_name ? ` - ${app.company_name}` : ''} (${statusInfo.label})`}
+                        >
+                          <FileText className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate max-w-[120px]">{app.job_title}</span>
+                        </span>
+                      );
+                    })}
+                    {candidate.applications_summary.length > 3 && (
+                      <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-zinc-700 text-zinc-400">
+                        +{candidate.applications_summary.length - 3}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Action */}
               <Link

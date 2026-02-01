@@ -61,6 +61,7 @@ class CandidateService {
     can_travel?: boolean;
     experience_years_min?: number;
     experience_years_max?: number;
+    applied_to_job?: number;
   }): Promise<PaginatedResponse<CandidateProfile>> {
     try {
       const queryParams = new URLSearchParams();
@@ -74,6 +75,7 @@ class CandidateService {
       if (params?.can_travel !== undefined) queryParams.append('can_travel', params.can_travel.toString());
       if (params?.experience_years_min !== undefined) queryParams.append('experience_years__gte', params.experience_years_min.toString());
       if (params?.experience_years_max !== undefined) queryParams.append('experience_years__lte', params.experience_years_max.toString());
+      if (params?.applied_to_job !== undefined) queryParams.append('applied_to_job', params.applied_to_job.toString());
 
       const url = `${this.baseUrl}/candidates/profiles/?${queryParams.toString()}`;
       const response = await axios.get(url, this.getAxiosConfig());

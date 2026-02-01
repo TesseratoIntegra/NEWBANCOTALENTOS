@@ -210,22 +210,24 @@ class CandidateProfileCreateUpdateSerializer(serializers.ModelSerializer):
 class CandidateProfileListSerializer(serializers.ModelSerializer):
     """Serializer simplificado para listagem de candidatos"""
 
+    user_id = serializers.IntegerField(source='user.id', read_only=True)
     user_name = serializers.CharField(source='user.name', read_only=True)
     user_email = serializers.CharField(source='user.email', read_only=True)
     age = serializers.ReadOnlyField()
     experience_summary = serializers.SerializerMethodField()
     education_summary = serializers.SerializerMethodField()
+    applications_count = serializers.SerializerMethodField()
     cpf = serializers.CharField(read_only=True)
 
     class Meta:
         model = CandidateProfile
         fields = [
-            'id', 'user_name', 'user_email', 'cpf', 'current_position', 'current_company',
+            'id', 'user_id', 'user_name', 'user_email', 'cpf', 'current_position', 'current_company',
             'city', 'state', 'image_profile', 'skills', 'professional_summary',
             'age', 'education_level', 'experience_years', 'desired_salary_min',
             'desired_salary_max', 'available_for_work', 'accepts_remote_work',
             'accepts_relocation', 'can_travel',
-            'experience_summary', 'education_summary', 'created_at'
+            'experience_summary', 'education_summary', 'applications_count', 'applications_summary', 'created_at'
         ]
 
     def get_experience_summary(self, obj):
@@ -250,3 +252,24 @@ class CandidateProfileListSerializer(serializers.ModelSerializer):
                 'is_current': education.is_current
             }
         return None
+
+    def get_applications_count(self, obj):
+        """Conta candidaturas do usuário"""
+        return obj.user.applications.count()
+
+    applications_summary = serializers.SerializerMethodField()
+
+    def get_applications_summary(self, obj):
+        """Resumo das candidaturas com dados da vaga"""
+        applications = obj.user.applications.select_related('job', 'job__company').order_by('-applied_at')[:5]
+        return [
+            {
+                'id': app.id,
+                'job_id': app.job.id,
+                'job_title': app.job.title,
+                'company_name': app.job.company.name if app.job.company else None,
+                'status': app.status,
+                'applied_at': app.applied_at.isoformat() if app.applied_at else None
+            }
+            for app in applications
+        ]

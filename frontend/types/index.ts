@@ -89,6 +89,7 @@ export interface JobsResponse {
 export interface CandidateProfile {
   id: number;
   user: number;
+  user_id?: number;
   user_name?: string;
   user_email?: string;
   cpf?: string;
@@ -124,6 +125,15 @@ export interface CandidateProfile {
   emergency_contact_name?: string;
   emergency_contact_phone?: string;
   image_profile?: string;
+  applications_count?: number;
+  applications_summary?: Array<{
+    id: number;
+    job_id: number;
+    job_title: string;
+    company_name?: string;
+    status: string;
+    applied_at?: string;
+  }>;
   created_at: string;
   updated_at: string;
 }

@@ -38,7 +38,8 @@ class ApplicationFilter(FilterSet):
             'applied_at': ['gte', 'lte'],
             'city': ['icontains'],
             'state': ['exact'],
-            'job': ['exact', 'in']
+            'job': ['exact', 'in'],
+            'candidate': ['exact']
         }
 
 

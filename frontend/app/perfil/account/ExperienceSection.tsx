@@ -5,7 +5,6 @@ import { CandidateExperience } from '@/types';
 import candidateService from '@/services/candidateService';
 import { toast } from 'react-hot-toast';
 import { Edit, Trash2, Plus, Save, X } from 'lucide-react';
-import AuthService from '@/services/auth';
 import * as Icon from 'react-bootstrap-icons'
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -29,26 +28,22 @@ export default function ExperienceSection({ experiences: initialExperiences, onU
     achievements: ''
   });
 
-  // Fetch experiences from API on mount
+  // Buscar experiências da API ao montar
   useEffect(() => {
     async function fetchExperiences() {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/candidates/experiences/`, {
-                  headers: {
-          'Authorization': `Bearer ${AuthService.getAccessToken()}`
-        }
-        });
-        if (!res.ok) throw new Error('Erro ao buscar experiências');
-        const data = await res.json();
-        setExperiences(data);
-        if (onUpdate) onUpdate(data);
+        const response = await candidateService.getCandidateExperiences();
+        // Se a resposta for paginada, use response.results, senão response direto
+        const exps = Array.isArray(response) ? response : response.results || [];
+        setExperiences(exps);
+        onUpdate(exps);
       } catch (error) {
         console.error('Erro ao buscar experiências:', error);
         toast.error('Erro ao buscar experiências');
       }
     }
     fetchExperiences();
-  }, []);
+  }, [onUpdate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,11 +167,10 @@ export default function ExperienceSection({ experiences: initialExperiences, onU
     <div className="lg:p-6">
       <div className="lg:flex justify-between items-center mb-6">
         <h2 className="text-center lg:text-right text-xl lg:text-2xl font-bold text-blue-900">Experiência Profissional</h2>
-        {experiences.length > 0 && (
+        {experiences.length > 0 && !isAdding && (
           <button
             onClick={() => setIsAdding(true)}
-            disabled={isAdding}
-            className="w-full mt-3 lg:mt-0 lg:w-auto bg-blue-900 hover:bg-blue-800 disabled:bg-slate-700 disabled:opacity-50 text-slate-100 px-4 py-2 rounded-md font-medium transition-colors flex items-center cursor-pointer justify-center lg:justify-start"
+            className="w-full mt-3 lg:mt-0 lg:w-auto bg-blue-900 hover:bg-blue-800 text-slate-100 px-4 py-2 rounded-md font-medium transition-colors flex items-center cursor-pointer justify-center lg:justify-start"
           >
             <Plus className="h-4 w-4 mr-2" />
             Adicionar Experiência
@@ -328,7 +322,8 @@ export default function ExperienceSection({ experiences: initialExperiences, onU
 
       {/* Lista de Experiências */}
       <div className="space-y-4">
-        {experiences.length === 0 && !isAdding ? (
+        {/* Estado vazio - mostrar botão de adicionar primeira experiência */}
+        {experiences.length === 0 && !isAdding && (
           <div className="text-center py-8">
             <p className="text-slate-700 mb-4">Nenhuma experiência cadastrada</p>
             <button
@@ -338,7 +333,10 @@ export default function ExperienceSection({ experiences: initialExperiences, onU
               Adicionar Primeira Experiência
             </button>
           </div>
-        ) : experiences.length > 0 ? (
+        )}
+
+        {/* Lista de experiências */}
+        {experiences.length > 0 && (
           experiences.map((experience) => (
             <div key={experience.id} className="bg-white rounded-md p-4 border border-blue-900/50">
               <div className="flex justify-between items-start">
@@ -395,7 +393,7 @@ export default function ExperienceSection({ experiences: initialExperiences, onU
               </div>
             </div>
           ))
-        ) : null}
+        )}
         <div className="flex justify-center lg:justify-end pt-6 border-t border-zinc-400">
           <div onClick={()=>{setCurrentStep(2)}} className="mr-auto bg-blue-900 hover:bg-blue-800 disabled:bg-slate-700 disabled:opacity-50 text-slate-100 px-6 py-2 rounded-md font-medium transition-colors flex items-center cursor-pointer">
             <Icon.ArrowLeft className="h-4 w-4 mr-2" /> Voltar
