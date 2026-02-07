@@ -18,36 +18,39 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
   const { setWizardStep, setCurrentStep } = useAuth();
   type EducationLevelType = "" | "fundamental" | "medio" | "tecnico" | "superior" | "pos_graduacao" | "mestrado" | "doutorado";
   interface FormDataType {
-    current_position?: string;
-    current_company?: string;
     education_level?: EducationLevelType;
-    experience_years?: number;
-  desired_salary_min?: string;
-  desired_salary_max?: string;
+    desired_salary_min?: string;
+    desired_salary_max?: string;
     professional_summary?: string;
-    skills?: string;
-    certifications?: string;
     linkedin_url?: string;
     github_url?: string;
     portfolio_url?: string;
+    available_for_work?: boolean;
+    can_travel?: boolean;
+    accepts_remote_work?: boolean;
+    accepts_relocation?: boolean;
+    preferred_work_shift?: 'morning' | 'afternoon' | 'night' | 'flexible';
+    has_vehicle?: boolean;
+    has_cnh?: boolean;
   }
   const [formData, setFormData] = useState<FormDataType>({
-    current_position: '',
-    current_company: '',
     education_level: '',
-    experience_years: undefined,
     desired_salary_min: '',
     desired_salary_max: '',
     professional_summary: '',
-    skills: '',
-    certifications: '',
     linkedin_url: '',
     github_url: '',
-    portfolio_url: ''
+    portfolio_url: '',
+    available_for_work: true,
+    can_travel: false,
+    accepts_remote_work: true,
+    accepts_relocation: false,
+    preferred_work_shift: 'flexible',
+    has_vehicle: false,
+    has_cnh: false
   });
   const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
 
-  // Requisita os dados do candidato no início
   useEffect(() => {
     async function fetchProfile() {
       if (!profile) {
@@ -55,66 +58,59 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
           const data = await candidateService.getCandidateProfile();
           if (data) {
             setFormData({
-              current_position: data.current_position || '',
-              current_company: data.current_company || '',
               education_level: (data.education_level as EducationLevelType) || '',
-              experience_years: typeof data.experience_years === 'number' ? data.experience_years : undefined,
               desired_salary_min: data.desired_salary_min !== undefined ? String(data.desired_salary_min) : '',
               desired_salary_max: data.desired_salary_max !== undefined ? String(data.desired_salary_max) : '',
               professional_summary: data.professional_summary || '',
-              skills: data.skills || '',
-              certifications: data.certifications || '',
               linkedin_url: data.linkedin_url || '',
               github_url: data.github_url || '',
-              portfolio_url: data.portfolio_url || ''
+              portfolio_url: data.portfolio_url || '',
+              available_for_work: data.available_for_work ?? true,
+              can_travel: data.can_travel ?? false,
+              accepts_remote_work: data.accepts_remote_work ?? true,
+              accepts_relocation: data.accepts_relocation ?? false,
+              preferred_work_shift: data.preferred_work_shift || 'flexible',
+              has_vehicle: data.has_vehicle ?? false,
+              has_cnh: data.has_cnh ?? false
             });
-            // Verifica se todos os campos obrigatórios estão preenchidos
             const allFilled = (
-              data.current_position && data.current_position !== '' &&
-              data.current_company && data.current_company !== '' &&
               data.education_level &&
-              typeof data.experience_years === 'number' && data.experience_years >= 0 &&
               typeof data.desired_salary_min === 'number' && data.desired_salary_min >= 0 &&
               typeof data.desired_salary_max === 'number' && data.desired_salary_max >= 0 &&
-              data.professional_summary && data.professional_summary !== '' &&
-              data.skills && data.skills !== ''
+              data.professional_summary && data.professional_summary !== ''
             );
             if (allFilled) {
-              setWizardStep(3);
+              setWizardStep(2);
             }
           }
         } catch (error) {
-          // erro ao buscar perfil
           console.log(error)
         }
       } else {
-        // Se já veio via prop, verifica se todos obrigatórios estão preenchidos
         setFormData({
-          current_position: profile.current_position || '',
-          current_company: profile.current_company || '',
           education_level: (profile.education_level as EducationLevelType) || '',
-          experience_years: typeof profile.experience_years === 'number' ? profile.experience_years : undefined,
-    desired_salary_min: profile.desired_salary_min !== undefined ? String(profile.desired_salary_min) : '',
-    desired_salary_max: profile.desired_salary_max !== undefined ? String(profile.desired_salary_max) : '',
+          desired_salary_min: profile.desired_salary_min !== undefined ? String(profile.desired_salary_min) : '',
+          desired_salary_max: profile.desired_salary_max !== undefined ? String(profile.desired_salary_max) : '',
           professional_summary: profile.professional_summary || '',
-          skills: profile.skills || '',
-          certifications: profile.certifications || '',
           linkedin_url: profile.linkedin_url || '',
           github_url: profile.github_url || '',
-          portfolio_url: profile.portfolio_url || ''
+          portfolio_url: profile.portfolio_url || '',
+          available_for_work: profile.available_for_work ?? true,
+          can_travel: profile.can_travel ?? false,
+          accepts_remote_work: profile.accepts_remote_work ?? true,
+          accepts_relocation: profile.accepts_relocation ?? false,
+          preferred_work_shift: profile.preferred_work_shift || 'flexible',
+          has_vehicle: profile.has_vehicle ?? false,
+          has_cnh: profile.has_cnh ?? false
         });
         const allFilled = (
-          profile.current_position && profile.current_position !== '' &&
-          profile.current_company && profile.current_company !== '' &&
           profile.education_level &&
-          typeof profile.experience_years === 'number' && profile.experience_years >= 0 &&
           typeof profile.desired_salary_min === 'number' && profile.desired_salary_min >= 0 &&
           typeof profile.desired_salary_max === 'number' && profile.desired_salary_max >= 0 &&
-          profile.professional_summary && profile.professional_summary !== '' &&
-          profile.skills && profile.skills !== ''
+          profile.professional_summary && profile.professional_summary !== ''
         );
         if (allFilled) {
-          setWizardStep(3);
+          setWizardStep(2);
         }
       }
     }
@@ -124,42 +120,39 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
   useEffect(() => {
     if (profile) {
       setFormData({
-        current_position: profile.current_position || '',
-        current_company: profile.current_company || '',
         education_level: (profile.education_level as EducationLevelType) || '',
-        experience_years: typeof profile.experience_years === 'number' ? profile.experience_years : undefined,
-  desired_salary_min: profile.desired_salary_min !== undefined ? String(profile.desired_salary_min) : '',
-  desired_salary_max: profile.desired_salary_max !== undefined ? String(profile.desired_salary_max) : '',
+        desired_salary_min: profile.desired_salary_min !== undefined ? String(profile.desired_salary_min) : '',
+        desired_salary_max: profile.desired_salary_max !== undefined ? String(profile.desired_salary_max) : '',
         professional_summary: profile.professional_summary || '',
-        skills: profile.skills || '',
-        certifications: profile.certifications || '',
         linkedin_url: profile.linkedin_url || '',
         github_url: profile.github_url || '',
-        portfolio_url: profile.portfolio_url || ''
+        portfolio_url: profile.portfolio_url || '',
+        available_for_work: profile.available_for_work ?? true,
+        can_travel: profile.can_travel ?? false,
+        accepts_remote_work: profile.accepts_remote_work ?? true,
+        accepts_relocation: profile.accepts_relocation ?? false,
+        preferred_work_shift: profile.preferred_work_shift || 'flexible',
+        has_vehicle: profile.has_vehicle ?? false,
+        has_cnh: profile.has_cnh ?? false
       });
     }
   }, [profile]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    // Validação obrigatória
+
     const newErrors: { [key: string]: boolean } = {};
-    if (!formData.current_position || formData.current_position.trim() === '') newErrors.current_position = true;
-    if (!formData.current_company || formData.current_company.trim() === '') newErrors.current_company = true;
     if (!formData.education_level) newErrors.education_level = true;
-    if (formData.experience_years === undefined || formData.experience_years < 0) newErrors.experience_years = true;
     if (!formData.desired_salary_min || formData.desired_salary_min.trim() === '') newErrors.desired_salary_min = true;
     if (!formData.desired_salary_max || formData.desired_salary_max.trim() === '') newErrors.desired_salary_max = true;
     if (!formData.professional_summary || formData.professional_summary.trim() === '') newErrors.professional_summary = true;
-    if (!formData.skills || formData.skills.trim() === '') newErrors.skills = true;
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
       toast.error('Por favor, preencha todos os campos obrigatórios!');
       return;
     }
-    // Converter campos numéricos para o tipo correto
+
     const submitData: Partial<CandidateProfile> = {
       ...formData,
       education_level: formData.education_level === '' ? undefined : formData.education_level,
@@ -173,18 +166,16 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
           : undefined,
     };
     await onUpdate(submitData);
-    setWizardStep(3); // Avança para o próximo passo do wizard
+    setWizardStep(2);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     if (name === 'desired_salary_min' || name === 'desired_salary_max') {
-      // Permite apenas dígitos
       const raw = value.replace(/\D/g, '');
-      setFormData(prev => ({
-        ...prev,
-        [name]: raw
-      }));
+      setFormData(prev => ({ ...prev, [name]: raw }));
+    } else if (type === 'checkbox') {
+      setFormData(prev => ({ ...prev, [name]: (e.target as HTMLInputElement).checked }));
     } else {
       setFormData(prev => ({
         ...prev,
@@ -195,94 +186,40 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
   };
 
   const educationLevels = candidateService.getEducationLevels();
+  const workShiftOptions = candidateService.getWorkShiftOptions();
 
   return (
     <div className="lg:p-6">
-      <h2 className="text-center lg:text-right text-xl lg:text-2xl font-bold text-blue-900 mb-6">Dados Profissionais</h2>
-      
+      <h2 className="text-center lg:text-right text-xl lg:text-2xl font-bold text-blue-900 mb-6">Perfil Profissional</h2>
+
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Posição e Empresa Atual */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label htmlFor="current_position" className="block text-sm font-medium text-zinc-700 mb-2">
-              Cargo Atual
-            </label>
-            <input
-              type="text"
-              id="current_position"
-              name="current_position"
-              value={formData.current_position || ''}
-              onChange={handleChange}
-              placeholder="Desenvolvedor, Analista, etc."
-              className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.current_position ? 'border-red-500' : 'border-slate-400'}`}
-            />
-            {errors.current_position && <span className="text-xs text-red-600">Campo obrigatório</span>}
-          </div>
-
-          <div>
-            <label htmlFor="current_company" className="block text-sm font-medium text-zinc-700 mb-2">
-              Empresa Atual
-            </label>
-            <input
-              type="text"
-              id="current_company"
-              name="current_company"
-              value={formData.current_company || ''}
-              onChange={handleChange}
-              placeholder="Nome da empresa"
-              className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.current_company ? 'border-red-500' : 'border-slate-400'}`}
-            />
-            {errors.current_company && <span className="text-xs text-red-600">Campo obrigatório</span>}
-          </div>
-        </div>
-
-        {/* Escolaridade e Anos de Experiência */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label htmlFor="education_level" className="block text-sm font-medium text-zinc-700 mb-2">
-              Nível de Escolaridade
-            </label>
-            <select
-              id="education_level"
-              name="education_level"
-              value={formData.education_level || ''}
-              onChange={handleChange}
-              className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.education_level ? 'border-red-500' : 'border-slate-400'}`}
-            >
-              <option value="">Selecione...</option>
-              {educationLevels.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            {errors.education_level && <span className="text-xs text-red-600">Campo obrigatório</span>}
-          </div>
-
-          <div>
-            <label htmlFor="experience_years" className="block text-sm font-medium text-zinc-700 mb-2">
-              Anos de Experiência
-            </label>
-            <input
-              type="number"
-              id="experience_years"
-              name="experience_years"
-              value={formData.experience_years || ''}
-              onChange={handleChange}
-              min="0"
-              max="50"
-              placeholder="0"
-              className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.experience_years ? 'border-red-500' : 'border-slate-400'}`}
-            />
-            {errors.experience_years && <span className="text-xs text-red-600">Campo obrigatório</span>}
-          </div>
+        {/* Escolaridade */}
+        <div>
+          <label htmlFor="education_level" className="block text-sm font-medium text-zinc-700 mb-2">
+            Nível de Escolaridade *
+          </label>
+          <select
+            id="education_level"
+            name="education_level"
+            value={formData.education_level || ''}
+            onChange={handleChange}
+            className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.education_level ? 'border-red-500' : 'border-slate-400'}`}
+          >
+            <option value="">Selecione...</option>
+            {educationLevels.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          {errors.education_level && <span className="text-xs text-red-600">Campo obrigatório</span>}
         </div>
 
         {/* Pretensão Salarial */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label htmlFor="desired_salary_min" className="block text-sm font-medium text-zinc-700 mb-2">
-              Pretensão Salarial Mínima (R$)
+              Pretensão Salarial Mínima (R$) *
             </label>
             <input
               type="text"
@@ -300,7 +237,7 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
 
           <div>
             <label htmlFor="desired_salary_max" className="block text-sm font-medium text-zinc-700 mb-2">
-              Pretensão Salarial Máxima (R$)
+              Pretensão Salarial Máxima (R$) *
             </label>
             <input
               type="text"
@@ -320,7 +257,7 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
         {/* Resumo Profissional */}
         <div>
           <label htmlFor="professional_summary" className="block text-sm font-medium text-zinc-700 mb-2">
-            Resumo Profissional
+            Resumo Profissional *
           </label>
           <textarea
             id="professional_summary"
@@ -334,45 +271,11 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
           {errors.professional_summary && <span className="text-xs text-red-600">Campo obrigatório</span>}
         </div>
 
-        {/* Habilidades */}
-        <div>
-          <label htmlFor="skills" className="block text-sm font-medium text-zinc-700 mb-2">
-            Habilidades e Competências
-          </label>
-          <textarea
-            id="skills"
-            name="skills"
-            value={formData.skills || ''}
-            onChange={handleChange}
-            rows={3}
-            placeholder="Liste suas principais habilidades técnicas e comportamentais..."
-            className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical ${errors.skills ? 'border-red-500' : 'border-slate-400'}`}
-          />
-          {errors.skills && <span className="text-xs text-red-600">Campo obrigatório</span>}
-        </div>
-
-        {/* Certificações */}
-        <div>
-          <label htmlFor="certifications" className="block text-sm font-medium text-zinc-700 mb-2">
-            Certificações
-          </label>
-          <textarea
-            id="certifications"
-            name="certifications"
-            value={formData.certifications || ''}
-            onChange={handleChange}
-            rows={3}
-            placeholder="Liste suas certificações, cursos e qualificações..."
-            className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical ${errors.certifications ? 'border-red-500' : 'border-slate-400'}`}
-          />
-            {/* Campo não obrigatório */}
-        </div>
-
         {/* Links Profissionais */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-slate-700">Links Profissionais</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label htmlFor="linkedin_url" className="block text-sm font-medium text-zinc-700 mb-2">
                 LinkedIn
@@ -384,9 +287,8 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
                 value={formData.linkedin_url || ''}
                 onChange={handleChange}
                 placeholder="https://linkedin.com/in/seuperfil"
-                className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.linkedin_url ? 'border-red-500' : 'border-slate-400'}`}
+                className="w-full px-3 py-2 bg-white border border-slate-400 rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
-              {/* Campo não obrigatório */}
             </div>
 
             <div>
@@ -400,32 +302,98 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
                 value={formData.github_url || ''}
                 onChange={handleChange}
                 placeholder="https://github.com/seuusuario"
-                className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.github_url ? 'border-red-500' : 'border-slate-400'}`}
+                className="w-full px-3 py-2 bg-white border border-slate-400 rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
-              {/* Campo não obrigatório */}
+            </div>
+
+            <div>
+              <label htmlFor="portfolio_url" className="block text-sm font-medium text-zinc-700 mb-2">
+                Portfólio
+              </label>
+              <input
+                type="url"
+                id="portfolio_url"
+                name="portfolio_url"
+                value={formData.portfolio_url || ''}
+                onChange={handleChange}
+                placeholder="https://seuportfolio.com"
+                className="w-full px-3 py-2 bg-white border border-slate-400 rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Preferências de Trabalho */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-slate-700">Preferências de Trabalho</h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center">
+              <input type="checkbox" id="available_for_work" name="available_for_work" checked={formData.available_for_work || false} onChange={handleChange} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-400 rounded bg-white cursor-pointer" />
+              <label htmlFor="available_for_work" className="ml-3 block text-sm text-zinc-700 cursor-pointer">
+                <span className="font-medium">Disponível para trabalho</span>
+              </label>
+            </div>
+
+            <div className="flex items-center">
+              <input type="checkbox" id="accepts_remote_work" name="accepts_remote_work" checked={formData.accepts_remote_work || false} onChange={handleChange} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-400 rounded bg-white cursor-pointer" />
+              <label htmlFor="accepts_remote_work" className="ml-3 block text-sm text-zinc-700 cursor-pointer">
+                <span className="font-medium">Aceita trabalho remoto</span>
+              </label>
+            </div>
+
+            <div className="flex items-center">
+              <input type="checkbox" id="can_travel" name="can_travel" checked={formData.can_travel || false} onChange={handleChange} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-400 rounded bg-white cursor-pointer" />
+              <label htmlFor="can_travel" className="ml-3 block text-sm text-zinc-700 cursor-pointer">
+                <span className="font-medium">Disponível para viagens</span>
+              </label>
+            </div>
+
+            <div className="flex items-center">
+              <input type="checkbox" id="accepts_relocation" name="accepts_relocation" checked={formData.accepts_relocation || false} onChange={handleChange} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-400 rounded bg-white cursor-pointer" />
+              <label htmlFor="accepts_relocation" className="ml-3 block text-sm text-zinc-700 cursor-pointer">
+                <span className="font-medium">Aceita mudança de cidade</span>
+              </label>
+            </div>
+
+            <div className="flex items-center">
+              <input type="checkbox" id="has_vehicle" name="has_vehicle" checked={formData.has_vehicle || false} onChange={handleChange} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-400 rounded bg-white cursor-pointer" />
+              <label htmlFor="has_vehicle" className="ml-3 block text-sm text-zinc-700 cursor-pointer">
+                <span className="font-medium">Possui veículo</span>
+              </label>
+            </div>
+
+            <div className="flex items-center">
+              <input type="checkbox" id="has_cnh" name="has_cnh" checked={formData.has_cnh || false} onChange={handleChange} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-400 rounded bg-white cursor-pointer" />
+              <label htmlFor="has_cnh" className="ml-3 block text-sm text-zinc-700 cursor-pointer">
+                <span className="font-medium">Possui CNH</span>
+              </label>
             </div>
           </div>
 
           <div>
-            <label htmlFor="portfolio_url" className="block text-sm font-medium text-zinc-700 mb-2">
-              Portfólio
+            <label htmlFor="preferred_work_shift" className="block text-sm font-medium text-zinc-700 mb-2">
+              Turno Preferido
             </label>
-            <input
-              type="url"
-              id="portfolio_url"
-              name="portfolio_url"
-              value={formData.portfolio_url || ''}
+            <select
+              id="preferred_work_shift"
+              name="preferred_work_shift"
+              value={formData.preferred_work_shift || 'flexible'}
               onChange={handleChange}
-              placeholder="https://seuportfolio.com"
-              className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.portfolio_url ? 'border-red-500' : 'border-slate-400'}`}
-            />
-            {/* Campo não obrigatório */}
+              className="w-full md:w-1/2 px-3 py-2 bg-white border border-slate-400 rounded-md text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              {workShiftOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
-        {/* Botão de Salvar */}
+        {/* Botões */}
         <div className="flex justify-center lg:justify-end pt-6 border-t border-zinc-400">
-          <div onClick={()=>{setCurrentStep(0)}} className="mr-auto bg-blue-900 hover:bg-blue-800 disabled:bg-slate-700 disabled:opacity-50 text-slate-100 px-6 py-2 rounded-md font-medium transition-colors flex items-center cursor-pointer">
+          <div onClick={() => { setCurrentStep(0) }} className="mr-auto bg-blue-900 hover:bg-blue-800 disabled:bg-slate-700 disabled:opacity-50 text-slate-100 px-6 py-2 rounded-md font-medium transition-colors flex items-center cursor-pointer">
             <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
           </div>
           <button

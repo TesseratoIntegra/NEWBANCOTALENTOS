@@ -122,6 +122,7 @@ export interface CandidateProfile {
   preferred_work_shift?: 'morning' | 'afternoon' | 'night' | 'flexible';
   has_vehicle: boolean;
   has_cnh: boolean;
+  accepts_whatsapp: boolean;
   emergency_contact_name?: string;
   emergency_contact_phone?: string;
   image_profile?: string;

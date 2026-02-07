@@ -18,12 +18,13 @@ export interface PersonalInfoSectionProps {
 }
 
 export default function PersonalInfoSection({ profile, onUpdate, onProfileChange, saving }: PersonalInfoSectionProps) {
-  const { wizzardStep, setWizardStep } = useAuth();
+  const { setWizardStep } = useAuth();
   const [formData, setFormData] = useState<Partial<CandidateProfile>>({
     cpf: '',
     date_of_birth: '',
     gender: undefined,
     phone_secondary: '',
+    accepts_whatsapp: true,
     zip_code: '',
     street: '',
     number: '',
@@ -32,7 +33,7 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
     state: '',
     city: ''
   });
-  type RequiredField = 'cpf' | 'date_of_birth' | 'gender' | 'phone_secondary' | 'zip_code' | 'street' | 'number' | 'complement' | 'neighborhood' | 'state' | 'city';
+  type RequiredField = 'cpf' | 'date_of_birth' | 'gender' | 'phone_secondary' | 'zip_code' | 'state' | 'city' | 'neighborhood' | 'street' | 'number';
   const [formErrors, setFormErrors] = useState<{[key in RequiredField]?: string}>({});
 
   const [profileImage, setProfileImage] = useState<File | null>(null);
@@ -55,6 +56,7 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
         date_of_birth: profile.date_of_birth || '',
         gender: profile.gender || undefined,
         phone_secondary: profile.phone_secondary || '',
+        accepts_whatsapp: profile.accepts_whatsapp ?? true,
         zip_code: profile.zip_code || '',
         street: profile.street || '',
         number: profile.number || '',
@@ -64,48 +66,42 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
         city: profile.city || ''
       });
 
-      // Se há um estado no perfil, encontrar o ID correspondente
       if (profile.state && states.length > 0) {
         const stateObj = states.find(state => state.sigla === profile.state);
         if (stateObj) {
           setSelectedStateId(stateObj.id);
         }
       }
-      
-      // Se existe uma imagem de perfil, configura o preview
+
       if (profile.image_profile) {
-        // Garante URL completa (backend pode retornar path relativo)
         const imageUrl = profile.image_profile.startsWith('http')
           ? profile.image_profile
           : `${process.env.NEXT_PUBLIC_API_BASE_URL}${profile.image_profile}`;
         setImagePreview(imageUrl);
       }
     }
-      // Checa se algum campo está vazio
-      if (profile) {
-        const requiredFields = [
-          { key: 'cpf', value: profile.cpf },
-          { key: 'date_of_birth', value: profile.date_of_birth },
-          { key: 'gender', value: profile.gender },
-          { key: 'phone_secondary', value: profile.phone_secondary },
-          { key: 'zip_code', value: profile.zip_code },
-          { key: 'street', value: profile.street },
-          { key: 'number', value: profile.number },
-          { key: 'complement', value: profile.complement },
-          { key: 'neighborhood', value: profile.neighborhood },
-          { key: 'state', value: profile.state },
-          { key: 'city', value: profile.city }
-        ];
-        const emptyFields = requiredFields.filter(field => !field.value || field.value === '').map(field => field.key);
-        if (emptyFields.length > 0) {
-          setWizardStep(0);
-        } else {
-          setWizardStep(1);
-        }
+    if (profile) {
+      const requiredFields = [
+        { key: 'cpf', value: profile.cpf },
+        { key: 'date_of_birth', value: profile.date_of_birth },
+        { key: 'gender', value: profile.gender },
+        { key: 'phone_secondary', value: profile.phone_secondary },
+        { key: 'zip_code', value: profile.zip_code },
+        { key: 'state', value: profile.state },
+        { key: 'city', value: profile.city },
+        { key: 'neighborhood', value: profile.neighborhood },
+        { key: 'street', value: profile.street },
+        { key: 'number', value: profile.number }
+      ];
+      const emptyFields = requiredFields.filter(field => !field.value || field.value === '').map(field => field.key);
+      if (emptyFields.length > 0) {
+        setWizardStep(0);
+      } else {
+        setWizardStep(1);
       }
+    }
   }, [profile, states, setWizardStep]);
 
-  // Carregar cidades quando estado é selecionado
   useEffect(() => {
     if (selectedStateId) {
       loadCities(selectedStateId);
@@ -142,13 +138,13 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
   const handleStateChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedState = event.target.value;
     const stateObj = states.find(state => state.sigla === selectedState);
-    
-    setFormData(prev => ({ 
-      ...prev, 
+
+    setFormData(prev => ({
+      ...prev,
       state: selectedState,
-      city: '' // Reset city when state changes
+      city: ''
     }));
-    
+
     if (stateObj) {
       setSelectedStateId(stateObj.id);
     } else {
@@ -162,23 +158,20 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  // Scrolla para o topo da tela ao clicar em salvar
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    // Validação visual dos campos obrigatórios
     const requiredFields: RequiredField[] = [
       'cpf',
       'date_of_birth',
       'gender',
       'phone_secondary',
       'zip_code',
-      'street',
-      'number',
-      'complement',
-      'neighborhood',
       'state',
-      'city'
+      'city',
+      'neighborhood',
+      'street',
+      'number'
     ];
     const newErrors: { [key in RequiredField]?: string } = {};
     requiredFields.forEach(field => {
@@ -187,7 +180,10 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
       }
     });
 
-    // Validação da idade mínima
+    if (formData.cpf && !validateCPF(formData.cpf)) {
+      newErrors['cpf'] = 'CPF inválido';
+    }
+
     if (formData.date_of_birth && calculateAge(formData.date_of_birth) < 14) {
       newErrors['date_of_birth'] = 'A idade mínima é de 14 anos';
     }
@@ -198,16 +194,13 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
       return;
     }
 
-    // Primeiro salva/cria o perfil
     const savedProfile = await onUpdate(formData);
 
-    // Depois faz upload da imagem se houver
     if (profileImage && savedProfile?.id) {
       try {
         const updatedProfile = await candidateService.uploadProfileImage(savedProfile.id, profileImage);
         setProfileImage(null);
         onProfileChange(updatedProfile);
-        // Garante URL completa para o preview
         if (updatedProfile.image_profile) {
           const imageUrl = updatedProfile.image_profile.startsWith('http')
             ? updatedProfile.image_profile
@@ -224,23 +217,20 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    
+
     if (file) {
-      // Verifica se é uma imagem
       if (!file.type.startsWith('image/')) {
         alert('Por favor, selecione apenas arquivos de imagem.');
         return;
       }
-      
-      // Verifica o tamanho (max 5MB)
+
       if (file.size > 5 * 1024 * 1024) {
         alert('A imagem deve ter no máximo 5MB.');
         return;
       }
-      
+
       setProfileImage(file);
-      
-      // Cria preview da imagem
+
       const reader = new FileReader();
       reader.onload = (e) => {
         setImagePreview(e.target?.result as string);
@@ -257,22 +247,9 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
     }
   };
 
-  const formatCEP = (value: string) => {
-    // Remove tudo que não for número
-    const numericValue = value.replace(/\D/g, '');
-    
-    // Aplica a máscara do CEP (00000-000)
-    if (numericValue.length <= 5) {
-      return numericValue;
-    }
-    return `${numericValue.slice(0, 5)}-${numericValue.slice(5, 8)}`;
-  };
-
   const formatCPF = (value: string) => {
-    // Remove tudo que não for número
     const numericValue = value.replace(/\D/g, '');
-    
-    // Aplica a máscara do CPF (000.000.000-00)
+
     if (numericValue.length <= 3) {
       return numericValue;
     } else if (numericValue.length <= 6) {
@@ -284,9 +261,67 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
     }
   };
 
-  // Usa a máscara do arquivo FormatTEL.ts
+  const validateCPF = (cpf: string): boolean => {
+    const numbers = cpf.replace(/\D/g, '');
+    if (numbers.length !== 11) return false;
+    // Rejeitar CPFs com todos os dígitos iguais
+    if (/^(\d)\1{10}$/.test(numbers)) return false;
+    // Primeiro dígito verificador
+    let soma = 0;
+    for (let i = 0; i < 9; i++) soma += parseInt(numbers[i]) * (10 - i);
+    let resto = soma % 11;
+    const digito1 = resto < 2 ? 0 : 11 - resto;
+    if (parseInt(numbers[9]) !== digito1) return false;
+    // Segundo dígito verificador
+    soma = 0;
+    for (let i = 0; i < 10; i++) soma += parseInt(numbers[i]) * (11 - i);
+    resto = soma % 11;
+    const digito2 = resto < 2 ? 0 : 11 - resto;
+    if (parseInt(numbers[10]) !== digito2) return false;
+    return true;
+  };
+
   const formatPhone = (value: string) => {
     return formatTEL(value);
+  };
+
+  const formatCEP = (value: string) => {
+    const numericValue = value.replace(/\D/g, '');
+    if (numericValue.length <= 5) {
+      return numericValue;
+    }
+    return `${numericValue.slice(0, 5)}-${numericValue.slice(5, 8)}`;
+  };
+
+  const fetchAddressByCEP = async (cep: string) => {
+    const cleanCep = cep.replace(/\D/g, '');
+    if (cleanCep.length !== 8) return;
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+      const data = await response.json();
+      if (data.erro) {
+        toast.error('CEP não encontrado');
+        return;
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        street: data.logradouro || prev.street,
+        neighborhood: data.bairro || prev.neighborhood,
+        city: data.localidade || prev.city,
+        state: data.uf || prev.state,
+      }));
+
+      if (data.uf && states.length > 0) {
+        const stateObj = states.find(s => s.sigla === data.uf);
+        if (stateObj) {
+          setSelectedStateId(stateObj.id);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao buscar CEP:', error);
+    }
   };
 
   const calculateAge = (birthDate: string) => {
@@ -294,25 +329,27 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
     const birth = new Date(birthDate);
     let age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
-    
+
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
       age--;
     }
-    
+
     return age;
   };
 
-  // max date para date input: hoje menos 14 anos
   const maxDateFor14 = (() => {
     const d = new Date();
     d.setFullYear(d.getFullYear() - 14);
-    return d.toISOString().split('T')[0]; // formato YYYY-MM-DD
+    return d.toISOString().split('T')[0];
   })();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
+    if (type === 'checkbox') {
+      setFormData(prev => ({ ...prev, [name]: (e.target as HTMLInputElement).checked }));
+      return;
+    }
     if (name === 'date_of_birth') {
-      // atualiza o valor mesmo que seja menor que 14, marca erro e usa toast (não bloqueante)
       setFormData(prev => ({ ...prev, [name]: value }));
       if (value && calculateAge(value) < 14) {
         setFormErrors(prev => ({ ...prev, date_of_birth: 'A idade mínima é de 14 anos' }));
@@ -326,62 +363,31 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
       }
       return;
     }
-    if (name === 'zip_code') {
-      const formattedValue = formatCEP(value);
-      setFormData(prev => ({
-        ...prev,
-        [name]: formattedValue
-      }));
-    } else if (name === 'cpf') {
+    if (name === 'cpf') {
       const formattedValue = formatCPF(value);
-      setFormData(prev => ({
-        ...prev,
-        [name]: formattedValue
-      }));
+      setFormData(prev => ({ ...prev, [name]: formattedValue }));
+      const digits = value.replace(/\D/g, '');
+      if (digits.length === 11) {
+        if (!validateCPF(formattedValue)) {
+          setFormErrors(prev => ({ ...prev, cpf: 'CPF inválido' }));
+        } else {
+          setFormErrors(prev => { const c = { ...prev }; delete c.cpf; return c; });
+        }
+      } else {
+        setFormErrors(prev => { const c = { ...prev }; delete c.cpf; return c; });
+      }
     } else if (name === 'phone_secondary') {
       const formattedValue = formatPhone(value);
-      setFormData(prev => ({
-        ...prev,
-        [name]: formattedValue
-      }));
-    } else if (name === 'emergency_contact_phone') {
-      const formattedValue = formatPhone(value);
-      setFormData(prev => ({
-        ...prev,
-        [name]: formattedValue
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    }
-  };
-
-  // Busca CEP na API ViaCEP
-  const fetchAddressByCEP = async (cep: string) => {
-    const cleanCep = cep.replace(/\D/g, '');
-    if (cleanCep.length !== 8) return;
-    try {
-      const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
-      const data = await response.json();
-      if (!data.erro) {
-        // Atualiza rua, bairro, cidade e estado
-        setFormData(prev => ({
-          ...prev,
-          street: data.logradouro || prev.street,
-          neighborhood: data.bairro || prev.neighborhood,
-          city: data.localidade || prev.city,
-          state: data.uf || prev.state
-        }));
-        // Atualiza estado selecionado para carregar cidades
-        const stateObj = states.find(state => state.sigla === data.uf);
-        if (stateObj) {
-          setSelectedStateId(stateObj.id);
-        }
+      setFormData(prev => ({ ...prev, [name]: formattedValue }));
+    } else if (name === 'zip_code') {
+      const formattedValue = formatCEP(value);
+      setFormData(prev => ({ ...prev, [name]: formattedValue }));
+      const cleanCep = value.replace(/\D/g, '');
+      if (cleanCep.length === 8) {
+        fetchAddressByCEP(cleanCep);
       }
-    } catch (error) {
-      console.error('Erro ao buscar CEP:', error);
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
 
@@ -389,12 +395,12 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
 
   return (
     <div className="lg:p-6">
-      
+
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Foto de Perfil */}
         <div className="flex flex-col items-center mb-8">
           <div className="relative group" onClick={handleImageClick}>
-            <div 
+            <div
               className="w-32 h-32 rounded-full overflow-hidden bg-white border-4 border-slate-400 cursor-pointer transition-all duration-200 group-hover:border-blue-200"
               onClick={handleImageClick}
             >
@@ -417,8 +423,7 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
               <Camera className="w-8 h-8 text-blue-200" />
             </div>
           </div>
-          
-          {/* Input file - garantindo que está sendo renderizado */}
+
           <input
             ref={fileInputRef}
             type="file"
@@ -427,17 +432,18 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
             style={{ display: 'none' }}
             id="profile-image-input"
           />
-          
+
           <p className="text-sm text-slate-700 mt-2 text-center">
             Clique na imagem para alterar a foto de perfil<br />
             <span className="text-xs">Máximo 5MB • JPG, PNG, GIF</span>
           </p>
         </div>
+
         {/* CPF e Data de Nascimento */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label htmlFor="cpf" className="block text-sm font-medium text-zinc-700 mb-2">
-              CPF
+              CPF *
             </label>
             <input
               type="text"
@@ -454,7 +460,7 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
 
           <div>
             <label htmlFor="date_of_birth" className="block text-sm font-medium text-zinc-700 mb-2">
-              Data de Nascimento {wizzardStep}
+              Data de Nascimento *
             </label>
             <input
               type="date"
@@ -472,11 +478,11 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
           </div>
         </div>
 
-        {/* Gênero e Telefone Secundário */}
+        {/* Gênero e Telefone */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label htmlFor="gender" className="block text-sm font-medium text-zinc-700 mb-2">
-              Gênero
+              Gênero *
             </label>
             <select
               id="gender"
@@ -497,7 +503,7 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
 
           <div>
             <label htmlFor="phone_secondary" className="block text-sm font-medium text-zinc-700 mb-2">
-              Telefone
+              Telefone *
             </label>
             <input
               type="tel"
@@ -505,7 +511,7 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
               name="phone_secondary"
               value={formData.phone_secondary}
               onChange={handleChange}
-              placeholder="+55 (11) 99999-9999"
+              placeholder="(11) 99999-9999"
               maxLength={19}
               className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.phone_secondary ? 'border-red-500' : 'border-slate-400'}`}
             />
@@ -513,149 +519,164 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
           </div>
         </div>
 
-        {/* Endereço */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-slate-700">Endereço</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label htmlFor="zip_code" className="block text-sm font-medium text-zinc-700 mb-2">
-                CEP
-              </label>
-              <input
-                type="text"
-                id="zip_code"
-                name="zip_code"
-                value={formData.zip_code}
-                onChange={handleChange}
-                onBlur={() => fetchAddressByCEP(formData.zip_code || '')}
-                placeholder="00000-000"
-                maxLength={9}
-                className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.zip_code ? 'border-red-500' : 'border-slate-400'}`}
-              />
-              {formErrors.zip_code && <p className="text-xs text-red-500 mt-1">{formErrors.zip_code}</p>}
-            </div>
+        {/* WhatsApp */}
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="accepts_whatsapp"
+            name="accepts_whatsapp"
+            checked={formData.accepts_whatsapp ?? true}
+            onChange={handleChange}
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-400 rounded bg-white cursor-pointer"
+          />
+          <label htmlFor="accepts_whatsapp" className="ml-3 block text-sm text-zinc-700 cursor-pointer">
+            <span className="font-medium">Aceito receber mensagens da empresa via WhatsApp</span>
+          </label>
+        </div>
 
-            <div className="md:col-span-2">
-              <label htmlFor="street" className="block text-sm font-medium text-zinc-700 mb-2">
-                Rua
-              </label>
-              <input
-                type="text"
-                id="street"
-                name="street"
-                value={formData.street}
-                onChange={handleChange}
-                placeholder="Nome da rua"
-                className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.street ? 'border-red-500' : 'border-slate-400'}`}
-              />
-              {formErrors.street && <p className="text-xs text-red-500 mt-1">{formErrors.street}</p>}
-            </div>
+        {/* CEP */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label htmlFor="zip_code" className="block text-sm font-medium text-zinc-700 mb-2">
+              CEP *
+            </label>
+            <input
+              type="text"
+              id="zip_code"
+              name="zip_code"
+              value={formData.zip_code || ''}
+              onChange={handleChange}
+              placeholder="00000-000"
+              maxLength={9}
+              className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.zip_code ? 'border-red-500' : 'border-slate-400'}`}
+            />
+            <p className="text-xs mt-1 text-slate-600">Digite o CEP para preencher automaticamente</p>
+            {formErrors.zip_code && <p className="text-xs text-red-500 mt-1">{formErrors.zip_code}</p>}
+          </div>
+        </div>
+
+        {/* Estado e Cidade */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label htmlFor="state" className="block text-sm font-medium text-zinc-700 mb-2">
+              Estado *
+            </label>
+            <select
+              id="state"
+              name="state"
+              value={formData.state}
+              onChange={handleStateChange}
+              className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.state ? 'border-red-500' : 'border-slate-400'}`}
+              disabled={loadingStates}
+            >
+              <option value="">
+                {loadingStates ? 'Carregando...' : 'Selecione um estado'}
+              </option>
+              {states.map((state) => (
+                <option key={state.id} value={state.sigla}>
+                  {state.nome} ({state.sigla})
+                </option>
+              ))}
+            </select>
+            {formErrors.state && <p className="text-xs text-red-500 mt-1">{formErrors.state}</p>}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label htmlFor="number" className="block text-sm font-medium text-zinc-700 mb-2">
-                Número
-              </label>
-              <input
-                type="text"
-                id="number"
-                name="number"
-                value={formData.number}
-                onChange={handleChange}
-                placeholder="123"
-                className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.number ? 'border-red-500' : 'border-slate-400'}`}
-              />
-              {formErrors.number && <p className="text-xs text-red-500 mt-1">{formErrors.number}</p>}
-            </div>
+          <div>
+            <label htmlFor="city" className="block text-sm font-medium text-zinc-700 mb-2">
+              Cidade *
+            </label>
+            <select
+              id="city"
+              name="city"
+              value={formData.city}
+              onChange={handleCityChange}
+              className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.city ? 'border-red-500' : 'border-slate-400'}`}
+              disabled={!selectedStateId || loadingCities}
+            >
+              <option value="">
+                {!selectedStateId
+                  ? 'Primeiro selecione um estado'
+                  : loadingCities
+                  ? 'Carregando...'
+                  : 'Selecione uma cidade'
+                }
+              </option>
+              {cities.map((city) => (
+                <option key={city.id} value={city.nome}>
+                  {city.nome}
+                </option>
+              ))}
+            </select>
+            {formErrors.city && <p className="text-xs text-red-500 mt-1">{formErrors.city}</p>}
+          </div>
+        </div>
 
-            <div>
-              <label htmlFor="complement" className="block text-sm font-medium text-zinc-700 mb-2">
-                Complemento
-              </label>
-              <input
-                type="text"
-                id="complement"
-                name="complement"
-                value={formData.complement}
-                onChange={handleChange}
-                placeholder="Apto, Casa, etc."
-                className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.complement ? 'border-red-500' : 'border-slate-400'}`}
-              />
-              {formErrors.complement && <p className="text-xs text-red-500 mt-1">{formErrors.complement}</p>}
-            </div>
-
-            <div>
-              <label htmlFor="neighborhood" className="block text-sm font-medium text-zinc-700 mb-2">
-                Bairro
-              </label>
-              <input
-                type="text"
-                id="neighborhood"
-                name="neighborhood"
-                value={formData.neighborhood}
-                onChange={handleChange}
-                placeholder="Nome do bairro"
-                className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.neighborhood ? 'border-red-500' : 'border-slate-400'}`}
-              />
-              {formErrors.neighborhood && <p className="text-xs text-red-500 mt-1">{formErrors.neighborhood}</p>}
-            </div>
+        {/* Bairro e Rua */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label htmlFor="neighborhood" className="block text-sm font-medium text-zinc-700 mb-2">
+              Bairro *
+            </label>
+            <input
+              type="text"
+              id="neighborhood"
+              name="neighborhood"
+              value={formData.neighborhood || ''}
+              onChange={handleChange}
+              placeholder="Bairro"
+              className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.neighborhood ? 'border-red-500' : 'border-slate-400'}`}
+            />
+            {formErrors.neighborhood && <p className="text-xs text-red-500 mt-1">{formErrors.neighborhood}</p>}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label htmlFor="state" className="block text-sm font-medium text-zinc-700 mb-2">
-                Estado *
-              </label>
-              <select
-                id="state"
-                name="state"
-                value={formData.state}
-                onChange={handleStateChange}
-                className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.state ? 'border-red-500' : 'border-slate-400'}`}
-                disabled={loadingStates}
-              >
-                <option value="">
-                  {loadingStates ? 'Carregando...' : 'Selecione um estado'}
-                </option>
-                {states.map((state) => (
-                  <option key={state.id} value={state.sigla}>
-                    {state.nome} ({state.sigla})
-                  </option>
-                ))}
-              </select>
-              {formErrors.state && <p className="text-xs text-red-500 mt-1">{formErrors.state}</p>}
-            </div>
-            
-            <div>
-              <label htmlFor="city" className="block text-sm font-medium text-zinc-700 mb-2">
-                Cidade *
-              </label>
-              <select
-                id="city"
-                name="city"
-                value={formData.city}
-                onChange={handleCityChange}
-                className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.city ? 'border-red-500' : 'border-slate-400'}`}
-                disabled={!selectedStateId || loadingCities}
-              >
-                <option value="">
-                  {!selectedStateId 
-                    ? 'Primeiro selecione um estado' 
-                    : loadingCities 
-                    ? 'Carregando...' 
-                    : 'Selecione uma cidade'
-                  }
-                </option>
-                {cities.map((city) => (
-                  <option key={city.id} value={city.nome}>
-                    {city.nome}
-                  </option>
-                ))}
-              </select>
-              {formErrors.city && <p className="text-xs text-red-500 mt-1">{formErrors.city}</p>}
-            </div>
+          <div>
+            <label htmlFor="street" className="block text-sm font-medium text-zinc-700 mb-2">
+              Rua *
+            </label>
+            <input
+              type="text"
+              id="street"
+              name="street"
+              value={formData.street || ''}
+              onChange={handleChange}
+              placeholder="Nome da rua"
+              className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.street ? 'border-red-500' : 'border-slate-400'}`}
+            />
+            {formErrors.street && <p className="text-xs text-red-500 mt-1">{formErrors.street}</p>}
+          </div>
+        </div>
+
+        {/* Número e Complemento */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label htmlFor="number" className="block text-sm font-medium text-zinc-700 mb-2">
+              Numero *
+            </label>
+            <input
+              type="text"
+              id="number"
+              name="number"
+              value={formData.number || ''}
+              onChange={handleChange}
+              placeholder="123"
+              className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.number ? 'border-red-500' : 'border-slate-400'}`}
+            />
+            {formErrors.number && <p className="text-xs text-red-500 mt-1">{formErrors.number}</p>}
+          </div>
+
+          <div>
+            <label htmlFor="complement" className="block text-sm font-medium text-zinc-700 mb-2">
+              Complemento
+            </label>
+            <input
+              type="text"
+              id="complement"
+              name="complement"
+              value={formData.complement || ''}
+              onChange={handleChange}
+              placeholder="Apto, Bloco, Casa..."
+              className="w-full px-3 py-2 bg-white border border-slate-400 rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
           </div>
         </div>
 

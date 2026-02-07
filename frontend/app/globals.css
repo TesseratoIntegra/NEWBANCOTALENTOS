@@ -108,3 +108,13 @@ body {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;  /* Chrome, Safari and Opera */
 }
+
+/* Detectar autofill do navegador */
+@keyframes onAutoFillStart {
+  from { /* vazio */ }
+  to { /* vazio */ }
+}
+
+input:-webkit-autofill {
+  animation-name: onAutoFillStart;
+}

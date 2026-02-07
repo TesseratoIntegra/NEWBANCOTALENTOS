@@ -5,8 +5,6 @@ import { CandidateExperience } from '@/types';
 import candidateService from '@/services/candidateService';
 import { toast } from 'react-hot-toast';
 import { Edit, Trash2, Plus, Save, X } from 'lucide-react';
-import * as Icon from 'react-bootstrap-icons'
-import { useAuth } from '@/contexts/AuthContext';
 
 export interface ExperienceSectionProps {
   experiences: CandidateExperience[];
@@ -14,7 +12,6 @@ export interface ExperienceSectionProps {
 }
 
 export default function ExperienceSection({ experiences: initialExperiences, onUpdate }: ExperienceSectionProps) {
-  const { setCurrentStep } = useAuth();
   const [experiences, setExperiences] = useState<CandidateExperience[]>(initialExperiences || []);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -394,15 +391,6 @@ export default function ExperienceSection({ experiences: initialExperiences, onU
             </div>
           ))
         )}
-        <div className="flex justify-center lg:justify-end pt-6 border-t border-zinc-400">
-          <div onClick={()=>{setCurrentStep(2)}} className="mr-auto bg-blue-900 hover:bg-blue-800 disabled:bg-slate-700 disabled:opacity-50 text-slate-100 px-6 py-2 rounded-md font-medium transition-colors flex items-center cursor-pointer">
-            <Icon.ArrowLeft className="h-4 w-4 mr-2" /> Voltar
-          </div>
-          <div onClick={()=>{setCurrentStep(4)}} className="bg-blue-900 hover:bg-blue-800 disabled:bg-slate-700 disabled:opacity-50 text-slate-100 px-6 py-2 rounded-md font-medium transition-colors flex items-center cursor-pointer">
-            Próximo
-            <Icon.ArrowRight className="h-4 w-4 ml-2" />
-          </div>
-        </div>
       </div>
     </div>
   );

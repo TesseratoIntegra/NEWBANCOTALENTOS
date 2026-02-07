@@ -62,9 +62,49 @@ export default function LoginPage() {
         if (el) el.click();
     }, []);
 
+    // Detectar autofill do navegador via animação CSS
+    const handleAutoFill = useCallback((field: 'user' | 'password') => {
+        const input = document.getElementById(field === 'user' ? 'user' : 'password') as HTMLInputElement;
+        if (field === 'user') {
+            setUserActive(true);
+            if (input?.value) setUserValue(input.value);
+        } else {
+            setPasswordActive(true);
+            if (input?.value) setPasswordValue(input.value);
+        }
+    }, []);
+
+    // Fallback: verificar autofill via DOM (para primeira entrada)
+    useEffect(() => {
+        const checkAutofill = () => {
+            const userInput = document.getElementById('user') as HTMLInputElement;
+            const passwordInput = document.getElementById('password') as HTMLInputElement;
+            try {
+                if (userInput?.matches(':-webkit-autofill')) {
+                    setUserActive(true);
+                    if (userInput.value) setUserValue(userInput.value);
+                }
+            } catch { /* matches pode falhar em alguns browsers */ }
+            try {
+                if (passwordInput?.matches(':-webkit-autofill')) {
+                    setPasswordActive(true);
+                    if (passwordInput.value) setPasswordValue(passwordInput.value);
+                }
+            } catch { /* matches pode falhar em alguns browsers */ }
+        };
+        const timers = [100, 500, 1000, 2000].map(ms => setTimeout(checkAutofill, ms));
+        return () => timers.forEach(clearTimeout);
+    }, []);
+
     // Função para fazer login
     const handleLogin = async () => {
-        if (!userValue || !passwordValue) {
+        // Ler valores do DOM como fallback (autofill pode não atualizar o state)
+        const userInput = document.getElementById('user') as HTMLInputElement;
+        const passwordInput = document.getElementById('password') as HTMLInputElement;
+        const email = userValue || userInput?.value || '';
+        const pass = passwordValue || passwordInput?.value || '';
+
+        if (!email || !pass) {
             Swal.fire({
                 icon: "error",
                 title: "Está faltando algo?",
@@ -78,7 +118,7 @@ export default function LoginPage() {
 
         try {
             // Usar o hook useAuth para login
-            const result = await login({ email: userValue, password: passwordValue });
+            const result = await login({ email: email, password: pass });
 
             Swal.fire({
                 icon: "success",
@@ -325,8 +365,9 @@ export default function LoginPage() {
                                         className="focus:outline-0 focus:ring-0 w-full h-9 pl-9 pr-2 text-zinc-900 bg-transparent"
                                         onChange={handleUserInputChange}
                                         onClick={handleUserInputClick}
+                                        onAnimationStart={(e) => { if (e.animationName === 'onAutoFillStart') handleAutoFill('user'); }}
                                         disabled={isLoading}
-                                           onKeyDown={handleKeyDown}
+                                        onKeyDown={handleKeyDown}
                                     />
                                 </div>
                                 <div className={`${userActive?'w-full':'w-0'} m-auto duration-300 h-[2px] bg-gradient-to-r from-blue-800 to-blue-400`}></div>
@@ -346,10 +387,11 @@ export default function LoginPage() {
                                         value={passwordValue}
                                         type={showPassword ? "text" : "password"}
                                         className="focus:outline-0 focus:ring-0 w-full h-9 px-9 text-zinc-900 bg-transparent"
-                                        onChange={handlePasswordInputChange} 
+                                        onChange={handlePasswordInputChange}
                                         onClick={handlePasswordInputClick}
+                                        onAnimationStart={(e) => { if (e.animationName === 'onAutoFillStart') handleAutoFill('password'); }}
                                         disabled={isLoading}
-                                           onKeyDown={handleKeyDown}
+                                        onKeyDown={handleKeyDown}
                                     />
                                     <Eye className={`h-9 text-xl w-9 p-2 text-blue-400 absolute right-1 ${showPassword?'opacity-100':'opacity-0 pointer-events-none'} duration-300 cursor-pointer`} onClick={togglePasswordVisibility}/>
                                     <EyeOff className={`h-9 text-xl w-9 p-2 text-zinc-500 absolute right-1 ${showPassword?'opacity-0 pointer-events-none':'opacity-100'} duration-300 cursor-pointer`} onClick={togglePasswordVisibility}/>

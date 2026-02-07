@@ -165,9 +165,9 @@ class CandidateInProcessSerializer(serializers.ModelSerializer):
     candidate_name = serializers.CharField(source='candidate_profile.user.name', read_only=True)
     candidate_email = serializers.CharField(source='candidate_profile.user.email', read_only=True)
     candidate_image = serializers.ImageField(source='candidate_profile.image_profile', read_only=True)
-    current_stage_name = serializers.CharField(source='current_stage.name', read_only=True)
-    current_stage_order = serializers.IntegerField(source='current_stage.order', read_only=True)
-    added_by_name = serializers.CharField(source='added_by.name', read_only=True)
+    current_stage_name = serializers.CharField(source='current_stage.name', read_only=True, default=None)
+    current_stage_order = serializers.IntegerField(source='current_stage.order', read_only=True, default=None)
+    added_by_name = serializers.CharField(source='added_by.name', read_only=True, default=None)
     stage_responses = CandidateStageResponseSerializer(many=True, read_only=True)
     process_title = serializers.CharField(source='process.title', read_only=True)
 
@@ -189,8 +189,8 @@ class CandidateInProcessListSerializer(serializers.ModelSerializer):
     candidate_name = serializers.CharField(source='candidate_profile.user.name', read_only=True)
     candidate_email = serializers.CharField(source='candidate_profile.user.email', read_only=True)
     candidate_image = serializers.ImageField(source='candidate_profile.image_profile', read_only=True)
-    current_stage_name = serializers.CharField(source='current_stage.name', read_only=True)
-    current_stage_order = serializers.IntegerField(source='current_stage.order', read_only=True)
+    current_stage_name = serializers.CharField(source='current_stage.name', read_only=True, default=None)
+    current_stage_order = serializers.IntegerField(source='current_stage.order', read_only=True, default=None)
     average_rating = serializers.SerializerMethodField()
     completed_stages = serializers.SerializerMethodField()
     total_stages = serializers.SerializerMethodField()
@@ -264,9 +264,9 @@ class SelectionProcessSerializer(serializers.ModelSerializer):
     stages = ProcessStageSerializer(many=True, read_only=True)
     stages_count = serializers.ReadOnlyField()
     candidates_count = serializers.ReadOnlyField()
-    job_title = serializers.CharField(source='job.title', read_only=True)
-    company_name = serializers.CharField(source='company.name', read_only=True)
-    created_by_name = serializers.CharField(source='created_by.name', read_only=True)
+    job_title = serializers.CharField(source='job.title', read_only=True, default=None)
+    company_name = serializers.CharField(source='company.name', read_only=True, default=None)
+    created_by_name = serializers.CharField(source='created_by.name', read_only=True, default=None)
 
     class Meta:
         model = SelectionProcess
@@ -286,9 +286,9 @@ class SelectionProcessListSerializer(serializers.ModelSerializer):
     """Serializer compacto para listagem"""
     stages_count = serializers.ReadOnlyField()
     candidates_count = serializers.ReadOnlyField()
-    job_title = serializers.CharField(source='job.title', read_only=True)
-    company_name = serializers.CharField(source='company.name', read_only=True)
-    created_by_name = serializers.CharField(source='created_by.name', read_only=True)
+    job_title = serializers.CharField(source='job.title', read_only=True, default=None)
+    company_name = serializers.CharField(source='company.name', read_only=True, default=None)
+    created_by_name = serializers.CharField(source='created_by.name', read_only=True, default=None)
 
     # Estatísticas adicionais
     candidates_approved = serializers.SerializerMethodField()

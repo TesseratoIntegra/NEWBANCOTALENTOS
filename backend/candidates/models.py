@@ -43,7 +43,7 @@ class CandidateProfile(Base):
     
     # Dados pessoais expandidos
     image_profile = models.ImageField(upload_to=UniqueFilePathGenerator('image_profile'), blank=True, verbose_name='Foto de Perfil')
-    cpf = models.CharField(max_length=14, blank=True, verbose_name='CPF')
+    cpf = models.CharField(max_length=14, blank=True, unique=True, verbose_name='CPF')
     date_of_birth = models.DateField(blank=True, null=True, verbose_name='Data de Nascimento')
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True, verbose_name='Gênero')
     phone_secondary = models.CharField(max_length=20, blank=True, verbose_name='Telefone Secundário')
@@ -115,6 +115,7 @@ class CandidateProfile(Base):
     )
     has_vehicle = models.BooleanField(default=False, verbose_name='Possui Veículo')
     has_cnh = models.BooleanField(default=False, verbose_name='Possui CNH')
+    accepts_whatsapp = models.BooleanField(default=True, verbose_name='Aceita mensagens via WhatsApp')
 
     # Contato de emergência
     emergency_contact_name = models.CharField(max_length=255, blank=True, verbose_name='Nome do Contato de Emergência')

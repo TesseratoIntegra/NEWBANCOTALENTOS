@@ -126,7 +126,7 @@ class CandidateProfileSerializer(serializers.ModelSerializer):
     user_email = serializers.CharField(source='user.email', read_only=True)
 
     # Dados da revisão do perfil
-    reviewed_by_name = serializers.CharField(source='profile_reviewed_by.name', read_only=True)
+    reviewed_by_name = serializers.CharField(source='profile_reviewed_by.name', read_only=True, default=None)
 
     class Meta:
         model = CandidateProfile
@@ -147,13 +147,39 @@ class CandidateProfileSerializer(serializers.ModelSerializer):
         return value
 
     def validate_cpf(self, value):
-        """Valida formato do CPF"""
+        """Valida formato, dígitos verificadores e unicidade do CPF"""
         if value:
             import re
-            # Remove caracteres não numéricos
             numbers_only = re.sub(r'\D', '', value)
             if len(numbers_only) != 11:
                 raise serializers.ValidationError('CPF deve ter 11 dígitos.')
+
+            # Rejeitar CPFs com todos os dígitos iguais (ex: 111.111.111-11)
+            if numbers_only == numbers_only[0] * 11:
+                raise serializers.ValidationError('CPF inválido.')
+
+            # Validar primeiro dígito verificador
+            soma = sum(int(numbers_only[i]) * (10 - i) for i in range(9))
+            resto = soma % 11
+            digito1 = 0 if resto < 2 else 11 - resto
+            if int(numbers_only[9]) != digito1:
+                raise serializers.ValidationError('CPF inválido.')
+
+            # Validar segundo dígito verificador
+            soma = sum(int(numbers_only[i]) * (11 - i) for i in range(10))
+            resto = soma % 11
+            digito2 = 0 if resto < 2 else 11 - resto
+            if int(numbers_only[10]) != digito2:
+                raise serializers.ValidationError('CPF inválido.')
+
+            # Verificar unicidade (excluindo o próprio perfil em caso de update)
+            from candidates.models import CandidateProfile
+            qs = CandidateProfile.objects.filter(cpf=value)
+            if self.instance:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise serializers.ValidationError('Este CPF já está cadastrado.')
+
         return value
 
     def validate_zip_code(self, value):
@@ -195,6 +221,38 @@ class CandidateProfileCreateUpdateSerializer(serializers.ModelSerializer):
         model = CandidateProfile
         exclude = ['user']
         read_only_fields = ['created_at', 'updated_at']
+
+    def validate_cpf(self, value):
+        """Valida formato, dígitos verificadores e unicidade do CPF"""
+        if value:
+            import re
+            numbers_only = re.sub(r'\D', '', value)
+            if len(numbers_only) != 11:
+                raise serializers.ValidationError('CPF deve ter 11 dígitos.')
+
+            if numbers_only == numbers_only[0] * 11:
+                raise serializers.ValidationError('CPF inválido.')
+
+            soma = sum(int(numbers_only[i]) * (10 - i) for i in range(9))
+            resto = soma % 11
+            digito1 = 0 if resto < 2 else 11 - resto
+            if int(numbers_only[9]) != digito1:
+                raise serializers.ValidationError('CPF inválido.')
+
+            soma = sum(int(numbers_only[i]) * (11 - i) for i in range(10))
+            resto = soma % 11
+            digito2 = 0 if resto < 2 else 11 - resto
+            if int(numbers_only[10]) != digito2:
+                raise serializers.ValidationError('CPF inválido.')
+
+            from candidates.models import CandidateProfile
+            qs = CandidateProfile.objects.filter(cpf=value)
+            if self.instance:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise serializers.ValidationError('Este CPF já está cadastrado.')
+
+        return value
 
     def validate_date_of_birth(self, value):
         """Valida data de nascimento"""
