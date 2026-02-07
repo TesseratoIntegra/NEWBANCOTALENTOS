@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Search, Filter, Users, MapPin, Briefcase, GraduationCap, Check, X, ChevronLeft, ChevronRight, Eye, FileText, UserCheck } from 'lucide-react';
+import { Search, Filter, Users, MapPin, Briefcase, GraduationCap, Check, X, ChevronLeft, ChevronRight, Eye, FileText, UserCheck, ClipboardList } from 'lucide-react';
 import Link from 'next/link';
 import candidateService from '@/services/candidateService';
 import jobService from '@/services/jobService';
@@ -419,6 +419,40 @@ export default function TalentosPage() {
                   Remoto
                 </span>
               </div>
+
+              {/* Processos Seletivos */}
+              {candidate.selection_processes_summary && candidate.selection_processes_summary.length > 0 && (
+                <div className="mb-4 space-y-2">
+                  <span className="text-xs text-zinc-500 font-medium">Processos Seletivos:</span>
+                  <div className="flex flex-wrap gap-1">
+                    {candidate.selection_processes_summary.slice(0, 3).map((sp) => {
+                      const isActive = sp.status === 'pending' || sp.status === 'in_progress';
+                      const colorClass = isActive
+                        ? 'bg-indigo-900/50 text-indigo-300'
+                        : sp.status === 'approved'
+                        ? 'bg-green-900/50 text-green-300'
+                        : sp.status === 'rejected'
+                        ? 'bg-red-900/50 text-red-300'
+                        : 'bg-zinc-700 text-zinc-400';
+                      return (
+                        <span
+                          key={sp.id}
+                          className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs ${colorClass}`}
+                          title={`${sp.process_title} — ${sp.current_stage_name || sp.status}`}
+                        >
+                          <ClipboardList className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate max-w-[120px]">{sp.process_title}</span>
+                        </span>
+                      );
+                    })}
+                    {candidate.selection_processes_summary.length > 3 && (
+                      <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-zinc-700 text-zinc-400">
+                        +{candidate.selection_processes_summary.length - 3}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Candidaturas */}
               {candidate.applications_summary && candidate.applications_summary.length > 0 && (

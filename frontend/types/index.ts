@@ -135,9 +135,17 @@ export interface CandidateProfile {
     status: string;
     applied_at?: string;
   }>;
+  selection_processes_summary?: Array<{
+    id: number;
+    process_id: number;
+    process_title: string;
+    status: string;
+    current_stage_name?: string;
+  }>;
   // Campos do processo seletivo de perfil
   profile_status?: 'pending' | 'awaiting_review' | 'approved' | 'rejected' | 'changes_requested';
   profile_observations?: string;
+  pending_observation_sections?: string[];
   profile_reviewed_at?: string;
   reviewed_by_name?: string;
   created_at: string;
@@ -364,6 +372,12 @@ export interface CandidateInProcess {
   average_rating?: number;
   completed_stages?: number;
   total_stages?: number;
+  stages_info?: Array<{
+    id: number;
+    name: string;
+    order: number;
+    status: 'completed' | 'current' | 'pending';
+  }>;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -421,7 +435,7 @@ export interface CreateSelectionProcess {
   title: string;
   description?: string;
   job?: number;
-  status?: 'draft' | 'active';
+  status?: 'draft' | 'active' | 'paused' | 'completed' | 'cancelled';
   start_date?: string;
   end_date?: string;
 }
@@ -448,4 +462,39 @@ export interface StageEvaluation {
   answers?: Record<number, string>;
   recruiter_feedback?: string;
   rating?: number;
+}
+
+// ============================================
+// PROCESS TEMPLATE TYPES
+// ============================================
+
+export interface TemplateStageQuestion {
+  id: number;
+  template_stage: number;
+  question_text: string;
+  question_type: 'multiple_choice' | 'open_text';
+  options?: string[];
+  order: number;
+  is_required: boolean;
+}
+
+export interface TemplateStage {
+  id: number;
+  template: number;
+  name: string;
+  description?: string;
+  order: number;
+  is_eliminatory: boolean;
+  questions_count?: number;
+  questions?: TemplateStageQuestion[];
+}
+
+export interface ProcessTemplate {
+  id: number;
+  name: string;
+  description?: string;
+  stages_count?: number;
+  created_by_name?: string;
+  stages?: TemplateStage[];
+  created_at: string;
 }

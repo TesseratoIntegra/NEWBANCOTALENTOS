@@ -145,6 +145,11 @@ class CandidateProfile(Base):
         null=True,
         verbose_name='Data da Revisão'
     )
+    pending_observation_sections = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name='Seções pendentes de edição'
+    )
 
     class Meta:
         verbose_name = 'Perfil do Candidato'

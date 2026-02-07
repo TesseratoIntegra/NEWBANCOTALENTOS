@@ -43,7 +43,7 @@ export default function EditarProcessoPage({ params }: { params: Promise<{ id: s
           title: processData.title,
           description: processData.description || '',
           job: processData.job,
-          status: processData.status,
+          status: processData.status as 'active' | 'draft' | undefined,
           start_date: processData.start_date || '',
           end_date: processData.end_date || '',
         });

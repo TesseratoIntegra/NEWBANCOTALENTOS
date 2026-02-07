@@ -12,7 +12,8 @@ import {
   CreateProcessStage,
   CreateStageQuestion,
   StageEvaluation,
-  PaginatedResponse
+  PaginatedResponse,
+  ProcessTemplate
 } from '@/types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -309,6 +310,7 @@ class SelectionProcessService {
     process?: number;
     status?: string;
     current_stage?: number;
+    candidate_profile?: number;
     search?: string;
     page?: number;
   }): Promise<PaginatedResponse<CandidateInProcess>> {
@@ -318,6 +320,7 @@ class SelectionProcessService {
       if (params?.process) queryParams.append('process', params.process.toString());
       if (params?.status) queryParams.append('status', params.status);
       if (params?.current_stage) queryParams.append('current_stage', params.current_stage.toString());
+      if (params?.candidate_profile) queryParams.append('candidate_profile', params.candidate_profile.toString());
       if (params?.search) queryParams.append('search', params.search);
       if (params?.page) queryParams.append('page', params.page.toString());
 
@@ -406,6 +409,121 @@ class SelectionProcessService {
   }
 
   // ============================================
+  // CANDIDATE-FACING
+  // ============================================
+
+  async getMyProcesses(): Promise<CandidateInProcess[]> {
+    try {
+      const response = await axios.get(
+        `${this.baseUrl}/candidates-in-process/my-processes/`,
+        this.getAxiosConfig()
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar meus processos seletivos:', error);
+      throw error;
+    }
+  }
+
+  // ============================================
+  // TEMPLATES
+  // ============================================
+
+  async getTemplates(search?: string): Promise<ProcessTemplate[]> {
+    try {
+      const queryParams = search ? `?search=${encodeURIComponent(search)}` : '';
+      const response = await axios.get(
+        `${this.baseUrl}/process-templates/${queryParams}`,
+        this.getAxiosConfig()
+      );
+      return response.data.results || response.data;
+    } catch (error) {
+      console.error('Erro ao buscar modelos:', error);
+      throw error;
+    }
+  }
+
+  async getTemplateById(id: number): Promise<ProcessTemplate> {
+    try {
+      const response = await axios.get(
+        `${this.baseUrl}/process-templates/${id}/`,
+        this.getAxiosConfig()
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar modelo:', error);
+      throw error;
+    }
+  }
+
+  async createTemplate(data: { name: string; description?: string }): Promise<ProcessTemplate> {
+    try {
+      const response = await axios.post(
+        `${this.baseUrl}/process-templates/`,
+        data,
+        this.getAxiosConfig()
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao criar modelo:', error);
+      throw error;
+    }
+  }
+
+  async deleteTemplate(id: number): Promise<void> {
+    try {
+      await axios.delete(
+        `${this.baseUrl}/process-templates/${id}/`,
+        this.getAxiosConfig()
+      );
+    } catch (error) {
+      console.error('Erro ao excluir modelo:', error);
+      throw error;
+    }
+  }
+
+  async applyTemplate(
+    templateId: number,
+    processData: {
+      title: string;
+      description?: string;
+      job?: number;
+      status?: string;
+      start_date?: string;
+      end_date?: string;
+    }
+  ): Promise<SelectionProcess> {
+    try {
+      const response = await axios.post(
+        `${this.baseUrl}/process-templates/${templateId}/apply/`,
+        processData,
+        this.getAxiosConfig()
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao aplicar modelo:', error);
+      throw error;
+    }
+  }
+
+  async saveProcessAsTemplate(
+    processId: number,
+    data: { name: string; description?: string }
+  ): Promise<ProcessTemplate> {
+    try {
+      const response = await axios.post(
+        `${this.baseUrl}/selection-processes/${processId}/save-as-template/`,
+        data,
+        this.getAxiosConfig()
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao salvar como modelo:', error);
+      throw error;
+    }
+  }
+
+  // ============================================
   // HELPERS
   // ============================================
 
@@ -447,6 +565,17 @@ class SelectionProcessService {
       approved: { label: 'Aprovado', bgColor: 'bg-green-900/50', textColor: 'text-green-300' },
       rejected: { label: 'Reprovado', bgColor: 'bg-red-900/50', textColor: 'text-red-300' },
       withdrawn: { label: 'Desistente', bgColor: 'bg-amber-900/50', textColor: 'text-amber-300' },
+    };
+    return statusMap[status] || statusMap.pending;
+  }
+
+  getCandidateStatusLabelLight(status: string): { label: string; bgColor: string; textColor: string } {
+    const statusMap: Record<string, { label: string; bgColor: string; textColor: string }> = {
+      pending: { label: 'Aguardando', bgColor: 'bg-gray-100', textColor: 'text-gray-700' },
+      in_progress: { label: 'Em Andamento', bgColor: 'bg-blue-100', textColor: 'text-blue-700' },
+      approved: { label: 'Aprovado', bgColor: 'bg-green-100', textColor: 'text-green-700' },
+      rejected: { label: 'Reprovado', bgColor: 'bg-red-100', textColor: 'text-red-700' },
+      withdrawn: { label: 'Desistente', bgColor: 'bg-amber-100', textColor: 'text-amber-700' },
     };
     return statusMap[status] || statusMap.pending;
   }

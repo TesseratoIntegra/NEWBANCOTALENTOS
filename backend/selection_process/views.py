@@ -11,7 +11,10 @@ from .models import (
     ProcessStage,
     StageQuestion,
     CandidateInProcess,
-    CandidateStageResponse
+    CandidateStageResponse,
+    ProcessTemplate,
+    TemplateStage,
+    TemplateStageQuestion
 )
 from .serializers import (
     SelectionProcessSerializer,
@@ -29,7 +32,14 @@ from .serializers import (
     StageEvaluationSerializer,
     AddCandidateSerializer,
     ProcessStatisticsSerializer,
-    ReorderStagesSerializer
+    ReorderStagesSerializer,
+    ProcessTemplateSerializer,
+    ProcessTemplateListSerializer,
+    ProcessTemplateCreateSerializer,
+    TemplateStageSerializer,
+    TemplateStageQuestionSerializer,
+    ApplyTemplateSerializer,
+    SaveAsTemplateSerializer
 )
 from .services.process_services import (
     add_candidate_to_process,
@@ -74,10 +84,11 @@ class CandidateInProcessFilter(FilterSet):
     process = NumberFilter(field_name='process')
     status = CharFilter(field_name='status')
     current_stage = NumberFilter(field_name='current_stage')
+    candidate_profile = NumberFilter(field_name='candidate_profile')
 
     class Meta:
         model = CandidateInProcess
-        fields = ['process', 'status', 'current_stage']
+        fields = ['process', 'status', 'current_stage', 'candidate_profile']
 
 
 # ============================================
@@ -185,6 +196,55 @@ class SelectionProcessViewSet(viewsets.ModelViewSet):
         process = self.get_object()
         stats = get_process_statistics(process)
         return Response(stats)
+
+    @extend_schema(
+        tags=['Processos Seletivos'],
+        summary='Salvar processo como modelo reutilizável',
+        request=SaveAsTemplateSerializer,
+        responses={201: ProcessTemplateSerializer}
+    )
+    @action(detail=True, methods=['post'], url_path='save-as-template')
+    def save_as_template(self, request, pk=None):
+        """Salva o processo atual como modelo reutilizável (copia etapas e perguntas)"""
+        process = self.get_object()
+        serializer = SaveAsTemplateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = request.user
+
+        # Criar o template
+        template = ProcessTemplate.objects.create(
+            name=serializer.validated_data['name'],
+            description=serializer.validated_data.get('description', ''),
+            company=user.company,
+            created_by=user
+        )
+
+        # Copiar etapas e perguntas
+        stages = process.stages.filter(is_active=True).order_by('order')
+        for stage in stages:
+            template_stage = TemplateStage.objects.create(
+                template=template,
+                name=stage.name,
+                description=stage.description,
+                order=stage.order,
+                is_eliminatory=stage.is_eliminatory
+            )
+            questions = stage.questions.filter(is_active=True).order_by('order')
+            for question in questions:
+                TemplateStageQuestion.objects.create(
+                    template_stage=template_stage,
+                    question_text=question.question_text,
+                    question_type=question.question_type,
+                    options=question.options,
+                    order=question.order,
+                    is_required=question.is_required
+                )
+
+        return Response(
+            ProcessTemplateSerializer(template).data,
+            status=status.HTTP_201_CREATED
+        )
 
     @extend_schema(
         tags=['Processos Seletivos'],
@@ -357,12 +417,18 @@ class CandidateInProcessViewSet(viewsets.ModelViewSet):
                 is_active=True
             )
 
+        if user.user_type == 'candidate':
+            return CandidateInProcess.objects.filter(
+                candidate_profile__user=user,
+                is_active=True
+            )
+
         return CandidateInProcess.objects.none()
 
     def get_serializer_class(self):
         if self.action in ['create']:
             return CandidateInProcessCreateSerializer
-        elif self.action == 'list':
+        elif self.action in ['list', 'my_processes']:
             return CandidateInProcessListSerializer
         return CandidateInProcessSerializer
 
@@ -444,6 +510,37 @@ class CandidateInProcessViewSet(viewsets.ModelViewSet):
 
         return Response(CandidateInProcessSerializer(updated).data)
 
+    @extend_schema(
+        tags=['Candidatos no Processo'],
+        summary='Listar meus processos seletivos (candidato)',
+        responses={200: CandidateInProcessListSerializer(many=True)}
+    )
+    @action(detail=False, methods=['get'], url_path='my-processes')
+    def my_processes(self, request):
+        """Retorna processos seletivos do candidato autenticado."""
+        user = request.user
+
+        if user.user_type != 'candidate':
+            return Response(
+                {'error': 'Apenas candidatos podem acessar este endpoint.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        try:
+            candidate_profile = CandidateProfile.objects.get(user=user)
+        except CandidateProfile.DoesNotExist:
+            return Response([], status=status.HTTP_200_OK)
+
+        queryset = CandidateInProcess.objects.filter(
+            candidate_profile=candidate_profile,
+            is_active=True
+        ).select_related(
+            'process', 'current_stage', 'candidate_profile__user'
+        ).order_by('-added_at')
+
+        serializer = CandidateInProcessListSerializer(queryset, many=True)
+        return Response(serializer.data)
+
 
 @extend_schema_view(
     list=extend_schema(tags=['Respostas das Etapas'], summary='Listar respostas'),
@@ -470,3 +567,119 @@ class CandidateStageResponseViewSet(viewsets.ModelViewSet):
             )
 
         return CandidateStageResponse.objects.none()
+
+
+# ============================================
+# PROCESS TEMPLATE VIEWSET
+# ============================================
+
+@extend_schema_view(
+    list=extend_schema(tags=['Modelos de Processo'], summary='Listar modelos'),
+    create=extend_schema(tags=['Modelos de Processo'], summary='Criar modelo'),
+    retrieve=extend_schema(tags=['Modelos de Processo'], summary='Detalhes do modelo'),
+    update=extend_schema(tags=['Modelos de Processo'], summary='Atualizar modelo'),
+    partial_update=extend_schema(tags=['Modelos de Processo'], summary='Atualizar modelo parcialmente'),
+    destroy=extend_schema(tags=['Modelos de Processo'], summary='Excluir modelo'),
+)
+class ProcessTemplateViewSet(viewsets.ModelViewSet):
+    """ViewSet para gerenciar Modelos de Processos Seletivos"""
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'description']
+    ordering_fields = ['name', 'created_at']
+    ordering = ['name']
+
+    def get_queryset(self):
+        user = self.request.user
+
+        if user.is_staff or user.is_superuser:
+            return ProcessTemplate.objects.filter(is_active=True)
+
+        if user.user_type == 'recruiter':
+            from django.db.models import Q
+            filters = Q(created_by=user)
+            if user.company:
+                filters |= Q(company=user.company)
+            return ProcessTemplate.objects.filter(filters, is_active=True)
+
+        return ProcessTemplate.objects.none()
+
+    def get_serializer_class(self):
+        if self.action in ['create', 'update', 'partial_update']:
+            return ProcessTemplateCreateSerializer
+        elif self.action == 'list':
+            return ProcessTemplateListSerializer
+        return ProcessTemplateSerializer
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        serializer.save(
+            company=user.company,
+            created_by=user
+        )
+
+    @extend_schema(
+        tags=['Modelos de Processo'],
+        summary='Criar processo seletivo a partir do modelo',
+        request=ApplyTemplateSerializer,
+        responses={201: SelectionProcessSerializer}
+    )
+    @action(detail=True, methods=['post'], url_path='apply')
+    def apply(self, request, pk=None):
+        """Cria um novo processo seletivo baseado neste modelo (clona etapas e perguntas)"""
+        template = self.get_object()
+        serializer = ApplyTemplateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = request.user
+        data = serializer.validated_data
+
+        # Resolver FK de job se fornecido
+        job = None
+        if data.get('job'):
+            from jobs.models import Job
+            try:
+                job = Job.objects.get(id=data['job'])
+            except Job.DoesNotExist:
+                return Response(
+                    {'error': 'Vaga não encontrada.'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+        # Criar o processo
+        process = SelectionProcess.objects.create(
+            title=data['title'],
+            description=data.get('description', ''),
+            job=job,
+            company=user.company,
+            created_by=user,
+            status=data.get('status', 'draft'),
+            start_date=data.get('start_date'),
+            end_date=data.get('end_date')
+        )
+
+        # Clonar etapas e perguntas do template
+        template_stages = template.stages.filter(is_active=True).order_by('order')
+        for ts in template_stages:
+            stage = ProcessStage.objects.create(
+                process=process,
+                name=ts.name,
+                description=ts.description,
+                order=ts.order,
+                is_eliminatory=ts.is_eliminatory
+            )
+            template_questions = ts.questions.filter(is_active=True).order_by('order')
+            for tq in template_questions:
+                StageQuestion.objects.create(
+                    stage=stage,
+                    question_text=tq.question_text,
+                    question_type=tq.question_type,
+                    options=tq.options,
+                    order=tq.order,
+                    is_required=tq.is_required
+                )
+
+        return Response(
+            SelectionProcessSerializer(process).data,
+            status=status.HTTP_201_CREATED
+        )

@@ -220,7 +220,7 @@ class CandidateProfileCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = CandidateProfile
         exclude = ['user']
-        read_only_fields = ['created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at', 'profile_status', 'profile_observations', 'profile_reviewed_by', 'profile_reviewed_at', 'pending_observation_sections']
 
     def validate_cpf(self, value):
         """Valida formato, dígitos verificadores e unicidade do CPF"""
@@ -289,6 +289,7 @@ class CandidateProfileListSerializer(serializers.ModelSerializer):
             'desired_salary_max', 'available_for_work', 'accepts_remote_work',
             'accepts_relocation', 'can_travel',
             'experience_summary', 'education_summary', 'applications_count', 'applications_summary',
+            'selection_processes_summary',
             'profile_status', 'profile_observations', 'profile_reviewed_at', 'created_at'
         ]
 
@@ -320,6 +321,7 @@ class CandidateProfileListSerializer(serializers.ModelSerializer):
         return obj.user.applications.count()
 
     applications_summary = serializers.SerializerMethodField()
+    selection_processes_summary = serializers.SerializerMethodField()
 
     def get_applications_summary(self, obj):
         """Resumo das candidaturas com dados da vaga"""
@@ -334,6 +336,20 @@ class CandidateProfileListSerializer(serializers.ModelSerializer):
                 'applied_at': app.applied_at.isoformat() if app.applied_at else None
             }
             for app in applications
+        ]
+
+    def get_selection_processes_summary(self, obj):
+        """Resumo dos processos seletivos do candidato"""
+        processes = obj.selection_processes.filter(is_active=True).select_related('process').order_by('-added_at')[:5]
+        return [
+            {
+                'id': cp.id,
+                'process_id': cp.process.id,
+                'process_title': cp.process.title,
+                'status': cp.status,
+                'current_stage_name': cp.current_stage.name if cp.current_stage else None,
+            }
+            for cp in processes
         ]
 
 

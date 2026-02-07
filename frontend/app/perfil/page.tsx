@@ -6,12 +6,13 @@ import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import candidateService from '@/services/candidateService';
 import applicationService from '@/services/applicationService';
-import { CandidateProfile, CandidateEducation, CandidateExperience, CandidateSkill, CandidateLanguage, Application } from '@/types';
+import { CandidateProfile, CandidateEducation, CandidateExperience, CandidateSkill, CandidateLanguage, Application, CandidateInProcess } from '@/types';
+import selectionProcessService from '@/services/selectionProcessService';
 import { toast } from 'react-hot-toast';
 import Navbar from '@/components/Navbar';
 import LoadChiap from '@/components/LoadChiap';
 import * as Icon from 'react-bootstrap-icons';
-import { MapPin, Mail, Phone, Linkedin, Github, Globe, Briefcase, GraduationCap, Award, Languages, Settings, Edit2, Plus, Trash2, X, AlertCircle, CheckCircle } from 'lucide-react';
+import { MapPin, Mail, Phone, Linkedin, Github, Globe, Briefcase, GraduationCap, Award, Languages, Settings, Edit2, Plus, Trash2, X, AlertCircle, CheckCircle, ClipboardList } from 'lucide-react';
 
 // Componentes de Modal
 import EditPersonalInfoModal from '@/components/profile/modals/EditPersonalInfoModal';
@@ -22,8 +23,123 @@ import EditSkillModal from '@/components/profile/modals/EditSkillModal';
 import EditLanguageModal from '@/components/profile/modals/EditLanguageModal';
 import EditPreferencesModal from '@/components/profile/modals/EditPreferencesModal';
 import ApplicationsSection from '@/components/profile/ApplicationsSection';
+import SelectionProcessesSection from '@/components/profile/SelectionProcessesSection';
 import Link from 'next/link';
 import { FileText } from 'lucide-react';
+
+const SECTION_KEY_TO_LABEL: Record<string, string> = {
+  dadosPessoais: 'Dados Pessoais',
+  profissional: 'Informações Profissionais',
+  formacao: 'Formação Acadêmica',
+  experiencia: 'Experiência Profissional',
+  habilidades: 'Habilidades',
+  idiomas: 'Idiomas',
+};
+
+const LABEL_TO_SECTION_KEY: Record<string, string> = {
+  'Dados Pessoais': 'dadosPessoais',
+  'Informações Profissionais': 'profissional',
+  'Formação Acadêmica': 'formacao',
+  'Experiência Profissional': 'experiencia',
+  'Habilidades': 'habilidades',
+  'Idiomas': 'idiomas',
+};
+
+function parseSectionObservations(text: string): Record<string, string> {
+  const result: Record<string, string> = {};
+  const sectionRegex = /\[([^\]]+)\]\n([\s\S]*?)(?=\n\[|$)/g;
+  let match;
+  while ((match = sectionRegex.exec(text)) !== null) {
+    const key = LABEL_TO_SECTION_KEY[match[1].trim()];
+    if (key) result[key] = match[2].trim();
+  }
+  return result;
+}
+
+function SectionAlert({ sectionKey, profile }: { sectionKey: string; profile: CandidateProfile }) {
+  if (profile.profile_status !== 'changes_requested' || !profile.profile_observations) return null;
+
+  const observations = parseSectionObservations(profile.profile_observations);
+  const text = observations[sectionKey];
+  if (!text) return null;
+
+  const pending = profile.pending_observation_sections || [];
+  const isPending = pending.includes(sectionKey);
+  const isCompleted = !isPending;
+
+  return (
+    <div className={`flex items-start gap-2 rounded-lg px-3 py-2 mb-3 text-sm ${
+      isCompleted
+        ? 'bg-green-50 border border-green-200'
+        : 'bg-orange-50 border border-orange-200'
+    }`}>
+      <span className={`w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 ${
+        isCompleted ? 'bg-green-500' : 'bg-orange-500 animate-pulse'
+      }`} />
+      <div className="flex-1 min-w-0">
+        <p className={`text-xs font-semibold ${isCompleted ? 'text-green-700' : 'text-orange-700'}`}>
+          {isCompleted ? 'Seção atualizada' : 'Pendência do recrutador'}
+        </p>
+        <p className={`text-xs mt-0.5 ${isCompleted ? 'text-green-600 line-through' : 'text-orange-600'}`}>{text}</p>
+      </div>
+    </div>
+  );
+}
+
+function StructuredObservations({ text, isRejected, pendingSections }: { text: string; isRejected?: boolean; pendingSections?: string[] }) {
+  // Try to parse structured format: [Section Name]\ncontent
+  const sectionRegex = /\[([^\]]+)\]\n([\s\S]*?)(?=\n\[|$)/g;
+  const sections: { title: string; content: string }[] = [];
+  let match;
+
+  while ((match = sectionRegex.exec(text)) !== null) {
+    sections.push({ title: match[1].trim(), content: match[2].trim() });
+  }
+
+  // If no structured sections found, render as plain text
+  if (sections.length === 0) {
+    return <p className="text-slate-700 text-sm whitespace-pre-line">{text}</p>;
+  }
+
+  // Map section titles to keys for checking pending status
+  const LABEL_TO_KEY: Record<string, string> = {
+    'Dados Pessoais': 'dadosPessoais',
+    'Informações Profissionais': 'profissional',
+    'Formação Acadêmica': 'formacao',
+    'Experiência Profissional': 'experiencia',
+    'Habilidades': 'habilidades',
+    'Idiomas': 'idiomas',
+  };
+
+  const borderColor = isRejected ? 'border-red-300' : 'border-orange-300';
+  const titleColor = isRejected ? 'text-red-800' : 'text-orange-800';
+
+  return (
+    <div className="space-y-2">
+      {sections.map((section, idx) => {
+        const sectionKey = LABEL_TO_KEY[section.title];
+        const isCompleted = pendingSections && sectionKey && !pendingSections.includes(sectionKey);
+
+        return (
+          <div key={idx} className={`border-l-2 ${isCompleted ? 'border-green-300' : borderColor} pl-3 py-1`}>
+            <div className="flex items-center gap-2">
+              {pendingSections && sectionKey && (
+                isCompleted
+                  ? <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                  : <AlertCircle className="w-4 h-4 text-orange-500 flex-shrink-0" />
+              )}
+              <p className={`text-sm font-semibold ${isCompleted ? 'text-green-800' : titleColor}`}>
+                {section.title}
+                {isCompleted && <span className="font-normal text-green-600 ml-2">— Atualizado</span>}
+              </p>
+            </div>
+            <p className="text-slate-700 text-sm whitespace-pre-line">{section.content}</p>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 export default function ProfileViewPage() {
   const router = useRouter();
@@ -35,6 +151,7 @@ export default function ProfileViewPage() {
   const [skills, setSkills] = useState<CandidateSkill[]>([]);
   const [languages, setLanguages] = useState<CandidateLanguage[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
+  const [myProcesses, setMyProcesses] = useState<CandidateInProcess[]>([]);
 
   // Estados dos modais
   const [editPersonalModal, setEditPersonalModal] = useState(false);
@@ -44,6 +161,7 @@ export default function ProfileViewPage() {
   const [editSkillModal, setEditSkillModal] = useState<CandidateSkill | null | 'new'>(null);
   const [editLanguageModal, setEditLanguageModal] = useState<CandidateLanguage | null | 'new'>(null);
   const [editPreferencesModal, setEditPreferencesModal] = useState(false);
+  const [showApprovedBanner, setShowApprovedBanner] = useState(false);
 
   useEffect(() => {
     if (user?.user_type === 'candidate') {
@@ -54,13 +172,14 @@ export default function ProfileViewPage() {
   const loadProfile = async () => {
     try {
       setLoading(true);
-      const [profileData, educationsData, experiencesData, skillsData, languagesData, applicationsData] = await Promise.all([
+      const [profileData, educationsData, experiencesData, skillsData, languagesData, applicationsData, processesData] = await Promise.all([
         candidateService.getCandidateProfile().catch(() => null),
         candidateService.getCandidateEducations().catch(() => []),
         candidateService.getCandidateExperiences().catch(() => []),
         candidateService.getCandidateSkills().catch(() => []),
         candidateService.getCandidateLanguages().catch(() => []),
-        applicationService.getMyApplications().catch(() => [])
+        applicationService.getMyApplications().catch(() => []),
+        selectionProcessService.getMyProcesses().catch(() => [])
       ]);
 
       // Se não tem perfil, redirecionar para o wizard de criação
@@ -75,6 +194,15 @@ export default function ProfileViewPage() {
       setSkills(Array.isArray(skillsData) ? skillsData : skillsData.results || []);
       setLanguages(Array.isArray(languagesData) ? languagesData : languagesData.results || []);
       setApplications(Array.isArray(applicationsData) ? applicationsData : applicationsData.results || []);
+      setMyProcesses(Array.isArray(processesData) ? processesData : []);
+
+      // Mostrar banner de aprovação apenas na primeira vez
+      if (profileData.profile_status === 'approved') {
+        const dismissed = localStorage.getItem('profile_approved_banner_dismissed');
+        if (!dismissed) {
+          setShowApprovedBanner(true);
+        }
+      }
     } catch (error) {
       console.error('Erro ao carregar perfil:', error);
       toast.error('Erro ao carregar informações do perfil');
@@ -222,17 +350,6 @@ export default function ProfileViewPage() {
     );
   }
 
-  const getProfileStatusInfo = (status?: string) => {
-    const statusMap: Record<string, { label: string; bgColor: string; textColor: string; borderColor: string }> = {
-      pending: { label: 'Em análise', bgColor: 'bg-amber-50', textColor: 'text-amber-800', borderColor: 'border-amber-200' },
-      awaiting_review: { label: 'Aguardando Revisão', bgColor: 'bg-blue-50', textColor: 'text-blue-800', borderColor: 'border-blue-200' },
-      approved: { label: 'Aprovado', bgColor: 'bg-green-50', textColor: 'text-green-800', borderColor: 'border-green-200' },
-      rejected: { label: 'Reprovado', bgColor: 'bg-red-50', textColor: 'text-red-800', borderColor: 'border-red-200' },
-      changes_requested: { label: 'Aguardando Candidato', bgColor: 'bg-orange-50', textColor: 'text-orange-800', borderColor: 'border-orange-200' },
-    };
-    return statusMap[status || 'pending'] || statusMap.pending;
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-zinc-100 to-white">
       <Navbar />
@@ -257,9 +374,13 @@ export default function ProfileViewPage() {
                     ? 'Perfil Reprovado'
                     : 'Pendências no Perfil'}
                 </h3>
-                <p className="text-slate-700 mt-1 text-sm whitespace-pre-line">
-                  {profile.profile_observations}
-                </p>
+                <div className="mt-2 space-y-3">
+                  <StructuredObservations
+                    text={profile.profile_observations}
+                    isRejected={profile.profile_status === 'rejected'}
+                    pendingSections={profile.profile_status === 'changes_requested' ? profile.pending_observation_sections : undefined}
+                  />
+                </div>
                 {profile.profile_reviewed_at && (
                   <p className="text-slate-500 text-xs mt-2">
                     Enviado em {new Date(profile.profile_reviewed_at).toLocaleDateString('pt-BR', {
@@ -271,6 +392,59 @@ export default function ProfileViewPage() {
                     })}
                   </p>
                 )}
+                {profile.profile_status === 'changes_requested' && profile.pending_observation_sections && profile.pending_observation_sections.length > 0 && (() => {
+                  // Parse total sections from observations
+                  const sectionRegex = /\[([^\]]+)\]/g;
+                  const LABEL_TO_KEY: Record<string, string> = {
+                    'Dados Pessoais': 'dadosPessoais',
+                    'Informações Profissionais': 'profissional',
+                    'Formação Acadêmica': 'formacao',
+                    'Experiência Profissional': 'experiencia',
+                    'Habilidades': 'habilidades',
+                    'Idiomas': 'idiomas',
+                  };
+                  const allKeys: string[] = [];
+                  let m;
+                  while ((m = sectionRegex.exec(profile.profile_observations || '')) !== null) {
+                    const key = LABEL_TO_KEY[m[1].trim()];
+                    if (key) allKeys.push(key);
+                  }
+                  const total = allKeys.length;
+                  const pending = profile.pending_observation_sections.length;
+                  const completed = total - pending;
+
+                  if (total === 0) return null;
+
+                  return (
+                    <div className="mt-3 bg-white/60 rounded-lg p-3">
+                      <div className="flex items-center justify-between text-sm mb-2">
+                        <span className="text-slate-700 font-medium">Progresso das atualizações</span>
+                        <span className="text-slate-600">{completed} de {total} seções atualizadas</span>
+                      </div>
+                      <div className="w-full bg-slate-200 rounded-full h-2">
+                        <div
+                          className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${(completed / total) * 100}%` }}
+                        />
+                      </div>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {allKeys.map(key => (
+                          <span
+                            key={key}
+                            className={`text-xs px-2 py-1 rounded-full ${
+                              !profile.pending_observation_sections!.includes(key)
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-orange-100 text-orange-700'
+                            }`}
+                          >
+                            {!profile.pending_observation_sections!.includes(key) ? '✓ ' : '○ '}
+                            {SECTION_KEY_TO_LABEL[key] || key}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
                 <p className="text-slate-600 text-sm mt-3">
                   <strong>Atualize seu perfil</strong> de acordo com as observações acima para continuar no processo seletivo.
                 </p>
@@ -280,14 +454,25 @@ export default function ProfileViewPage() {
         )}
 
         {/* Profile Status Badge (if approved) */}
-        {profile?.profile_status === 'approved' && (
+        {showApprovedBanner && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-            <div className="flex items-center gap-3">
-              <CheckCircle className="h-5 w-5 text-green-600" />
-              <div>
-                <h3 className="font-semibold text-green-800">Perfil Aprovado</h3>
-                <p className="text-green-700 text-sm">Seu perfil foi aprovado no processo seletivo. Continue se candidatando às vagas!</p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                <div>
+                  <h3 className="font-semibold text-green-800">Perfil Aprovado</h3>
+                  <p className="text-green-700 text-sm">Seu perfil foi aprovado no processo seletivo. Continue se candidatando às vagas!</p>
+                </div>
               </div>
+              <button
+                onClick={() => {
+                  setShowApprovedBanner(false);
+                  localStorage.setItem('profile_approved_banner_dismissed', 'true');
+                }}
+                className="text-green-600 hover:text-green-800 p-1 rounded transition-colors flex-shrink-0"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
           </div>
         )}
@@ -305,8 +490,28 @@ export default function ProfileViewPage() {
           </div>
         )}
 
+        {/* Selection Process Notification Banner */}
+        {myProcesses.length > 0 && myProcesses.some(p => ['pending', 'in_progress'].includes(p.status)) && (
+          <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center gap-3">
+              <ClipboardList className="h-5 w-5 text-indigo-600" />
+              <div>
+                <h3 className="font-semibold text-indigo-800">
+                  Você está em {myProcesses.filter(p => ['pending', 'in_progress'].includes(p.status)).length} processo(s) seletivo(s)
+                </h3>
+                <p className="text-indigo-700 text-sm">Veja abaixo o andamento dos seus processos seletivos.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Header do Perfil */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className={`bg-white rounded-lg shadow-md p-6 mb-6 ${
+          profile && profile.profile_status === 'changes_requested' && profile.pending_observation_sections?.includes('dadosPessoais')
+            ? 'ring-2 ring-orange-300'
+            : ''
+        }`}>
+          {profile && <SectionAlert sectionKey="dadosPessoais" profile={profile} />}
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
             {/* Foto */}
             <div className="relative">
@@ -397,7 +602,12 @@ export default function ProfileViewPage() {
         </div>
 
         {/* Sobre Mim */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className={`bg-white rounded-lg shadow-md p-6 mb-6 ${
+          profile && profile.profile_status === 'changes_requested' && profile.pending_observation_sections?.includes('profissional')
+            ? 'ring-2 ring-orange-300'
+            : ''
+        }`}>
+          {profile && <SectionAlert sectionKey="profissional" profile={profile} />}
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-blue-900 flex items-center gap-2">
               <Icon.PersonVcard className="w-5 h-5" />
@@ -416,7 +626,12 @@ export default function ProfileViewPage() {
         </div>
 
         {/* Experiência Profissional */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className={`bg-white rounded-lg shadow-md p-6 mb-6 ${
+          profile && profile.profile_status === 'changes_requested' && profile.pending_observation_sections?.includes('experiencia')
+            ? 'ring-2 ring-orange-300'
+            : ''
+        }`}>
+          {profile && <SectionAlert sectionKey="experiencia" profile={profile} />}
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-blue-900 flex items-center gap-2">
               <Briefcase className="w-5 h-5" />
@@ -472,7 +687,12 @@ export default function ProfileViewPage() {
         </div>
 
         {/* Formação Acadêmica */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className={`bg-white rounded-lg shadow-md p-6 mb-6 ${
+          profile && profile.profile_status === 'changes_requested' && profile.pending_observation_sections?.includes('formacao')
+            ? 'ring-2 ring-orange-300'
+            : ''
+        }`}>
+          {profile && <SectionAlert sectionKey="formacao" profile={profile} />}
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-blue-900 flex items-center gap-2">
               <GraduationCap className="w-5 h-5" />
@@ -522,7 +742,12 @@ export default function ProfileViewPage() {
         </div>
 
         {/* Habilidades */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className={`bg-white rounded-lg shadow-md p-6 mb-6 ${
+          profile && profile.profile_status === 'changes_requested' && profile.pending_observation_sections?.includes('habilidades')
+            ? 'ring-2 ring-orange-300'
+            : ''
+        }`}>
+          {profile && <SectionAlert sectionKey="habilidades" profile={profile} />}
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-blue-900 flex items-center gap-2">
               <Award className="w-5 h-5" />
@@ -569,7 +794,12 @@ export default function ProfileViewPage() {
         </div>
 
         {/* Idiomas */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className={`bg-white rounded-lg shadow-md p-6 mb-6 ${
+          profile && profile.profile_status === 'changes_requested' && profile.pending_observation_sections?.includes('idiomas')
+            ? 'ring-2 ring-orange-300'
+            : ''
+        }`}>
+          {profile && <SectionAlert sectionKey="idiomas" profile={profile} />}
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-blue-900 flex items-center gap-2">
               <Languages className="w-5 h-5" />
@@ -681,6 +911,19 @@ export default function ProfileViewPage() {
           </div>
         </div>
 
+        {/* Meus Processos Seletivos */}
+        {myProcesses.length > 0 && (
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-blue-900 flex items-center gap-2">
+                <ClipboardList className="w-5 h-5" />
+                Meus Processos Seletivos
+              </h2>
+            </div>
+            <SelectionProcessesSection processes={myProcesses} />
+          </div>
+        )}
+
         {/* Minhas Candidaturas */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
@@ -739,6 +982,9 @@ export default function ProfileViewPage() {
             }
             setEditExperienceModal(null);
             toast.success('Experiência salva com sucesso!');
+            // Reload profile to update pending_observation_sections
+            const updatedProfile = await candidateService.getCandidateProfile().catch(() => null);
+            if (updatedProfile) setProfile(updatedProfile);
           }}
         />
       )}
@@ -757,6 +1003,9 @@ export default function ProfileViewPage() {
             }
             setEditEducationModal(null);
             toast.success('Formação salva com sucesso!');
+            // Reload profile to update pending_observation_sections
+            const updatedProfile = await candidateService.getCandidateProfile().catch(() => null);
+            if (updatedProfile) setProfile(updatedProfile);
           }}
         />
       )}
@@ -775,6 +1024,9 @@ export default function ProfileViewPage() {
             }
             setEditSkillModal(null);
             toast.success('Habilidade salva com sucesso!');
+            // Reload profile to update pending_observation_sections
+            const updatedProfile = await candidateService.getCandidateProfile().catch(() => null);
+            if (updatedProfile) setProfile(updatedProfile);
           }}
         />
       )}
@@ -793,6 +1045,9 @@ export default function ProfileViewPage() {
             }
             setEditLanguageModal(null);
             toast.success('Idioma salvo com sucesso!');
+            // Reload profile to update pending_observation_sections
+            const updatedProfile = await candidateService.getCandidateProfile().catch(() => null);
+            if (updatedProfile) setProfile(updatedProfile);
           }}
         />
       )}

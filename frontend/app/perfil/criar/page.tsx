@@ -82,11 +82,12 @@ export default function CreateProfilePage() {
       toast.success('Perfil atualizado com sucesso!');
       setCurrentStep(currentStep === 1 ? 2 : currentStep === 3 ? 3 : 1);
       return updatedProfile;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao atualizar perfil:', error);
 
-      if (error.response?.data) {
-        const errorData = error.response.data;
+      const err = error as { response?: { data?: Record<string, unknown> } };
+      if (err.response?.data) {
+        const errorData = err.response.data;
         const errorMessages = Object.entries(errorData)
           .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
           .join('\n');

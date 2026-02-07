@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Plus, Search, Filter, Eye, Edit, Trash2, Users, Layers, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Search, Filter, Eye, Edit, Trash2, Users, Layers, X, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 import selectionProcessService from '@/services/selectionProcessService';
 import jobService from '@/services/jobService';
 import { SelectionProcess, Job, PaginatedResponse } from '@/types';
@@ -113,6 +113,13 @@ export default function ProcessosSeletivosPage() {
           <span className="text-zinc-300">
             Total: <span className="font-semibold text-white">{totalCount}</span>
           </span>
+          <Link
+            href="/admin-panel/processos-seletivos/modelos"
+            className="flex items-center gap-2 px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded-lg transition-colors"
+          >
+            <FileText className="h-4 w-4" />
+            Modelos
+          </Link>
           <Link
             href="/admin-panel/processos-seletivos/novo"
             className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"

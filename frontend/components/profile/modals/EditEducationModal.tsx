@@ -26,7 +26,8 @@ export default function EditEducationModal({ education, onClose, onSave }: EditE
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     if (type === 'checkbox' && e.target instanceof HTMLInputElement) {
-      setFormData(prev => ({ ...prev, [name]: e.target.checked }));
+      const checked = (e.target as HTMLInputElement).checked;
+      setFormData(prev => ({ ...prev, [name]: checked }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
@@ -39,7 +40,7 @@ export default function EditEducationModal({ education, onClose, onSave }: EditE
       // Prepara os dados para envio, convertendo string vazia para null
       const dataToSend = {
         ...formData,
-        end_date: formData.is_current || !formData.end_date ? null : formData.end_date,
+        end_date: formData.is_current || !formData.end_date ? undefined : formData.end_date,
       };
       await onSave(dataToSend);
     } catch (error) {

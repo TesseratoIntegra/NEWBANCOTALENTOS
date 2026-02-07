@@ -23,6 +23,82 @@ from candidates.serializers import (
 )
 
 
+import re as _re
+
+SECTION_LABEL_TO_KEY = {
+    'Dados Pessoais': 'dadosPessoais',
+    'Informações Profissionais': 'profissional',
+    'Formação Acadêmica': 'formacao',
+    'Experiência Profissional': 'experiencia',
+    'Habilidades': 'habilidades',
+    'Idiomas': 'idiomas',
+}
+
+PERSONAL_FIELDS = {
+    'cpf', 'date_of_birth', 'gender', 'phone_secondary', 'zip_code',
+    'street', 'number', 'complement', 'neighborhood', 'city', 'state',
+    'emergency_contact_name', 'emergency_contact_phone', 'image_profile',
+    'accepts_whatsapp'
+}
+
+PROFESSIONAL_FIELDS = {
+    'current_position', 'current_company', 'education_level', 'experience_years',
+    'desired_salary_min', 'desired_salary_max', 'professional_summary',
+    'linkedin_url', 'github_url', 'portfolio_url', 'skills', 'certifications'
+}
+
+
+def _parse_observation_sections(observations):
+    """Extrai chaves de secao das observacoes estruturadas."""
+    keys = []
+    for match in _re.finditer(r'\[([^\]]+)\]', observations):
+        label = match.group(1).strip()
+        key = SECTION_LABEL_TO_KEY.get(label)
+        if key:
+            keys.append(key)
+    return keys
+
+
+def _transition_profile_to_awaiting_review(profile, section_keys=None):
+    """
+    Transiciona o perfil do candidato para 'awaiting_review'.
+    - approved/rejected: transicao imediata em qualquer edicao.
+    - changes_requested COM secoes pendentes: so transiciona quando todas forem editadas.
+    - changes_requested SEM secoes pendentes (legado): transicao imediata.
+    """
+    if profile.profile_status in ('approved', 'rejected'):
+        profile.profile_status = 'awaiting_review'
+        profile.pending_observation_sections = []
+        profile.save(update_fields=['profile_status', 'pending_observation_sections', 'updated_at'])
+        return
+
+    if profile.profile_status != 'changes_requested':
+        return
+
+    pending = list(profile.pending_observation_sections or [])
+
+    # Sem secoes pendentes (legado/texto simples) → transicao imediata
+    if not pending:
+        profile.profile_status = 'awaiting_review'
+        profile.save(update_fields=['profile_status', 'updated_at'])
+        return
+
+    # Remover secoes editadas da lista
+    if section_keys:
+        for key in section_keys:
+            if key in pending:
+                pending.remove(key)
+    profile.pending_observation_sections = pending
+
+    # Se todas foram editadas, transicionar
+    if not pending:
+        profile.profile_status = 'awaiting_review'
+        profile.pending_observation_sections = []
+        profile.save(update_fields=['profile_status', 'pending_observation_sections', 'updated_at'])
+    else:
+        profile.save(update_fields=['pending_observation_sections', 'updated_at'])
+
+
 class CandidateProfileFilter(FilterSet):
     """Filtros customizados para perfis de candidatos"""
 
@@ -145,16 +221,20 @@ class CandidateProfileViewSet(viewsets.ModelViewSet):
         if self.request.user != serializer.instance.user:
             raise PermissionError('Você só pode editar seu próprio perfil.')
 
-        instance = serializer.instance
-        previous_status = instance.profile_status
-
         instance = serializer.save()
 
-        # Se o perfil estava com status 'changes_requested' e foi atualizado,
-        # mudar automaticamente para 'awaiting_review' para notificar o recrutador
-        if previous_status == 'changes_requested':
-            instance.profile_status = 'awaiting_review'
-            instance.save(update_fields=['profile_status', 'updated_at'])
+        # Detectar quais secoes foram editadas pelos campos do request
+        request_fields = set(self.request.data.keys())
+        section_keys = []
+        if request_fields & PERSONAL_FIELDS:
+            section_keys.append('dadosPessoais')
+        if request_fields & PROFESSIONAL_FIELDS:
+            section_keys.append('profissional')
+
+        _transition_profile_to_awaiting_review(
+            instance,
+            section_keys=section_keys or ['dadosPessoais', 'profissional']
+        )
 
         # Forçar persistência do image_profile se enviado via FILES
         # (corrige problema onde o serializer não persiste o campo corretamente)
@@ -279,10 +359,20 @@ class CandidateProfileViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         # Atualizar perfil
-        profile.profile_status = serializer.validated_data['status']
-        profile.profile_observations = serializer.validated_data.get('observations', '')
+        new_status = serializer.validated_data['status']
+        observations = serializer.validated_data.get('observations', '')
+
+        profile.profile_status = new_status
+        profile.profile_observations = observations
         profile.profile_reviewed_by = user
         profile.profile_reviewed_at = timezone.now()
+
+        # Popular secoes pendentes quando solicita alteracoes
+        if new_status == 'changes_requested':
+            profile.pending_observation_sections = _parse_observation_sections(observations)
+        else:
+            profile.pending_observation_sections = []
+
         profile.save()
 
         # Retornar perfil atualizado
@@ -291,6 +381,7 @@ class CandidateProfileViewSet(viewsets.ModelViewSet):
             'profile_status': profile.profile_status,
             'profile_observations': profile.profile_observations,
             'profile_reviewed_at': profile.profile_reviewed_at.isoformat(),
+            'pending_observation_sections': profile.pending_observation_sections,
         })
 
 
@@ -359,10 +450,27 @@ class CandidateEducationViewSet(viewsets.ModelViewSet):
         try:
             profile = CandidateProfile.objects.get(user=self.request.user)
             serializer.save(candidate=profile)
+            _transition_profile_to_awaiting_review(profile, section_keys=['formacao'])
         except CandidateProfile.DoesNotExist:
             raise serializers.ValidationError({
                 'candidate': 'Perfil de candidato não encontrado. Crie um perfil primeiro.'
             })
+
+    def perform_update(self, serializer):
+        instance = serializer.instance
+        if self.request.user.user_type == 'candidate' and instance.candidate.user != self.request.user:
+            raise PermissionError('Você só pode editar suas próprias formações.')
+        serializer.save()
+        if self.request.user.user_type == 'candidate':
+            _transition_profile_to_awaiting_review(instance.candidate, section_keys=['formacao'])
+
+    def perform_destroy(self, instance):
+        if self.request.user.user_type == 'candidate' and instance.candidate.user != self.request.user:
+            raise PermissionError('Você só pode deletar suas próprias formações.')
+        profile = instance.candidate
+        super().perform_destroy(instance)
+        if self.request.user.user_type == 'candidate':
+            _transition_profile_to_awaiting_review(profile, section_keys=['formacao'])
 
 
 @extend_schema_view(
@@ -420,10 +528,27 @@ class CandidateExperienceViewSet(viewsets.ModelViewSet):
         try:
             profile = CandidateProfile.objects.get(user=self.request.user)
             serializer.save(candidate=profile)
+            _transition_profile_to_awaiting_review(profile, section_keys=['experiencia'])
         except CandidateProfile.DoesNotExist:
             raise serializers.ValidationError({
                 'candidate': 'Perfil de candidato não encontrado. Crie um perfil primeiro.'
             })
+
+    def perform_update(self, serializer):
+        instance = serializer.instance
+        if self.request.user.user_type == 'candidate' and instance.candidate.user != self.request.user:
+            raise PermissionError('Você só pode editar suas próprias experiências.')
+        serializer.save()
+        if self.request.user.user_type == 'candidate':
+            _transition_profile_to_awaiting_review(instance.candidate, section_keys=['experiencia'])
+
+    def perform_destroy(self, instance):
+        if self.request.user.user_type == 'candidate' and instance.candidate.user != self.request.user:
+            raise PermissionError('Você só pode deletar suas próprias experiências.')
+        profile = instance.candidate
+        super().perform_destroy(instance)
+        if self.request.user.user_type == 'candidate':
+            _transition_profile_to_awaiting_review(profile, section_keys=['experiencia'])
 
 
 @extend_schema_view(
@@ -481,6 +606,7 @@ class CandidateLanguageViewSet(viewsets.ModelViewSet):
         try:
             profile = CandidateProfile.objects.get(user=self.request.user)
             serializer.save(candidate=profile)
+            _transition_profile_to_awaiting_review(profile, section_keys=['idiomas'])
         except CandidateProfile.DoesNotExist:
             raise serializers.ValidationError({
                 'candidate': 'Perfil de candidato não encontrado. Crie um perfil primeiro.'
@@ -489,6 +615,22 @@ class CandidateLanguageViewSet(viewsets.ModelViewSet):
             raise serializers.ValidationError({
                 'language': 'Você já possui este idioma cadastrado.'
             })
+
+    def perform_update(self, serializer):
+        instance = serializer.instance
+        if self.request.user.user_type == 'candidate' and instance.candidate.user != self.request.user:
+            raise PermissionError('Você só pode editar seus próprios idiomas.')
+        serializer.save()
+        if self.request.user.user_type == 'candidate':
+            _transition_profile_to_awaiting_review(instance.candidate, section_keys=['idiomas'])
+
+    def perform_destroy(self, instance):
+        if self.request.user.user_type == 'candidate' and instance.candidate.user != self.request.user:
+            raise PermissionError('Você só pode deletar seus próprios idiomas.')
+        profile = instance.candidate
+        super().perform_destroy(instance)
+        if self.request.user.user_type == 'candidate':
+            _transition_profile_to_awaiting_review(profile, section_keys=['idiomas'])
 
 
 @extend_schema_view(
@@ -546,6 +688,7 @@ class CandidateSkillViewSet(viewsets.ModelViewSet):
         try:
             profile = CandidateProfile.objects.get(user=self.request.user)
             serializer.save(candidate=profile)
+            _transition_profile_to_awaiting_review(profile, section_keys=['habilidades'])
         except CandidateProfile.DoesNotExist:
             raise serializers.ValidationError({
                 'candidate': 'Perfil de candidato não encontrado. Crie um perfil primeiro.'
@@ -554,3 +697,19 @@ class CandidateSkillViewSet(viewsets.ModelViewSet):
             raise serializers.ValidationError({
                 'skill_name': 'Você já possui uma habilidade com este nome cadastrada.'
             })
+
+    def perform_update(self, serializer):
+        instance = serializer.instance
+        if self.request.user.user_type == 'candidate' and instance.candidate.user != self.request.user:
+            raise PermissionError('Você só pode editar suas próprias habilidades.')
+        serializer.save()
+        if self.request.user.user_type == 'candidate':
+            _transition_profile_to_awaiting_review(instance.candidate, section_keys=['habilidades'])
+
+    def perform_destroy(self, instance):
+        if self.request.user.user_type == 'candidate' and instance.candidate.user != self.request.user:
+            raise PermissionError('Você só pode deletar suas próprias habilidades.')
+        profile = instance.candidate
+        super().perform_destroy(instance)
+        if self.request.user.user_type == 'candidate':
+            _transition_profile_to_awaiting_review(profile, section_keys=['habilidades'])

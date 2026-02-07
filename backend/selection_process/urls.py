@@ -4,7 +4,8 @@ from .views import (
     ProcessStageViewSet,
     StageQuestionViewSet,
     CandidateInProcessViewSet,
-    CandidateStageResponseViewSet
+    CandidateStageResponseViewSet,
+    ProcessTemplateViewSet
 )
 
 router = DefaultRouter()
@@ -14,5 +15,6 @@ router.register(r'process-stages', ProcessStageViewSet, basename='process-stage'
 router.register(r'stage-questions', StageQuestionViewSet, basename='stage-question')
 router.register(r'candidates-in-process', CandidateInProcessViewSet, basename='candidate-in-process')
 router.register(r'stage-responses', CandidateStageResponseViewSet, basename='stage-response')
+router.register(r'process-templates', ProcessTemplateViewSet, basename='process-template')
 
 urlpatterns = router.urls

@@ -23,7 +23,7 @@ export default function EditPersonalInfoModal({ profile, user, onClose, onSave, 
   const [formData, setFormData] = useState({
     cpf: profile.cpf || '',
     date_of_birth: profile.date_of_birth || '',
-    gender: profile.gender || '',
+    gender: (profile.gender || '') as 'M' | 'F' | 'O' | 'N' | '',
     phone_secondary: profile.phone_secondary || '',
     zip_code: profile.zip_code || '',
     street: profile.street || '',
@@ -67,7 +67,7 @@ export default function EditPersonalInfoModal({ profile, user, onClose, onSave, 
     setSaving(true);
 
     try {
-      await onSave(formData);
+      await onSave({ ...formData, gender: formData.gender as 'M' | 'F' | 'O' | 'N' | undefined });
 
       // Upload da imagem se houver uma nova
       if (imageFile && profile.id) {

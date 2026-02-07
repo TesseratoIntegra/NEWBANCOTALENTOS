@@ -348,3 +348,141 @@ class CandidateStageResponse(Base):
 
     def __str__(self):
         return f'{self.candidate_in_process.candidate_profile.user.name} - {self.stage.name}'
+
+
+class ProcessTemplate(Base):
+    """Modelo reutilizável de processo seletivo (etapas + perguntas pré-configuradas)"""
+
+    name = models.CharField(
+        max_length=255,
+        verbose_name='Nome do Modelo'
+    )
+    description = models.TextField(
+        blank=True,
+        default='',
+        verbose_name='Descrição'
+    )
+
+    company = models.ForeignKey(
+        'companies.Company',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='process_templates',
+        verbose_name='Empresa'
+    )
+
+    created_by = models.ForeignKey(
+        'accounts.UserProfile',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='created_process_templates',
+        verbose_name='Criado Por'
+    )
+
+    class Meta:
+        verbose_name = 'Modelo de Processo'
+        verbose_name_plural = 'Modelos de Processos'
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def stages_count(self):
+        return self.stages.filter(is_active=True).count()
+
+
+class TemplateStage(Base):
+    """Etapa dentro de um modelo de processo"""
+
+    template = models.ForeignKey(
+        ProcessTemplate,
+        on_delete=models.CASCADE,
+        related_name='stages',
+        verbose_name='Modelo'
+    )
+
+    name = models.CharField(
+        max_length=255,
+        verbose_name='Nome da Etapa'
+    )
+    description = models.TextField(
+        blank=True,
+        default='',
+        verbose_name='Descrição'
+    )
+
+    order = models.PositiveIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(8)],
+        verbose_name='Ordem'
+    )
+
+    is_eliminatory = models.BooleanField(
+        default=True,
+        verbose_name='Etapa Eliminatória'
+    )
+
+    class Meta:
+        verbose_name = 'Etapa do Modelo'
+        verbose_name_plural = 'Etapas do Modelo'
+        ordering = ['template', 'order']
+        unique_together = [['template', 'order']]
+
+    def __str__(self):
+        return f'{self.template.name} - Etapa {self.order}: {self.name}'
+
+    @property
+    def questions_count(self):
+        return self.questions.filter(is_active=True).count()
+
+
+class TemplateStageQuestion(Base):
+    """Pergunta dentro de uma etapa do modelo"""
+
+    QUESTION_TYPE_CHOICES = [
+        ('multiple_choice', 'Múltipla Escolha'),
+        ('open_text', 'Texto Aberto'),
+    ]
+
+    template_stage = models.ForeignKey(
+        TemplateStage,
+        on_delete=models.CASCADE,
+        related_name='questions',
+        verbose_name='Etapa do Modelo'
+    )
+
+    question_text = models.TextField(
+        verbose_name='Texto da Pergunta'
+    )
+
+    question_type = models.CharField(
+        max_length=20,
+        choices=QUESTION_TYPE_CHOICES,
+        verbose_name='Tipo de Pergunta'
+    )
+
+    options = models.JSONField(
+        blank=True,
+        null=True,
+        verbose_name='Opções (para múltipla escolha)'
+    )
+
+    order = models.PositiveIntegerField(
+        default=1,
+        verbose_name='Ordem'
+    )
+
+    is_required = models.BooleanField(
+        default=True,
+        verbose_name='Obrigatória'
+    )
+
+    class Meta:
+        verbose_name = 'Pergunta do Modelo'
+        verbose_name_plural = 'Perguntas do Modelo'
+        ordering = ['template_stage', 'order']
+
+    def __str__(self):
+        return f'{self.template_stage.name} - Pergunta {self.order}'

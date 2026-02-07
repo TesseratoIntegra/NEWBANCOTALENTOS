@@ -133,7 +133,7 @@ class CandidateService {
     candidateId: number,
     status: 'approved' | 'rejected' | 'changes_requested',
     observations?: string
-  ): Promise<{ message: string; profile_status: string; profile_observations: string; profile_reviewed_at: string }> {
+  ): Promise<{ message: string; profile_status: string; profile_observations: string; profile_reviewed_at: string; pending_observation_sections: string[] }> {
     try {
       const response = await axios.patch(
         `${this.baseUrl}/candidates/profiles/${candidateId}/update-profile-status/`,

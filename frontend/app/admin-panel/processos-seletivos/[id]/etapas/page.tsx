@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Plus, Trash2, Edit, ChevronDown, ChevronUp, GripVertical, Save, X } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Edit, ChevronDown, ChevronUp, GripVertical, Save, X, BookmarkPlus } from 'lucide-react';
 import selectionProcessService from '@/services/selectionProcessService';
 import { SelectionProcess, ProcessStage, StageQuestion, CreateProcessStage, CreateStageQuestion } from '@/types';
 
@@ -36,6 +36,17 @@ export default function EtapasPage({ params }: { params: Promise<{ id: string }>
   });
   const [newOptionText, setNewOptionText] = useState('');
 
+  // Edit question
+  const [editingQuestion, setEditingQuestion] = useState<number | null>(null);
+  const [editQuestionData, setEditQuestionData] = useState<Partial<CreateStageQuestion>>({});
+  const [editOptionText, setEditOptionText] = useState('');
+
+  // Save as template modal
+  const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
+  const [templateName, setTemplateName] = useState('');
+  const [templateDescription, setTemplateDescription] = useState('');
+  const [savingTemplate, setSavingTemplate] = useState(false);
+
   useEffect(() => {
     fetchData();
   }, [processId]);
@@ -48,7 +59,20 @@ export default function EtapasPage({ params }: { params: Promise<{ id: string }>
         selectionProcessService.getStages(processId)
       ]);
       setProcess(processData);
-      setStages(stagesData);
+
+      // Carregar perguntas das etapas que estão expandidas
+      const expandedIds = Array.from(expandedStages);
+      if (expandedIds.length > 0) {
+        const fullStages = await Promise.all(
+          stagesData
+            .filter(s => expandedIds.includes(s.id))
+            .map(s => selectionProcessService.getStageById(s.id))
+        );
+        const questionsMap = new Map(fullStages.map(fs => [fs.id, fs.questions]));
+        setStages(stagesData.map(s => questionsMap.has(s.id) ? { ...s, questions: questionsMap.get(s.id) } : s));
+      } else {
+        setStages(stagesData);
+      }
     } catch (err) {
       console.error('Erro ao buscar dados:', err);
       setError('Erro ao carregar etapas.');
@@ -57,16 +81,51 @@ export default function EtapasPage({ params }: { params: Promise<{ id: string }>
     }
   };
 
-  const toggleStage = (stageId: number) => {
+  const handleSaveAsTemplate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!templateName.trim()) return;
+    setSavingTemplate(true);
+    try {
+      await selectionProcessService.saveProcessAsTemplate(processId, {
+        name: templateName.trim(),
+        description: templateDescription.trim()
+      });
+      setShowSaveTemplateModal(false);
+      setTemplateName('');
+      setTemplateDescription('');
+      alert('Modelo salvo com sucesso!');
+    } catch {
+      alert('Erro ao salvar como modelo.');
+    } finally {
+      setSavingTemplate(false);
+    }
+  };
+
+  const toggleStage = async (stageId: number) => {
+    const isExpanded = expandedStages.has(stageId);
+
     setExpandedStages(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(stageId)) {
+      if (isExpanded) {
         newSet.delete(stageId);
       } else {
         newSet.add(stageId);
       }
       return newSet;
     });
+
+    // Ao expandir, buscar detalhes com perguntas se ainda não tem
+    if (!isExpanded) {
+      const stage = stages.find(s => s.id === stageId);
+      if (stage && !stage.questions) {
+        try {
+          const fullStage = await selectionProcessService.getStageById(stageId);
+          setStages(prev => prev.map(s => s.id === stageId ? { ...s, questions: fullStage.questions } : s));
+        } catch {
+          console.error('Erro ao buscar perguntas da etapa');
+        }
+      }
+    }
   };
 
   const handleCreateStage = async () => {
@@ -164,6 +223,52 @@ export default function EtapasPage({ params }: { params: Promise<{ id: string }>
     }
   };
 
+  const startEditQuestion = (question: StageQuestion) => {
+    setEditingQuestion(question.id);
+    setEditQuestionData({
+      question_text: question.question_text,
+      question_type: question.question_type,
+      options: question.options ? [...question.options] : [],
+      is_required: question.is_required
+    });
+    setEditOptionText('');
+  };
+
+  const handleAddEditOption = () => {
+    if (!editOptionText.trim()) return;
+    setEditQuestionData(prev => ({
+      ...prev,
+      options: [...(prev.options || []), editOptionText.trim()]
+    }));
+    setEditOptionText('');
+  };
+
+  const handleRemoveEditOption = (index: number) => {
+    setEditQuestionData(prev => ({
+      ...prev,
+      options: (prev.options || []).filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleUpdateQuestion = async (questionId: number) => {
+    if (!editQuestionData.question_text) return;
+
+    try {
+      await selectionProcessService.updateQuestion(questionId, {
+        question_text: editQuestionData.question_text,
+        question_type: editQuestionData.question_type,
+        options: editQuestionData.question_type === 'multiple_choice' ? editQuestionData.options : undefined,
+        is_required: editQuestionData.is_required
+      });
+      setEditingQuestion(null);
+      setEditQuestionData({});
+      fetchData();
+    } catch (err) {
+      console.error('Erro ao atualizar pergunta:', err);
+      alert('Erro ao atualizar pergunta.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -196,15 +301,26 @@ export default function EtapasPage({ params }: { params: Promise<{ id: string }>
             <p className="text-zinc-400">{process.title}</p>
           </div>
         </div>
-        {stages.length < 8 && (
-          <button
-            onClick={() => setShowNewStageForm(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
-          >
-            <Plus className="h-5 w-5" />
-            Nova Etapa
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {stages.length > 0 && (
+            <button
+              onClick={() => { setTemplateName(process?.title || ''); setShowSaveTemplateModal(true); }}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors text-sm"
+            >
+              <BookmarkPlus className="h-4 w-4" />
+              Salvar como Modelo
+            </button>
+          )}
+          {stages.length < 8 && (
+            <button
+              onClick={() => setShowNewStageForm(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+            >
+              <Plus className="h-5 w-5" />
+              Nova Etapa
+            </button>
+          )}
+        </div>
       </div>
 
       {/* New Stage Form */}
@@ -357,36 +473,145 @@ export default function EtapasPage({ params }: { params: Promise<{ id: string }>
                   {stage.questions && stage.questions.length > 0 ? (
                     <div className="space-y-3 mb-4">
                       {stage.questions.map((question, qIndex) => (
-                        <div key={question.id} className="flex items-start justify-between p-3 bg-zinc-800 rounded-lg">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="text-zinc-500 text-sm">{qIndex + 1}.</span>
-                              <span className="text-zinc-300">{question.question_text}</span>
-                              {question.is_required && (
-                                <span className="text-red-400 text-xs">*</span>
+                        <div key={question.id} className="p-3 bg-zinc-800 rounded-lg">
+                          {editingQuestion === question.id ? (
+                            /* Edit Question Form */
+                            <div className="space-y-3">
+                              <div>
+                                <label className="block text-sm text-zinc-400 mb-1">Texto da Pergunta</label>
+                                <textarea
+                                  value={editQuestionData.question_text || ''}
+                                  onChange={(e) => setEditQuestionData(prev => ({ ...prev, question_text: e.target.value }))}
+                                  rows={2}
+                                  className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                                />
+                              </div>
+                              <div className="flex gap-4">
+                                <div>
+                                  <label className="block text-sm text-zinc-400 mb-1">Tipo</label>
+                                  <select
+                                    value={editQuestionData.question_type || 'open_text'}
+                                    onChange={(e) => setEditQuestionData(prev => ({ ...prev, question_type: e.target.value as 'multiple_choice' | 'open_text' }))}
+                                    className="px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                  >
+                                    <option value="open_text">Texto Aberto</option>
+                                    <option value="multiple_choice">Múltipla Escolha</option>
+                                  </select>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="checkbox"
+                                    id={`edit_required_${question.id}`}
+                                    checked={editQuestionData.is_required ?? true}
+                                    onChange={(e) => setEditQuestionData(prev => ({ ...prev, is_required: e.target.checked }))}
+                                    className="rounded border-zinc-600 bg-zinc-700 text-indigo-600"
+                                  />
+                                  <label htmlFor={`edit_required_${question.id}`} className="text-sm text-zinc-300">Obrigatória</label>
+                                </div>
+                              </div>
+
+                              {editQuestionData.question_type === 'multiple_choice' && (
+                                <div>
+                                  <label className="block text-sm text-zinc-400 mb-1">Opções</label>
+                                  <div className="flex gap-2 mb-2">
+                                    <input
+                                      type="text"
+                                      value={editOptionText}
+                                      onChange={(e) => setEditOptionText(e.target.value)}
+                                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddEditOption())}
+                                      placeholder="Digite uma opção..."
+                                      className="flex-1 px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    />
+                                    <button
+                                      onClick={handleAddEditOption}
+                                      type="button"
+                                      className="px-3 py-2 bg-zinc-600 hover:bg-zinc-500 text-white rounded-lg"
+                                    >
+                                      Adicionar
+                                    </button>
+                                  </div>
+                                  {editQuestionData.options && editQuestionData.options.length > 0 && (
+                                    <div className="flex flex-wrap gap-2">
+                                      {editQuestionData.options.map((opt, i) => (
+                                        <span
+                                          key={i}
+                                          className="flex items-center gap-1 px-2 py-1 bg-zinc-700 text-zinc-300 rounded text-sm"
+                                        >
+                                          {opt}
+                                          <button onClick={() => handleRemoveEditOption(i)} className="text-zinc-500 hover:text-red-400">
+                                            <X className="h-3 w-3" />
+                                          </button>
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
                               )}
+
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => handleUpdateQuestion(question.id)}
+                                  disabled={!editQuestionData.question_text || (editQuestionData.question_type === 'multiple_choice' && (!editQuestionData.options || editQuestionData.options.length < 2))}
+                                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg disabled:opacity-50 text-sm"
+                                >
+                                  Salvar
+                                </button>
+                                <button
+                                  onClick={() => { setEditingQuestion(null); setEditQuestionData({}); }}
+                                  className="px-4 py-2 bg-zinc-600 hover:bg-zinc-500 text-white rounded-lg text-sm"
+                                >
+                                  Cancelar
+                                </button>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className={`px-2 py-0.5 text-xs rounded ${
-                                question.question_type === 'multiple_choice'
-                                  ? 'bg-blue-900/50 text-blue-300'
-                                  : 'bg-zinc-700 text-zinc-400'
-                              }`}>
-                                {question.question_type === 'multiple_choice' ? 'Múltipla Escolha' : 'Texto Aberto'}
-                              </span>
-                              {question.question_type === 'multiple_choice' && question.options && (
-                                <span className="text-zinc-500 text-xs">
-                                  ({question.options.length} opções)
-                                </span>
-                              )}
+                          ) : (
+                            /* Question Display */
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-zinc-500 text-sm">{qIndex + 1}.</span>
+                                  <span className="text-zinc-300">{question.question_text}</span>
+                                  {question.is_required && (
+                                    <span className="text-red-400 text-xs">*</span>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className={`px-2 py-0.5 text-xs rounded ${
+                                    question.question_type === 'multiple_choice'
+                                      ? 'bg-blue-900/50 text-blue-300'
+                                      : 'bg-zinc-700 text-zinc-400'
+                                  }`}>
+                                    {question.question_type === 'multiple_choice' ? 'Múltipla Escolha' : 'Texto Aberto'}
+                                  </span>
+                                </div>
+                                {question.question_type === 'multiple_choice' && question.options && question.options.length > 0 && (
+                                  <div className="flex flex-wrap gap-1.5 mt-2">
+                                    {question.options.map((opt, i) => (
+                                      <span key={i} className="px-2 py-0.5 bg-indigo-900/40 text-indigo-300 text-xs rounded-md border border-indigo-800/50">
+                                        {opt}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => startEditQuestion(question)}
+                                  className="p-1 text-zinc-500 hover:text-indigo-400"
+                                  title="Editar pergunta"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteQuestion(question.id)}
+                                  className="p-1 text-zinc-500 hover:text-red-400"
+                                  title="Excluir pergunta"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                          <button
-                            onClick={() => handleDeleteQuestion(question.id)}
-                            className="p-1 text-zinc-500 hover:text-red-400"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -501,6 +726,58 @@ export default function EtapasPage({ params }: { params: Promise<{ id: string }>
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Save as Template Modal */}
+      {showSaveTemplateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-zinc-800 border border-zinc-700 rounded-xl w-full max-w-md mx-4 p-6">
+            <h2 className="text-lg font-bold text-white mb-4">Salvar como Modelo</h2>
+            <p className="text-sm text-zinc-400 mb-4">
+              As {stages.length} etapas e suas perguntas serão salvas como modelo reutilizável.
+            </p>
+            <form onSubmit={handleSaveAsTemplate} className="space-y-4">
+              <div>
+                <label className="block text-sm text-zinc-400 mb-1">Nome do Modelo *</label>
+                <input
+                  type="text"
+                  value={templateName}
+                  onChange={(e) => setTemplateName(e.target.value)}
+                  placeholder="Ex.: Processo Padrão, Técnicos..."
+                  className="w-full px-3 py-2 bg-zinc-900 border border-zinc-600 rounded-lg text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
+                  required
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-zinc-400 mb-1">Descrição</label>
+                <textarea
+                  value={templateDescription}
+                  onChange={(e) => setTemplateDescription(e.target.value)}
+                  placeholder="Descrição opcional..."
+                  rows={3}
+                  className="w-full px-3 py-2 bg-zinc-900 border border-zinc-600 rounded-lg text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 resize-none"
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowSaveTemplateModal(false)}
+                  className="px-4 py-2 text-sm text-zinc-400 hover:text-white transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingTemplate || !templateName.trim()}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 rounded-lg text-sm font-medium text-white transition-colors"
+                >
+                  {savingTemplate ? 'Salvando...' : 'Salvar Modelo'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

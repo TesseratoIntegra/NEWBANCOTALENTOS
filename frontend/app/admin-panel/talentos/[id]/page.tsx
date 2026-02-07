@@ -29,10 +29,13 @@ import {
   Award,
   FileText,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  ClipboardList,
+  ExternalLink
 } from 'lucide-react';
 import candidateService from '@/services/candidateService';
 import applicationService from '@/services/applicationService';
+import selectionProcessService from '@/services/selectionProcessService';
 import ProfileStatusModal from '@/components/admin/ProfileStatusModal';
 import {
   CandidateProfile,
@@ -40,9 +43,123 @@ import {
   CandidateExperience,
   CandidateSkill,
   CandidateLanguage,
+  CandidateInProcess,
   Application,
   PaginatedResponse
 } from '@/types';
+
+const SECTION_KEY_TO_LABEL: Record<string, string> = {
+  dadosPessoais: 'Dados Pessoais',
+  profissional: 'Informações Profissionais',
+  formacao: 'Formação Acadêmica',
+  experiencia: 'Experiência Profissional',
+  habilidades: 'Habilidades',
+  idiomas: 'Idiomas',
+};
+
+const LABEL_TO_SECTION_KEY: Record<string, string> = {
+  'Dados Pessoais': 'dadosPessoais',
+  'Informações Profissionais': 'profissional',
+  'Formação Acadêmica': 'formacao',
+  'Experiência Profissional': 'experiencia',
+  'Habilidades': 'habilidades',
+  'Idiomas': 'idiomas',
+};
+
+function parseSectionObservations(text: string): Record<string, string> {
+  const result: Record<string, string> = {};
+  const sectionRegex = /\[([^\]]+)\]\n([\s\S]*?)(?=\n\[|$)/g;
+  let match;
+  while ((match = sectionRegex.exec(text)) !== null) {
+    const key = LABEL_TO_SECTION_KEY[match[1].trim()];
+    if (key) result[key] = match[2].trim();
+  }
+  return result;
+}
+
+function AdminSectionAlert({ sectionKey, profile }: { sectionKey: string; profile: CandidateProfile }) {
+  const showStatuses = ['changes_requested', 'awaiting_review'];
+  if (!showStatuses.includes(profile.profile_status || '') || !profile.profile_observations) return null;
+
+  const observations = parseSectionObservations(profile.profile_observations);
+  const text = observations[sectionKey];
+  if (!text) return null;
+
+  // awaiting_review = candidato ja completou tudo → tudo verde
+  const isCompleted = profile.profile_status === 'awaiting_review'
+    || !(profile.pending_observation_sections || []).includes(sectionKey);
+
+  return (
+    <div className={`flex items-start gap-2 rounded-lg px-3 py-2 mb-3 text-sm ${
+      isCompleted
+        ? 'bg-green-900/30 border border-green-700/50'
+        : 'bg-orange-900/30 border border-orange-700/50'
+    }`}>
+      <span className={`w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 ${
+        isCompleted ? 'bg-green-500' : 'bg-orange-500 animate-pulse'
+      }`} />
+      <div className="flex-1 min-w-0">
+        <p className={`text-xs font-semibold ${isCompleted ? 'text-green-400' : 'text-orange-400'}`}>
+          {isCompleted ? 'Candidato atualizou esta seção' : 'Pendente — aguardando candidato'}
+        </p>
+        <p className={`text-xs mt-0.5 ${isCompleted ? 'text-green-500/70 line-through' : 'text-orange-300/80'}`}>{text}</p>
+      </div>
+    </div>
+  );
+}
+
+function getSectionRingClass(sectionKey: string, profile: CandidateProfile): string {
+  const showStatuses = ['changes_requested', 'awaiting_review'];
+  if (!showStatuses.includes(profile.profile_status || '') || !profile.profile_observations) return '';
+  const observations = parseSectionObservations(profile.profile_observations);
+  if (!observations[sectionKey]) return '';
+  if (profile.profile_status === 'awaiting_review') return 'ring-2 ring-green-500/50';
+  const pending = profile.pending_observation_sections || [];
+  return pending.includes(sectionKey) ? 'ring-2 ring-orange-500/50' : 'ring-2 ring-green-500/50';
+}
+
+function AdminStructuredObservations({ text, isRejected, pendingSections }: { text: string; isRejected?: boolean; pendingSections?: string[] }) {
+  const sectionRegex = /\[([^\]]+)\]\n([\s\S]*?)(?=\n\[|$)/g;
+  const sections: { title: string; content: string }[] = [];
+  let match;
+
+  while ((match = sectionRegex.exec(text)) !== null) {
+    sections.push({ title: match[1].trim(), content: match[2].trim() });
+  }
+
+  if (sections.length === 0) {
+    return <p className="text-zinc-300 text-sm whitespace-pre-line">{text}</p>;
+  }
+
+  const borderColor = isRejected ? 'border-red-500/50' : 'border-orange-500/50';
+  const titleColor = isRejected ? 'text-red-300' : 'text-orange-300';
+
+  return (
+    <div className="space-y-2">
+      {sections.map((section, idx) => {
+        const sectionKey = LABEL_TO_SECTION_KEY[section.title];
+        const isCompleted = pendingSections && sectionKey && !pendingSections.includes(sectionKey);
+
+        return (
+          <div key={idx} className={`border-l-2 ${isCompleted ? 'border-green-500/50' : borderColor} pl-3 py-1`}>
+            <div className="flex items-center gap-2">
+              {pendingSections && sectionKey && (
+                isCompleted
+                  ? <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  : <AlertCircle className="w-4 h-4 text-orange-400 flex-shrink-0" />
+              )}
+              <p className={`text-sm font-semibold ${isCompleted ? 'text-green-300' : titleColor}`}>
+                {section.title}
+                {isCompleted && <span className="font-normal text-green-500 ml-2">— Atualizado pelo candidato</span>}
+              </p>
+            </div>
+            <p className="text-zinc-300 text-sm whitespace-pre-line">{section.content}</p>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 export default function TalentoDetalhesPage() {
   const params = useParams();
@@ -55,9 +172,11 @@ export default function TalentoDetalhesPage() {
   const [skills, setSkills] = useState<CandidateSkill[]>([]);
   const [languages, setLanguages] = useState<CandidateLanguage[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
+  const [candidateProcesses, setCandidateProcesses] = useState<CandidateInProcess[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showStatusModal, setShowStatusModal] = useState(false);
+  const [defaultModalStatus, setDefaultModalStatus] = useState<'approved' | 'rejected' | 'changes_requested' | undefined>(undefined);
 
   const educationLevels = candidateService.getEducationLevels();
   const skillLevels = candidateService.getSkillLevels();
@@ -92,6 +211,14 @@ export default function TalentoDetalhesPage() {
           } catch (appErr) {
             console.error('Erro ao buscar candidaturas:', appErr);
           }
+        }
+
+        // Buscar processos seletivos do candidato
+        try {
+          const processData = await selectionProcessService.getCandidatesInProcess({ candidate_profile: candidateId });
+          setCandidateProcesses(processData.results || []);
+        } catch (processErr) {
+          console.error('Erro ao buscar processos do candidato:', processErr);
         }
       } catch (err) {
         console.error('Erro ao buscar dados do talento:', err);
@@ -151,7 +278,7 @@ export default function TalentoDetalhesPage() {
     observations: string
   ) => {
     try {
-      await candidateService.updateProfileStatus(candidateId, status, observations);
+      const response = await candidateService.updateProfileStatus(candidateId, status, observations);
       toast.success(
         status === 'approved'
           ? 'Perfil aprovado com sucesso!'
@@ -159,9 +286,15 @@ export default function TalentoDetalhesPage() {
           ? 'Observações enviadas ao candidato!'
           : 'Perfil reprovado.'
       );
-      // Atualizar o perfil localmente
+      // Atualizar o perfil localmente (incluindo pending_observation_sections da resposta)
       setProfile((prev) =>
-        prev ? { ...prev, profile_status: status, profile_observations: observations } : prev
+        prev ? {
+          ...prev,
+          profile_status: status,
+          profile_observations: observations,
+          pending_observation_sections: response.pending_observation_sections || [],
+          profile_reviewed_at: response.profile_reviewed_at,
+        } : prev
       );
       setShowStatusModal(false);
     } catch (err) {
@@ -209,35 +342,45 @@ export default function TalentoDetalhesPage() {
         </Link>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-3">
-          {profile.profile_status === 'approved' ? (
-            <span className="inline-flex items-center gap-2 px-4 py-2 bg-green-900/50 text-green-300 rounded-lg border border-green-700">
-              <CheckCircle className="h-5 w-5" />
-              Perfil Aprovado
-            </span>
-          ) : (
-            <>
-              <button
-                onClick={() => handleUpdateProfileStatus('approved', '')}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-              >
-                <CheckCircle className="h-5 w-5" />
-                Aprovar Perfil
-              </button>
-              <button
-                onClick={() => setShowStatusModal(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors"
-              >
-                <AlertCircle className="h-5 w-5" />
-                Observações
-              </button>
-            </>
-          )}
+        <div className="flex items-center gap-3 flex-wrap">
+          {(() => {
+            const statusInfo = getProfileStatusInfo(profile.profile_status);
+            return (
+              <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium ${statusInfo.bgColor} ${statusInfo.textColor} border ${statusInfo.borderColor}`}>
+                {profile.profile_status === 'approved' ? <CheckCircle className="h-4 w-4" /> :
+                 profile.profile_status === 'rejected' ? <X className="h-4 w-4" /> :
+                 <AlertCircle className="h-4 w-4" />}
+                {statusInfo.label}
+              </span>
+            );
+          })()}
+          <button
+            onClick={() => handleUpdateProfileStatus('approved', '')}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors cursor-pointer"
+          >
+            <CheckCircle className="h-5 w-5" />
+            Aprovar
+          </button>
+          <button
+            onClick={() => setShowStatusModal(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors cursor-pointer"
+          >
+            <AlertCircle className="h-5 w-5" />
+            Observações
+          </button>
+          <button
+            onClick={() => { setDefaultModalStatus('rejected'); setShowStatusModal(true); }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors cursor-pointer"
+          >
+            <X className="h-5 w-5" />
+            Reprovar
+          </button>
         </div>
       </div>
 
       {/* Profile Header */}
-      <div className="bg-zinc-800 rounded-lg p-6 border border-zinc-700">
+      <div className={`bg-zinc-800 rounded-lg p-6 border border-zinc-700 ${getSectionRingClass('dadosPessoais', profile)}`}>
+        <AdminSectionAlert sectionKey="dadosPessoais" profile={profile} />
         <div className="flex flex-col md:flex-row gap-6">
           {/* Photo */}
           <div className="flex-shrink-0">
@@ -389,21 +532,41 @@ export default function TalentoDetalhesPage() {
         <div className={`rounded-lg p-4 border ${
           profile.profile_status === 'rejected'
             ? 'bg-red-900/30 border-red-500/50'
+            : profile.profile_status === 'awaiting_review'
+            ? 'bg-green-900/30 border-green-500/50'
             : 'bg-orange-900/30 border-orange-500/50'
         }`}>
           <div className="flex items-start gap-3">
-            <AlertCircle className={`h-5 w-5 flex-shrink-0 mt-0.5 ${
-              profile.profile_status === 'rejected' ? 'text-red-400' : 'text-orange-400'
-            }`} />
-            <div>
+            {profile.profile_status === 'awaiting_review' ? (
+              <CheckCircle className="h-5 w-5 flex-shrink-0 mt-0.5 text-green-400" />
+            ) : (
+              <AlertCircle className={`h-5 w-5 flex-shrink-0 mt-0.5 ${
+                profile.profile_status === 'rejected' ? 'text-red-400' : 'text-orange-400'
+              }`} />
+            )}
+            <div className="flex-1">
               <h3 className={`font-medium ${
-                profile.profile_status === 'rejected' ? 'text-red-300' : 'text-orange-300'
+                profile.profile_status === 'rejected' ? 'text-red-300'
+                : profile.profile_status === 'awaiting_review' ? 'text-green-300'
+                : 'text-orange-300'
               }`}>
-                {profile.profile_status === 'rejected' ? 'Motivo da Reprovação' : 'Observações Enviadas'}
+                {profile.profile_status === 'rejected'
+                  ? 'Motivo da Reprovação'
+                  : profile.profile_status === 'awaiting_review'
+                  ? 'Candidato concluiu as alterações solicitadas'
+                  : 'Observações Enviadas'}
               </h3>
-              <p className="text-zinc-300 mt-1 text-sm whitespace-pre-line">
-                {profile.profile_observations}
-              </p>
+              <div className="mt-2 space-y-2">
+                <AdminStructuredObservations
+                  text={profile.profile_observations}
+                  isRejected={profile.profile_status === 'rejected'}
+                  pendingSections={profile.profile_status === 'changes_requested'
+                    ? profile.pending_observation_sections
+                    : profile.profile_status === 'awaiting_review'
+                    ? []
+                    : undefined}
+                />
+              </div>
               {profile.profile_reviewed_at && (
                 <p className="text-zinc-500 text-xs mt-2">
                   Enviado em {new Date(profile.profile_reviewed_at).toLocaleDateString('pt-BR', {
@@ -415,6 +578,53 @@ export default function TalentoDetalhesPage() {
                   })}
                 </p>
               )}
+              {['changes_requested', 'awaiting_review'].includes(profile.profile_status || '') && (() => {
+                const sectionRegex = /\[([^\]]+)\]/g;
+                const allKeys: string[] = [];
+                let m;
+                while ((m = sectionRegex.exec(profile.profile_observations || '')) !== null) {
+                  const key = LABEL_TO_SECTION_KEY[m[1].trim()];
+                  if (key) allKeys.push(key);
+                }
+                const total = allKeys.length;
+                const pendingSections = profile.profile_status === 'awaiting_review'
+                  ? []
+                  : (profile.pending_observation_sections || []);
+                const pending = pendingSections.length;
+                const completed = total - pending;
+
+                if (total === 0) return null;
+
+                return (
+                  <div className="mt-3 bg-zinc-700/50 rounded-lg p-3">
+                    <div className="flex items-center justify-between text-sm mb-2">
+                      <span className="text-zinc-300 font-medium">Progresso do candidato</span>
+                      <span className="text-zinc-400">{completed} de {total} seções atualizadas</span>
+                    </div>
+                    <div className="w-full bg-zinc-600 rounded-full h-2">
+                      <div
+                        className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${(completed / total) * 100}%` }}
+                      />
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {allKeys.map(key => (
+                        <span
+                          key={key}
+                          className={`text-xs px-2 py-1 rounded-full ${
+                            !pendingSections.includes(key)
+                              ? 'bg-green-900/50 text-green-300'
+                              : 'bg-orange-900/50 text-orange-300'
+                          }`}
+                        >
+                          {!pendingSections.includes(key) ? '✓ ' : '○ '}
+                          {SECTION_KEY_TO_LABEL[key] || key}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>
@@ -424,18 +634,20 @@ export default function TalentoDetalhesPage() {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Professional Summary */}
-          {profile.professional_summary && (
-            <div className="bg-zinc-800 rounded-lg p-6 border border-zinc-700">
+          {(profile.professional_summary || parseSectionObservations(profile.profile_observations || '')['profissional']) && (
+            <div className={`bg-zinc-800 rounded-lg p-6 border border-zinc-700 ${getSectionRingClass('profissional', profile)}`}>
+              <AdminSectionAlert sectionKey="profissional" profile={profile} />
               <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
                 <User className="h-5 w-5 text-indigo-400" />
                 Resumo Profissional
               </h2>
-              <p className="text-zinc-300 whitespace-pre-line">{profile.professional_summary}</p>
+              <p className="text-zinc-300 whitespace-pre-line">{profile.professional_summary || 'Nenhum resumo cadastrado'}</p>
             </div>
           )}
 
           {/* Experience */}
-          <div className="bg-zinc-800 rounded-lg p-6 border border-zinc-700">
+          <div className={`bg-zinc-800 rounded-lg p-6 border border-zinc-700 ${getSectionRingClass('experiencia', profile)}`}>
+            <AdminSectionAlert sectionKey="experiencia" profile={profile} />
             <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <Briefcase className="h-5 w-5 text-indigo-400" />
               Experiência Profissional
@@ -466,7 +678,8 @@ export default function TalentoDetalhesPage() {
           </div>
 
           {/* Education */}
-          <div className="bg-zinc-800 rounded-lg p-6 border border-zinc-700">
+          <div className={`bg-zinc-800 rounded-lg p-6 border border-zinc-700 ${getSectionRingClass('formacao', profile)}`}>
+            <AdminSectionAlert sectionKey="formacao" profile={profile} />
             <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <GraduationCap className="h-5 w-5 text-indigo-400" />
               Formação Acadêmica
@@ -490,6 +703,73 @@ export default function TalentoDetalhesPage() {
               </div>
             )}
           </div>
+
+          {/* Processos Seletivos */}
+          {candidateProcesses.length > 0 && (
+            <div className="bg-zinc-800 rounded-lg p-6 border border-zinc-700">
+              <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <ClipboardList className="h-5 w-5 text-indigo-400" />
+                Processos Seletivos ({candidateProcesses.length})
+              </h2>
+              <div className="space-y-4">
+                {candidateProcesses.map((cp) => {
+                  const statusInfo = selectionProcessService.getCandidateStatusLabel(cp.status);
+                  const stages = cp.stages_info || [];
+                  return (
+                    <Link
+                      key={cp.id}
+                      href={`/admin-panel/processos-seletivos/${cp.process}/candidatos/${cp.id}`}
+                      className="block p-4 bg-zinc-700/50 rounded-lg hover:bg-zinc-700 transition-colors group"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="font-medium text-white truncate">
+                          {cp.process_title || `Processo #${cp.process}`}
+                        </p>
+                        <div className="flex items-center gap-2 ml-3">
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${statusInfo.bgColor} ${statusInfo.textColor}`}>
+                            {statusInfo.label}
+                          </span>
+                          <ExternalLink className="w-4 h-4 text-zinc-500 group-hover:text-indigo-400 transition-colors flex-shrink-0" />
+                        </div>
+                      </div>
+                      {stages.length > 0 && (
+                        <div className="flex items-center gap-1">
+                          {stages.map((stage, idx) => (
+                            <div key={stage.id} className="flex items-center flex-1 min-w-0">
+                              <div className="flex flex-col items-center flex-1 min-w-0">
+                                <div className={`w-full h-2 rounded-full ${
+                                  stage.status === 'completed'
+                                    ? 'bg-green-500'
+                                    : stage.status === 'current'
+                                    ? 'bg-indigo-500'
+                                    : 'bg-zinc-600'
+                                }`} />
+                                <span className={`text-[10px] mt-1 truncate max-w-full px-0.5 text-center ${
+                                  stage.status === 'completed'
+                                    ? 'text-green-400 font-medium'
+                                    : stage.status === 'current'
+                                    ? 'text-indigo-300 font-semibold'
+                                    : 'text-zinc-500'
+                                }`}>
+                                  {stage.status === 'completed' && <CheckCircle className="w-3 h-3 inline mr-0.5 -mt-0.5" />}
+                                  {stage.name}
+                                </span>
+                              </div>
+                              {idx < stages.length - 1 && (
+                                <div className={`w-1 h-2 flex-shrink-0 ${
+                                  stage.status === 'completed' ? 'bg-green-700' : 'bg-zinc-600'
+                                }`} />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Candidaturas */}
           <div className="bg-zinc-800 rounded-lg p-6 border border-zinc-700">
@@ -539,7 +819,8 @@ export default function TalentoDetalhesPage() {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Skills */}
-          <div className="bg-zinc-800 rounded-lg p-6 border border-zinc-700">
+          <div className={`bg-zinc-800 rounded-lg p-6 border border-zinc-700 ${getSectionRingClass('habilidades', profile)}`}>
+            <AdminSectionAlert sectionKey="habilidades" profile={profile} />
             <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <Award className="h-5 w-5 text-indigo-400" />
               Habilidades
@@ -565,7 +846,8 @@ export default function TalentoDetalhesPage() {
           </div>
 
           {/* Languages */}
-          <div className="bg-zinc-800 rounded-lg p-6 border border-zinc-700">
+          <div className={`bg-zinc-800 rounded-lg p-6 border border-zinc-700 ${getSectionRingClass('idiomas', profile)}`}>
+            <AdminSectionAlert sectionKey="idiomas" profile={profile} />
             <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <Languages className="h-5 w-5 text-indigo-400" />
               Idiomas
@@ -642,8 +924,14 @@ export default function TalentoDetalhesPage() {
         show={showStatusModal}
         candidateName={profile.user_name || 'Candidato'}
         currentStatus={getProfileStatusInfo(profile.profile_status).label}
+        profile={profile}
+        educations={educations}
+        experiences={experiences}
+        skills={skills}
+        languages={languages}
         onConfirm={handleUpdateProfileStatus}
-        onClose={() => setShowStatusModal(false)}
+        onClose={() => { setShowStatusModal(false); setDefaultModalStatus(undefined); }}
+        defaultStatus={defaultModalStatus}
       />
     </div>
   );

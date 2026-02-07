@@ -38,7 +38,7 @@ export default function EditProfessionalInfoModal({ profile, onClose, onSave }: 
     e.preventDefault();
     setSaving(true);
     try {
-      await onSave(formData);
+      await onSave(formData as Partial<CandidateProfile>);
     } finally {
       setSaving(false);
     }

@@ -2,18 +2,26 @@
 
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Edit, Users, Layers, Play, Pause, CheckCircle, XCircle, Plus, BarChart3 } from 'lucide-react';
+import { ArrowLeft, Edit, Users, Layers, Play, Pause, CheckCircle, XCircle, Plus, BarChart3, BookmarkPlus } from 'lucide-react';
 import selectionProcessService from '@/services/selectionProcessService';
 import { SelectionProcess, ProcessStatistics } from '@/types';
+import { useRouter } from 'next/navigation';
 
 export default function ProcessoDetalhePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const processId = parseInt(resolvedParams.id);
+  const router = useRouter();
 
   const [process, setProcess] = useState<SelectionProcess | null>(null);
   const [statistics, setStatistics] = useState<ProcessStatistics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Save as template modal
+  const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
+  const [templateName, setTemplateName] = useState('');
+  const [templateDescription, setTemplateDescription] = useState('');
+  const [savingTemplate, setSavingTemplate] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,6 +52,26 @@ export default function ProcessoDetalhePage({ params }: { params: Promise<{ id: 
     } catch (err) {
       console.error('Erro ao atualizar status:', err);
       alert('Erro ao atualizar status do processo.');
+    }
+  };
+
+  const handleSaveAsTemplate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!templateName.trim()) return;
+    setSavingTemplate(true);
+    try {
+      await selectionProcessService.saveProcessAsTemplate(processId, {
+        name: templateName.trim(),
+        description: templateDescription.trim()
+      });
+      setShowSaveTemplateModal(false);
+      setTemplateName('');
+      setTemplateDescription('');
+      alert('Modelo salvo com sucesso!');
+    } catch {
+      alert('Erro ao salvar como modelo.');
+    } finally {
+      setSavingTemplate(false);
     }
   };
 
@@ -130,6 +158,13 @@ export default function ProcessoDetalhePage({ params }: { params: Promise<{ id: 
               Concluir
             </button>
           )}
+          <button
+            onClick={() => { setTemplateName(process?.title || ''); setShowSaveTemplateModal(true); }}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+          >
+            <BookmarkPlus className="h-4 w-4" />
+            Salvar como Modelo
+          </button>
           <Link
             href={`/admin-panel/processos-seletivos/${processId}/editar`}
             className="flex items-center gap-2 px-4 py-2 bg-zinc-600 hover:bg-zinc-500 text-white rounded-lg transition-colors"
@@ -308,6 +343,58 @@ export default function ProcessoDetalhePage({ params }: { params: Promise<{ id: 
                 {new Date(process.created_at).toLocaleDateString('pt-BR')}
               </span>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Save as Template Modal */}
+      {showSaveTemplateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-zinc-800 border border-zinc-700 rounded-xl w-full max-w-md mx-4 p-6">
+            <h2 className="text-lg font-bold text-white mb-4">Salvar como Modelo</h2>
+            <p className="text-sm text-zinc-400 mb-4">
+              As etapas e perguntas deste processo serão salvas como um modelo reutilizável.
+            </p>
+            <form onSubmit={handleSaveAsTemplate} className="space-y-4">
+              <div>
+                <label className="block text-sm text-zinc-400 mb-1">Nome do Modelo *</label>
+                <input
+                  type="text"
+                  value={templateName}
+                  onChange={(e) => setTemplateName(e.target.value)}
+                  placeholder="Ex.: Processo Padrão, Técnicos..."
+                  className="w-full px-3 py-2 bg-zinc-900 border border-zinc-600 rounded-lg text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
+                  required
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-zinc-400 mb-1">Descrição</label>
+                <textarea
+                  value={templateDescription}
+                  onChange={(e) => setTemplateDescription(e.target.value)}
+                  placeholder="Descrição opcional..."
+                  rows={3}
+                  className="w-full px-3 py-2 bg-zinc-900 border border-zinc-600 rounded-lg text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 resize-none"
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowSaveTemplateModal(false)}
+                  className="px-4 py-2 text-sm text-zinc-400 hover:text-white transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingTemplate || !templateName.trim()}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 rounded-lg text-sm font-medium text-white transition-colors"
+                >
+                  {savingTemplate ? 'Salvando...' : 'Salvar Modelo'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
