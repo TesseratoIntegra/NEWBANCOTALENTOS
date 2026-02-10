@@ -36,6 +36,7 @@ import {
 import candidateService from '@/services/candidateService';
 import applicationService from '@/services/applicationService';
 import selectionProcessService from '@/services/selectionProcessService';
+import admissionService from '@/services/admissionService';
 import ProfileStatusModal from '@/components/admin/ProfileStatusModal';
 import {
   CandidateProfile,
@@ -45,7 +46,9 @@ import {
   CandidateLanguage,
   CandidateInProcess,
   Application,
-  PaginatedResponse
+  PaginatedResponse,
+  CandidateDocumentWithType,
+  DocumentsSummary
 } from '@/types';
 
 const SECTION_KEY_TO_LABEL: Record<string, string> = {
@@ -173,6 +176,10 @@ export default function TalentoDetalhesPage() {
   const [languages, setLanguages] = useState<CandidateLanguage[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [candidateProcesses, setCandidateProcesses] = useState<CandidateInProcess[]>([]);
+  const [candidateDocs, setCandidateDocs] = useState<CandidateDocumentWithType[]>([]);
+  const [docsSummary, setDocsSummary] = useState<DocumentsSummary | null>(null);
+  const [reviewingDoc, setReviewingDoc] = useState<number | null>(null);
+  const [reviewObs, setReviewObs] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showStatusModal, setShowStatusModal] = useState(false);
@@ -220,6 +227,15 @@ export default function TalentoDetalhesPage() {
         } catch (processErr) {
           console.error('Erro ao buscar processos do candidato:', processErr);
         }
+
+        // Buscar documentos do candidato
+        try {
+          const docsData = await admissionService.getCandidateSummary(candidateId);
+          setCandidateDocs(docsData.documents || []);
+          setDocsSummary(docsData.summary || null);
+        } catch (docErr) {
+          console.error('Erro ao buscar documentos do candidato:', docErr);
+        }
       } catch (err) {
         console.error('Erro ao buscar dados do talento:', err);
         setError('Erro ao carregar dados do talento.');
@@ -258,7 +274,14 @@ export default function TalentoDetalhesPage() {
 
   const formatCurrency = (value?: string | number) => {
     if (!value) return '-';
-    const num = typeof value === 'string' ? parseFloat(value) : value;
+    let num: number;
+    if (typeof value === 'string') {
+      const cleaned = value.replace(/[^\d,]/g, '').replace(',', '.');
+      num = parseFloat(cleaned);
+    } else {
+      num = value;
+    }
+    if (isNaN(num)) return '-';
     return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   };
 
@@ -271,6 +294,26 @@ export default function TalentoDetalhesPage() {
       changes_requested: { label: 'Aguardando Candidato', bgColor: 'bg-orange-900/50', textColor: 'text-orange-300', borderColor: 'border-orange-700' },
     };
     return statusMap[status || 'pending'] || statusMap.pending;
+  };
+
+  const handleReviewDocument = async (docId: number, status: 'approved' | 'rejected') => {
+    if (status === 'rejected' && !reviewObs.trim()) {
+      alert('Informe o motivo da rejeição.');
+      return;
+    }
+    try {
+      await admissionService.reviewDocument(docId, { status, observations: reviewObs });
+      setReviewingDoc(null);
+      setReviewObs('');
+      // Refresh documents
+      const docsData = await admissionService.getCandidateSummary(candidateId);
+      setCandidateDocs(docsData.documents || []);
+      setDocsSummary(docsData.summary || null);
+      toast.success(status === 'approved' ? 'Documento aprovado!' : 'Documento rejeitado.');
+    } catch (err) {
+      console.error('Erro ao revisar documento:', err);
+      toast.error('Erro ao revisar documento.');
+    }
   };
 
   const handleUpdateProfileStatus = async (
@@ -388,11 +431,11 @@ export default function TalentoDetalhesPage() {
               {profile.image_profile ? (
                 <img
                   src={profile.image_profile}
-                  alt={profile.user_name || 'Candidato'}
+                  alt={`${profile.user_name || ''} ${profile.user_last_name || ''}`.trim() || 'Candidato'}
                   className="w-full h-full object-cover"
                 />
               ) : (
-                profile.user_name?.charAt(0).toUpperCase() || '?'
+                (profile.user_name || '?').charAt(0).toUpperCase()
               )}
             </div>
           </div>
@@ -400,7 +443,7 @@ export default function TalentoDetalhesPage() {
           {/* Basic Info */}
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-white mb-1">
-              {profile.user_name || 'Nome não informado'}
+              {`${profile.user_name || ''} ${profile.user_last_name || ''}`.trim() || 'Nome não informado'}
             </h1>
             <p className="text-lg text-indigo-400 mb-4">
               {profile.current_position || 'Cargo não informado'}
@@ -771,6 +814,134 @@ export default function TalentoDetalhesPage() {
             </div>
           )}
 
+          {/* Documentos */}
+          {candidateDocs.length > 0 && (
+            <div className="bg-zinc-800 rounded-lg p-6 border border-zinc-700">
+              <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <FileText className="h-5 w-5 text-indigo-400" />
+                Documentos
+                {docsSummary && (
+                  <span className="text-sm font-normal text-zinc-400 ml-2">
+                    {docsSummary.approved} de {docsSummary.required_types} obrigatórios aprovados
+                  </span>
+                )}
+              </h2>
+
+              {/* Progress bar */}
+              {docsSummary && docsSummary.required_types > 0 && (
+                <div className="mb-4">
+                  <div className="w-full bg-zinc-700 rounded-full h-2">
+                    <div
+                      className="bg-green-500 h-2 rounded-full transition-all"
+                      style={{ width: `${(docsSummary.approved / docsSummary.required_types) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-3">
+                {candidateDocs.map((item) => {
+                  const docType = item.document_type;
+                  const doc = item.document;
+                  const status = item.status;
+
+                  return (
+                    <div key={docType.id} className={`p-3 rounded-lg border ${
+                      status === 'approved' ? 'bg-green-900/20 border-green-700/50' :
+                      status === 'rejected' ? 'bg-red-900/20 border-red-700/50' :
+                      status === 'pending' ? 'bg-yellow-900/20 border-yellow-700/50' :
+                      'bg-zinc-700/30 border-zinc-600'
+                    }`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-white font-medium text-sm">{docType.name}</span>
+                            {docType.is_required && (
+                              <span className="text-red-400 text-xs">*</span>
+                            )}
+                            <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${
+                              status === 'approved' ? 'bg-green-900/50 text-green-300' :
+                              status === 'rejected' ? 'bg-red-900/50 text-red-300' :
+                              status === 'pending' ? 'bg-yellow-900/50 text-yellow-300' :
+                              'bg-zinc-700 text-zinc-400'
+                            }`}>
+                              {status === 'approved' ? 'Aprovado' :
+                               status === 'rejected' ? 'Rejeitado' :
+                               status === 'pending' ? 'Pendente' :
+                               'Não enviado'}
+                            </span>
+                          </div>
+                          {doc && (
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-xs text-zinc-400">{doc.original_filename}</span>
+                              {doc.file_url && (
+                                <a
+                                  href={doc.file_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-indigo-400 hover:text-indigo-300 text-xs"
+                                >
+                                  <Download className="h-3 w-3 inline" /> Ver
+                                </a>
+                              )}
+                            </div>
+                          )}
+                          {doc?.observations && (
+                            <p className="text-xs text-zinc-500 mt-1">Obs: {doc.observations}</p>
+                          )}
+                        </div>
+
+                        {/* Review Buttons */}
+                        {doc && status === 'pending' && (
+                          <div className="flex items-center gap-2 ml-3">
+                            {reviewingDoc === doc.id ? (
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="text"
+                                  value={reviewObs}
+                                  onChange={(e) => setReviewObs(e.target.value)}
+                                  placeholder="Observação (obrigatória p/ rejeição)"
+                                  className="px-2 py-1 bg-zinc-700 border border-zinc-600 rounded text-xs text-white placeholder-zinc-400 w-48"
+                                />
+                                <button
+                                  onClick={() => handleReviewDocument(doc.id, 'approved')}
+                                  className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs"
+                                  title="Aprovar"
+                                >
+                                  <Check className="h-3 w-3" />
+                                </button>
+                                <button
+                                  onClick={() => handleReviewDocument(doc.id, 'rejected')}
+                                  className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs"
+                                  title="Rejeitar"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                                <button
+                                  onClick={() => { setReviewingDoc(null); setReviewObs(''); }}
+                                  className="text-zinc-400 hover:text-white text-xs"
+                                >
+                                  Cancelar
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setReviewingDoc(doc.id)}
+                                className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs"
+                              >
+                                Revisar
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Candidaturas */}
           <div className="bg-zinc-800 rounded-lg p-6 border border-zinc-700">
             <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
@@ -922,7 +1093,7 @@ export default function TalentoDetalhesPage() {
       {/* Profile Status Modal */}
       <ProfileStatusModal
         show={showStatusModal}
-        candidateName={profile.user_name || 'Candidato'}
+        candidateName={`${profile.user_name || ''} ${profile.user_last_name || ''}`.trim() || 'Candidato'}
         currentStatus={getProfileStatusInfo(profile.profile_status).label}
         profile={profile}
         educations={educations}

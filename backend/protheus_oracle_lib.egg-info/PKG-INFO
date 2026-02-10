@@ -1,0 +1,329 @@
+Metadata-Version: 2.4
+Name: protheus-oracle-lib
+Version: 2.0.0
+Summary: Biblioteca Python para acesso ao banco de dados Oracle do TOTVS Protheus (sincrono e assincrono)
+Author-email: Seu Nome <seu@email.com>
+License: MIT
+Project-URL: Homepage, https://github.com/seu-usuario/protheus-oracle-lib
+Project-URL: Repository, https://github.com/seu-usuario/protheus-oracle-lib
+Project-URL: Issues, https://github.com/seu-usuario/protheus-oracle-lib/issues
+Keywords: protheus,totvs,oracle,erp,database,async,fastapi
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Database
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Framework :: FastAPI
+Classifier: Framework :: AsyncIO
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+Requires-Dist: oracledb>=1.0.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.0.0; extra == "dev"
+Requires-Dist: pytest-asyncio>=0.21.0; extra == "dev"
+Provides-Extra: fastapi
+Requires-Dist: fastapi>=0.100.0; extra == "fastapi"
+Requires-Dist: uvicorn>=0.22.0; extra == "fastapi"
+Provides-Extra: all
+Requires-Dist: fastapi>=0.100.0; extra == "all"
+Requires-Dist: uvicorn>=0.22.0; extra == "all"
+Requires-Dist: pytest>=7.0.0; extra == "all"
+Requires-Dist: pytest-cov>=4.0.0; extra == "all"
+Requires-Dist: pytest-asyncio>=0.21.0; extra == "all"
+
+# Protheus Oracle Library
+
+Biblioteca Python para acesso direto ao banco de dados Oracle do ERP TOTVS Protheus.
+
+## O Que Esta Biblioteca Faz
+
+Esta biblioteca permite conectar e consultar diretamente o banco Oracle que alimenta o sistema Protheus, sem necessidade de instalar o Oracle Client (usa modo thin).
+
+### Funcionalidades Principais
+
+| Funcionalidade | Descricao |
+|----------------|-----------|
+| **Conexao Direta** | Conecta ao Oracle do Protheus usando `oracledb` em modo thin |
+| **Validacao de Campos** | Consulta o dicionario de dados (SX3010) para validar campos |
+| **Opcoes de Combo/Select** | Busca valores disponiveis para campos de selecao |
+| **Pedidos de Venda** | Acesso completo a SC5 (cabecalho), SC6 (itens), SC9 (liberacoes) |
+| **Clientes** | Consulta a tabela SA1010 com filtros |
+| **Queries Customizadas** | Executa SQL arbitrario quando necessario |
+
+### Tabelas Suportadas
+
+- **SB1** - Produtos
+- **SC5** - Pedidos de Venda (Cabecalho)
+- **SC6** - Itens de Pedido
+- **SC9** - Liberacoes/Entregas
+- **SA1** - Clientes
+- **SX3** - Dicionario de Dados
+- **SX5** - Tabelas Genericas
+
+### Busca Inteligente de Opcoes
+
+A biblioteca busca valores para campos select de forma inteligente:
+1. Opcoes inline do dicionario (X3_CBOX)
+2. Tabelas auxiliares mapeadas (CTT, SBM, SAH, NNR, SA1, SA2...)
+3. Tabela generica SX5010
+4. Valores distintos da tabela de origem
+
+## Instalacao
+
+### Opcao 1: Instalacao Local (Desenvolvimento)
+
+```bash
+cd protheus-oracle-lib
+pip install -e .
+```
+
+### Opcao 2: Instalacao Local (Producao)
+
+```bash
+cd protheus-oracle-lib
+pip install .
+```
+
+### Opcao 3: Instalacao de Outro Projeto
+
+```bash
+# Apontando para o caminho da biblioteca
+pip install -e C:\caminho\para\protheus-oracle-lib
+```
+
+### Opcao 4: Via Git (se publicar no GitHub)
+
+```bash
+pip install git+https://github.com/seu-usuario/protheus-oracle-lib.git
+```
+
+### Opcao 5: Via PyPI (se publicar no PyPI)
+
+```bash
+pip install protheus-oracle-lib
+```
+
+## Configuracao
+
+Defina as variaveis de ambiente (ou passe diretamente no construtor):
+
+```env
+ORACLE_HOST=seu_servidor
+ORACLE_PORT=1521
+ORACLE_SERVICE_NAME=seu_service
+ORACLE_USER=seu_usuario
+ORACLE_PASSWORD=sua_senha
+ORACLE_SCHEMA=seu_schema
+PROTHEUS_EMPRESA=01
+PROTHEUS_FILIAL=01
+```
+
+## Uso Basico
+
+```python
+from protheus_oracle_lib import ProtheusDBService, ProtheusDBError
+
+# Criar instancia (usa variaveis de ambiente)
+protheus = ProtheusDBService()
+
+# Ou passar configuracao diretamente
+protheus = ProtheusDBService(
+    host="servidor",
+    port=1521,
+    service_name="orcl",
+    user="usuario",
+    password="senha",
+    schema="PROTHEUS"
+)
+
+# Testar conexao
+status = protheus.testar_conexao()
+print(status)
+# {'conectado': True, 'servidor': '...', 'versao': 'Oracle 19c...'}
+
+# Validar campo
+info = protheus.validar_campo_sb1('B1_TIPO')
+print(info)
+# {'existe': True, 'campo': 'B1_TIPO', 'tipo': 'C', 'tamanho': 2, ...}
+
+# Buscar opcoes de select
+opcoes = protheus.buscar_opcoes_combo('B1_CC')
+for op in opcoes:
+    print(f"{op['valor']} = {op['descricao']}")
+# 010111101 = COMERCIAL NACIONAL
+# 010112103 = DESENVOLVIMENTO WEB
+
+# Buscar pedidos de venda
+pedidos = protheus.buscar_pedidos_venda(cliente="000001")
+
+# Buscar clientes
+clientes = protheus.buscar_clientes(nome="EMPRESA")
+
+# Executar query customizada
+resultado = protheus.executar_query("SELECT * FROM SA1010 WHERE ROWNUM <= 10")
+```
+
+## Metodos Disponiveis
+
+### Conexao
+- `testar_conexao()` - Testa conexao com o banco
+- `is_configured()` - Verifica se a configuracao esta completa
+
+### Produtos (SB1)
+- `listar_campos_sb1()` - Lista todos os campos
+- `validar_campo_sb1(campo)` - Valida um campo especifico
+- `buscar_opcoes_combo(campo)` - Busca opcoes de select
+
+### Pedidos de Venda (SC5)
+- `listar_campos_sc5()` - Lista campos do cabecalho
+- `validar_campo_sc5(campo)` - Valida campo do cabecalho
+- `buscar_pedidos_venda(filtros)` - Busca pedidos
+- `buscar_pedido_por_numero(numero)` - Busca pedido especifico
+- `buscar_pedido_completo(numero)` - Cabecalho + itens
+
+### Itens de Pedido (SC6)
+- `listar_campos_sc6()` - Lista campos dos itens
+- `validar_campo_sc6(campo)` - Valida campo dos itens
+- `buscar_itens_pedido(numero)` - Busca itens do pedido
+
+### Liberacoes (SC9)
+- `listar_campos_sc9()` - Lista campos
+- `buscar_liberacoes_pedido(numero)` - Busca liberacoes
+- `buscar_status_entrega_pedido(numero)` - Status de entrega
+
+### Clientes (SA1)
+- `listar_campos_sa1()` - Lista campos
+- `validar_campo_sa1(campo)` - Valida campo
+- `buscar_clientes(filtros)` - Busca clientes
+- `buscar_cliente(codigo, loja)` - Busca cliente especifico
+- `buscar_cliente_por_pedido(numero)` - Cliente do pedido
+
+### Utilitarios
+- `validar_campo(tabela, campo)` - Validacao generica
+- `listar_campos(tabela)` - Lista campos de qualquer tabela
+- `executar_query(sql, params)` - Executa SQL customizado
+
+## Tabelas Auxiliares Mapeadas
+
+| Consulta F3 | Tabela | Campo Codigo | Campo Descricao |
+|-------------|--------|--------------|-----------------|
+| CTT | CTT010 | CTT_CUSTO | CTT_DESC01 |
+| SBM | SBM010 | BM_GRUPO | BM_DESC |
+| SAH | SAH010 | AH_UNIMED | AH_DESCPO |
+| NNR | NNR010 | NNR_CODIGO | NNR_DESCRI |
+| SA2 | SA2010 | A2_COD | A2_NOME |
+| SA1 | SA1010 | A1_COD | A1_NOME |
+| CT1 | CT1010 | CT1_CONTA | CT1_DESC01 |
+| ACU | ACU010 | ACU_CODIGO | ACU_DESC |
+| SYD | SYD010 | YD_TEC | YD_DESCRI |
+| SBE | SBE010 | BE_LOCAL | BE_DESC |
+
+## Adicionar Novas Tabelas
+
+Edite o dicionario `TABELAS_F3` em `protheus_oracle_lib/protheus_db.py`:
+
+```python
+TABELAS_F3 = {
+    "NOVA_TABELA": {
+        "tabela": "XXX010",
+        "campo_cod": "XX_CODIGO",
+        "campo_desc": "XX_DESCRI"
+    },
+}
+```
+
+## Estrutura do Projeto
+
+```
+protheus-oracle-lib/
+├── protheus_oracle_lib/
+│   ├── __init__.py         # Exporta classes principais
+│   └── protheus_db.py      # Servico principal
+├── pyproject.toml          # Configuracao do pacote
+├── exemplo_uso.py          # Exemplo de uso
+├── .env.exemplo            # Template de variaveis de ambiente
+└── README.md
+```
+
+## Proximos Passos (Opcional)
+
+### Publicar no GitHub
+
+1. Crie um repositorio no GitHub
+2. Inicialize o git e faca push:
+
+```bash
+cd protheus-oracle-lib
+git init
+git add .
+git commit -m "Versao inicial da biblioteca"
+git branch -M main
+git remote add origin https://github.com/seu-usuario/protheus-oracle-lib.git
+git push -u origin main
+```
+
+3. Agora outros podem instalar via:
+
+```bash
+pip install git+https://github.com/seu-usuario/protheus-oracle-lib.git
+```
+
+### Publicar no PyPI
+
+Para que qualquer pessoa possa instalar com `pip install protheus-oracle-lib`:
+
+1. Crie uma conta em https://pypi.org
+
+2. Instale as ferramentas de build:
+
+```bash
+pip install build twine
+```
+
+3. Gere os arquivos de distribuicao:
+
+```bash
+cd protheus-oracle-lib
+python -m build
+```
+
+4. Isso cria a pasta `dist/` com os arquivos `.whl` e `.tar.gz`
+
+5. Faca upload para o PyPI:
+
+```bash
+twine upload dist/*
+```
+
+6. Sera solicitado seu usuario e senha do PyPI
+
+7. Pronto! Agora qualquer pessoa pode instalar:
+
+```bash
+pip install protheus-oracle-lib
+```
+
+### Antes de Publicar
+
+- Edite `pyproject.toml` e altere:
+  - `authors` - Seu nome e email
+  - `project.urls` - URLs do seu repositorio
+- Considere adicionar uma licenca (MIT, Apache, etc.)
+- Adicione testes automatizados
+
+## Requisitos
+
+- Python 3.8+
+- oracledb >= 1.0.0
+
+## Licenca
+
+MIT License

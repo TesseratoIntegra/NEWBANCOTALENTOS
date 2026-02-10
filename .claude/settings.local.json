@@ -4,6 +4,9 @@
       "Bash(docker-compose up:*)",
       "Bash(docker-compose ps:*)",
       "Bash(npx next build:*)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\marketing11\\Desktop\\projetos\\NEWBANCOTALENTOS"
     ]
   }
 }

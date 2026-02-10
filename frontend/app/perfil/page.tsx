@@ -477,6 +477,28 @@ export default function ProfileViewPage() {
           </div>
         )}
 
+        {/* Documents Banner (only after approved in selection process) */}
+        {myProcesses.some(p => p.status === 'approved') && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <FileText className="h-5 w-5 text-blue-600" />
+                <div>
+                  <h3 className="font-semibold text-blue-800">Envio de Documentos</h3>
+                  <p className="text-blue-700 text-sm">Você foi aprovado no processo seletivo! Envie os documentos solicitados para continuar o processo de admissão.</p>
+                </div>
+              </div>
+              <Link
+                href="/perfil/documentos"
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors flex-shrink-0"
+              >
+                <FileText className="h-4 w-4" />
+                Ver Documentos
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Profile Status Badge (if awaiting review) */}
         {profile?.profile_status === 'awaiting_review' && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
@@ -541,7 +563,7 @@ export default function ProfileViewPage() {
 
             {/* Informações principais */}
             <div className="flex-1">
-              <h1 className="text-2xl font-bold text-blue-900">{user?.name}</h1>
+              <h1 className="text-2xl font-bold text-blue-900">{user?.name}{user?.last_name ? ` ${user.last_name}` : ''}</h1>
               <p className="text-lg text-slate-600">{profile?.current_position || 'Cargo não informado'}</p>
 
               <div className="flex flex-wrap gap-4 mt-3 text-sm text-slate-500">

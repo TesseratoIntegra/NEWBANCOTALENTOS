@@ -25,7 +25,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     """Serializer para visualizar dados do usuário (sem senha)."""
     class Meta:
         model = UserProfile
-        fields = ['id', 'email', 'name', 'user_type', 'is_active', 'is_staff', 'is_superuser', 'created_at']
+        fields = ['id', 'email', 'name', 'last_name', 'user_type', 'is_active', 'is_staff', 'is_superuser', 'created_at']
         read_only_fields = ['id', 'is_active', 'is_staff', 'is_superuser', 'created_at']
 
 
@@ -36,7 +36,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfile
-        fields = ['email', 'name', 'password', 'password2']
+        fields = ['email', 'name', 'last_name', 'password', 'password2']
 
     def validate(self, attrs):
         if attrs['password'] != attrs['password2']:

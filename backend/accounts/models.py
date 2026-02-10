@@ -29,11 +29,18 @@ class UserProfile(Base, AbstractBaseUser, PermissionsMixin):
     company = models.ForeignKey('companies.Company', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Empresa')
     email = models.EmailField(unique=True, verbose_name='E-mail')
     name = models.CharField(max_length=255, verbose_name='Nome')
+    last_name = models.CharField(max_length=255, blank=True, default='', verbose_name='Sobrenome')
     user_type = models.CharField(max_length=20, choices=USER_TYPE_CHOICES, verbose_name='Tipo de Usuário')
     is_staff = models.BooleanField(default=False, verbose_name='É Funcionario?')
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name', 'user_type']
 
+    @property
+    def full_name(self):
+        if self.last_name:
+            return f'{self.name} {self.last_name}'
+        return self.name
+
     def __str__(self):
-        return f'{self.name} ({self.get_user_type_display()})'
+        return f'{self.full_name} ({self.get_user_type_display()})'

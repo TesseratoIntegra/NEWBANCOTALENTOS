@@ -34,12 +34,27 @@ export default function EditExperienceModal({ experience, onClose, onSave }: Edi
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.is_current && !formData.end_date) {
+      alert('Data de término é obrigatória se não for trabalho atual.');
+      return;
+    }
+
+    if (!formData.description.trim()) {
+      alert('Descrição das atividades é obrigatória.');
+      return;
+    }
+
     setSaving(true);
     try {
-      // Prepara os dados para envio, convertendo string vazia para null
       const dataToSend = {
-        ...formData,
-        end_date: formData.is_current || !formData.end_date ? undefined : formData.end_date,
+        company: formData.company,
+        position: formData.position,
+        start_date: formData.start_date,
+        end_date: formData.is_current ? null : formData.end_date,
+        is_current: formData.is_current,
+        description: formData.description,
+        achievements: formData.achievements || '',
       };
       await onSave(dataToSend);
     } catch (error) {
@@ -102,13 +117,16 @@ export default function EditExperienceModal({ experience, onClose, onSave }: Edi
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Data de Término</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Data de Término {!formData.is_current && '*'}
+              </label>
               <input
                 type="date"
                 name="end_date"
                 value={formData.end_date}
                 onChange={handleChange}
                 disabled={formData.is_current}
+                required={!formData.is_current}
                 className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100"
               />
             </div>
@@ -129,11 +147,12 @@ export default function EditExperienceModal({ experience, onClose, onSave }: Edi
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Descrição das Atividades</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Descrição das Atividades *</label>
             <textarea
               name="description"
               value={formData.description}
               onChange={handleChange}
+              required
               rows={4}
               placeholder="Descreva suas principais atividades e responsabilidades..."
               className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"

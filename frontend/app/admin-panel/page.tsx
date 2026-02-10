@@ -18,16 +18,18 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Buscar vagas
-        const jobsData = await adminJobService.getJobs();
+        // Buscar vagas e candidaturas em paralelo
+        const [jobsData, applicationsData] = await Promise.all([
+          adminJobService.getJobs(),
+          adminApplicationService.getAllApplications(),
+        ]);
+
         const jobs = Array.isArray(jobsData) ? jobsData : [];
         setAllJobs(jobs);
         setFilteredJobs(jobs);
 
-        // Buscar candidaturas usando o serviço de admin
-        const applicationsData = await adminApplicationService.getAllApplications();
-        const applicationsList = Array.isArray(applicationsData) 
-          ? applicationsData 
+        const applicationsList = Array.isArray(applicationsData)
+          ? applicationsData
           : applicationsData.results || [];
         setApplications(applicationsList);
       } catch (err) {

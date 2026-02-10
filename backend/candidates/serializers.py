@@ -123,6 +123,7 @@ class CandidateProfileSerializer(serializers.ModelSerializer):
 
     # Dados do usuário
     user_name = serializers.CharField(source='user.name', read_only=True)
+    user_last_name = serializers.CharField(source='user.last_name', read_only=True)
     user_email = serializers.CharField(source='user.email', read_only=True)
 
     # Dados da revisão do perfil
@@ -273,6 +274,7 @@ class CandidateProfileListSerializer(serializers.ModelSerializer):
 
     user_id = serializers.IntegerField(source='user.id', read_only=True)
     user_name = serializers.CharField(source='user.name', read_only=True)
+    user_last_name = serializers.CharField(source='user.last_name', read_only=True)
     user_email = serializers.CharField(source='user.email', read_only=True)
     age = serializers.ReadOnlyField()
     experience_summary = serializers.SerializerMethodField()
@@ -283,7 +285,7 @@ class CandidateProfileListSerializer(serializers.ModelSerializer):
     class Meta:
         model = CandidateProfile
         fields = [
-            'id', 'user_id', 'user_name', 'user_email', 'cpf', 'current_position', 'current_company',
+            'id', 'user_id', 'user_name', 'user_last_name', 'user_email', 'cpf', 'current_position', 'current_company',
             'city', 'state', 'image_profile', 'skills', 'professional_summary',
             'age', 'education_level', 'experience_years', 'desired_salary_min',
             'desired_salary_max', 'available_for_work', 'accepts_remote_work',

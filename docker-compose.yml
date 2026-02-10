@@ -41,16 +41,10 @@ services:
     container_name: bancodetalentos_frontend
     env_file:
       - ./frontend/.env
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
     ports:
       - "3025:3000"
     depends_on:
       - backend
-    stdin_open: true
-    tty: true
     restart: unless-stopped
 
 volumes:

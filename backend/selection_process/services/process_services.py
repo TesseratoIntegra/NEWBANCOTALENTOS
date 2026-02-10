@@ -144,6 +144,11 @@ def _handle_stage_approved(candidate_in_process, current_stage):
         candidate_in_process.status = 'approved'
         candidate_in_process.save(update_fields=['status', 'updated_at'])
 
+        # Sincronizar profile_status do candidato
+        profile = candidate_in_process.candidate_profile
+        profile.profile_status = 'approved'
+        profile.save(update_fields=['profile_status', 'updated_at'])
+
 
 def _handle_stage_rejected(candidate_in_process, current_stage):
     """
@@ -153,6 +158,11 @@ def _handle_stage_rejected(candidate_in_process, current_stage):
     if current_stage.is_eliminatory:
         candidate_in_process.status = 'rejected'
         candidate_in_process.save(update_fields=['status', 'updated_at'])
+
+        # Sincronizar profile_status do candidato
+        profile = candidate_in_process.candidate_profile
+        profile.profile_status = 'rejected'
+        profile.save(update_fields=['profile_status', 'updated_at'])
 
 
 def advance_candidate_manually(candidate_in_process, advanced_by):

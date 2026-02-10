@@ -26,6 +26,7 @@ export default function LoginPage() {
     // Estados para os campos de cadastro
     const [createEmail, setCreateEmail] = useState('');
     const [createName, setCreateName] = useState('');
+    const [createLastName, setCreateLastName] = useState('');
     const [createPassword, setCreatePassword] = useState('');
     const [createPassword2, setCreatePassword2] = useState('');
     
@@ -199,6 +200,7 @@ export default function LoginPage() {
             await register({
                 email: createEmail,
                 name: createName,
+                last_name: createLastName,
                 password: createPassword,
                 password2: createPassword2
             });
@@ -288,6 +290,7 @@ export default function LoginPage() {
         // Limpar os campos e mensagens
         setCreateEmail('');
         setCreateName('');
+        setCreateLastName('');
         setCreatePassword('');
         setCreatePassword2('');
         setUserValue('');
@@ -301,6 +304,10 @@ export default function LoginPage() {
 
     const handleCreateNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         setCreateName(e.target.value);
+    }, []);
+
+    const handleCreateLastNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        setCreateLastName(e.target.value);
     }, []);
 
     const handleCreatePasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -418,13 +425,26 @@ export default function LoginPage() {
 
                             <div className={`${sign ? 'opacity-0 pointer-events-none' : 'animate-fade-up animate-delay-[200ms]'}`}>
                                 <label htmlFor="create-name" className="text-zinc-700">Nome</label>
-                                <input 
-                                    id="create-name" 
-                                    type="text" 
-                                    placeholder="Digite aqui seu nome..." 
+                                <input
+                                    id="create-name"
+                                    type="text"
+                                    placeholder="Digite aqui seu nome..."
                                     className="text-zinc-800 w-full h-10 bg-transparent -mt-2 mb-4 border-b border-zinc-700 focus:border-blue-400 focus:outline-none"
                                     value={createName}
                                     onChange={handleCreateNameChange}
+                                    disabled={isLoading}
+                                />
+                            </div>
+
+                            <div className={`${sign ? 'opacity-0 pointer-events-none' : 'animate-fade-up animate-delay-[250ms]'}`}>
+                                <label htmlFor="create-last-name" className="text-zinc-700">Sobrenome</label>
+                                <input
+                                    id="create-last-name"
+                                    type="text"
+                                    placeholder="Digite aqui seu sobrenome..."
+                                    className="text-zinc-800 w-full h-10 bg-transparent -mt-2 mb-4 border-b border-zinc-700 focus:border-blue-400 focus:outline-none"
+                                    value={createLastName}
+                                    onChange={handleCreateLastNameChange}
                                     disabled={isLoading}
                                 />
                             </div>

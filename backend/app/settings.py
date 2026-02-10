@@ -23,7 +23,7 @@ else:
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-=&ri$$873!4#j0=o$dw*drk)&jby8p*+@#--#$#g-&(5k5t1d&')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=True, cast=bool)
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*', cast=lambda v: [s.strip() for s in v.split(',')])
 
@@ -61,6 +61,7 @@ LOCAL_APPS = [
     'spontaneous',
     'candidates',
     'selection_process',
+    'admission',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -199,6 +200,7 @@ SPECTACULAR_SETTINGS = {
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.gzip.GZipMiddleware',
     'django.middleware.security.SecurityMiddleware',
     "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -231,6 +233,15 @@ TEMPLATES = [
 WSGI_APPLICATION = 'app.wsgi.application'
 
 # Database
+# Cache em memória (para lookups Oracle e dados estáticos)
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'bancotalentos-cache',
+        'TIMEOUT': 3600,
+    }
+}
+
 # Usa PostgreSQL se POSTGRES_HOST estiver definido, senão SQLite
 POSTGRES_HOST = config('POSTGRES_HOST', default='')
 if POSTGRES_HOST:
@@ -329,6 +340,19 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Protheus ERP Integration (REST API)
+PROTHEUS_API_BASE_URL = config('PROTHEUS_API_BASE_URL', default='')
+PROTHEUS_API_KEY = config('PROTHEUS_API_KEY', default='')
+PROTHEUS_API_TIMEOUT = config('PROTHEUS_API_TIMEOUT', default=30, cast=int)
+
+# Protheus Oracle Database (conexão direta)
+ORACLE_USER = config('ORACLE_USER', default='')
+ORACLE_PASSWORD = config('ORACLE_PASSWORD', default='')
+ORACLE_HOST = config('ORACLE_HOST', default='')
+ORACLE_PORT = config('ORACLE_PORT', default='1521')
+ORACLE_SERVICE_NAME = config('ORACLE_SERVICE_NAME', default='')
+ORACLE_SCHEMA = config('ORACLE_SCHEMA', default='')
 
 # Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

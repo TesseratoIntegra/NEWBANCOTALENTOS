@@ -348,16 +348,16 @@ export default function TalentosPage() {
                   {candidate.image_profile ? (
                     <img
                       src={candidate.image_profile}
-                      alt={candidate.user_name || 'Candidato'}
+                      alt={`${candidate.user_name || ''}${candidate.user_last_name ? ` ${candidate.user_last_name}` : ''}`.trim() || 'Candidato'}
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    candidate.user_name?.charAt(0).toUpperCase() || '?'
+                    (candidate.user_name || '?').charAt(0).toUpperCase()
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <h3 className="font-semibold text-white truncate">
-                    {candidate.user_name || 'Nome não informado'}
+                    {`${candidate.user_name || ''}${candidate.user_last_name ? ` ${candidate.user_last_name}` : ''}`.trim() || 'Nome não informado'}
                   </h3>
                   <p className="text-sm text-indigo-400 truncate">
                     {candidate.current_position || 'Cargo não informado'}

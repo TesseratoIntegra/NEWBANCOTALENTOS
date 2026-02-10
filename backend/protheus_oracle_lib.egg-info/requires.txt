@@ -1,0 +1,17 @@
+oracledb>=1.0.0
+
+[all]
+fastapi>=0.100.0
+uvicorn>=0.22.0
+pytest>=7.0.0
+pytest-cov>=4.0.0
+pytest-asyncio>=0.21.0
+
+[dev]
+pytest>=7.0.0
+pytest-cov>=4.0.0
+pytest-asyncio>=0.21.0
+
+[fastapi]
+fastapi>=0.100.0
+uvicorn>=0.22.0

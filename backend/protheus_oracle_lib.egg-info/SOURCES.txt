@@ -1,0 +1,10 @@
+README.md
+pyproject.toml
+protheus_oracle_lib/__init__.py
+protheus_oracle_lib/protheus_db.py
+protheus_oracle_lib/protheus_db_async.py
+protheus_oracle_lib.egg-info/PKG-INFO
+protheus_oracle_lib.egg-info/SOURCES.txt
+protheus_oracle_lib.egg-info/dependency_links.txt
+protheus_oracle_lib.egg-info/requires.txt
+protheus_oracle_lib.egg-info/top_level.txt

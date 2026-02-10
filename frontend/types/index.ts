@@ -3,6 +3,7 @@ export interface User {
   id: number;
   email: string;
   name: string;
+  last_name?: string;
   user_type: 'candidate' | 'recruiter' | 'admin';
   is_active: boolean;
   is_staff?: boolean;
@@ -25,6 +26,7 @@ export interface LoginRequest {
 export interface RegisterRequest {
   email: string;
   name: string;
+  last_name?: string;
   password: string;
   password2: string;
   user_type?: 'candidate' | 'recruiter' | 'admin';
@@ -497,4 +499,268 @@ export interface ProcessTemplate {
   created_by_name?: string;
   stages?: TemplateStage[];
   created_at: string;
+}
+
+// ============================================
+// DOCUMENT / ADMISSION TYPES
+// ============================================
+
+export interface DocumentType {
+  id: number;
+  name: string;
+  description?: string;
+  is_required: boolean;
+  accepted_formats: string;
+  max_file_size_mb: number;
+  order: number;
+  created_by?: number;
+  created_by_name?: string;
+  documents_count?: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CandidateDocument {
+  id: number;
+  candidate: number;
+  document_type: number;
+  document_type_name: string;
+  document_type_data?: DocumentType;
+  candidate_name?: string;
+  file: string;
+  file_url?: string;
+  original_filename: string;
+  status: 'pending' | 'approved' | 'rejected';
+  observations?: string;
+  reviewed_by?: number;
+  reviewed_by_name?: string;
+  reviewed_at?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CandidateDocumentWithType {
+  document_type: DocumentType;
+  document: CandidateDocument | null;
+  status: 'not_sent' | 'pending' | 'approved' | 'rejected';
+}
+
+export interface DocumentsSummary {
+  total_types: number;
+  required_types: number;
+  sent: number;
+  approved: number;
+  rejected: number;
+  pending: number;
+  required_approved?: number;
+  all_required_approved?: boolean;
+}
+
+export interface MyDocumentsResponse {
+  documents: CandidateDocumentWithType[];
+  summary: DocumentsSummary;
+}
+
+export interface CandidateSummaryResponse {
+  candidate_id: number;
+  candidate_name: string;
+  documents: CandidateDocumentWithType[];
+  summary: DocumentsSummary;
+}
+
+export interface CreateDocumentType {
+  name: string;
+  description?: string;
+  is_required?: boolean;
+  accepted_formats?: string;
+  max_file_size_mb?: number;
+  order?: number;
+}
+
+export interface DocumentReview {
+  status: 'approved' | 'rejected';
+  observations?: string;
+}
+
+export interface ApprovedAwaitingCandidate {
+  candidate_id: number;
+  candidate_name: string;
+  candidate_email: string;
+  total_required: number;
+  approved_count: number;
+  pending_count: number;
+  rejected_count: number;
+  not_sent_count: number;
+}
+
+export interface DocumentsCompletedCandidate {
+  candidate_id: number;
+  candidate_name: string;
+  candidate_email: string;
+  total_required: number;
+  approved_count: number;
+}
+
+// ============================================
+// ADMISSION DATA TYPES (Protheus)
+// ============================================
+
+export interface AdmissionData {
+  id: number;
+  candidate: number;
+  candidate_name?: string;
+  candidate_email?: string;
+  status: 'draft' | 'completed' | 'sent' | 'error' | 'confirmed';
+  status_display?: string;
+  filled_by?: number;
+  filled_by_name?: string;
+
+  // Cadastrais
+  matricula: string;
+  nome: string;
+  nome_completo: string;
+  nome_mae: string;
+  nome_pai: string;
+  cod_pais_origem: string;
+  sexo: string;
+  raca_cor: string;
+  data_nascimento: string | null;
+  estado_civil: string;
+  nacionalidade: string;
+  pais_origem: string;
+  cod_nacion_rfb: string;
+  bra_nasc_ext: string;
+  municipio_nascimento: string;
+  naturalidade_uf: string;
+  cod_mun_nasc: string;
+  nivel_escolaridade: string;
+  email: string;
+  defic_fisico: string;
+  tp_deficiencia: string;
+  cota_def: string;
+  beneficiario_reabilitado: string;
+
+  // Funcionais
+  centro_custo: string;
+  data_admissao: string | null;
+  tipo_admissao: string;
+  alt_admissao: string;
+  dt_op_fgts: string | null;
+  perc_fgts: string | null;
+  tipo_conta_salario: string;
+  horas_mensais: string | null;
+  tp_previdencia: string;
+  codigo_funcao: string;
+  tp_contrato_trab: string;
+  salario: string | null;
+  salario_base: string | null;
+  ct_tempo_parcial: string;
+  perc_adiantamento: string | null;
+  cod_sindicato: string;
+  clau_assec: string;
+  alt_cbo: string;
+  tipo_pagamento: string;
+  categoria_funcional: string;
+  vinc_empregado: string;
+  cate_esocial: string;
+  venc_exper_1: string | null;
+  venc_exper_2: string | null;
+  venc_exame_med: string | null;
+  contr_assistencial: string;
+  mens_sindical: string;
+  cargo: string;
+  comp_sabado: string;
+  cod_departamento: string;
+  contr_sindical: string;
+  aposentado: string;
+  cod_processo: string;
+
+  // Documentos
+  pis: string;
+  rg: string;
+  nr_reservista: string;
+  titulo_eleitor: string;
+  zona_eleitoral: string;
+  secao_eleitoral: string;
+  cpf: string;
+
+  // Endereço
+  res_exterior: string;
+  tipo_endereco: string;
+  tipo_logradouro: string;
+  endereco: string;
+  num_endereco: string;
+  desc_logradouro: string;
+  municipio: string;
+  nr_logradouro: string;
+  bairro: string;
+  estado: string;
+  cod_municipio: string;
+  cep: string;
+  telefone: string;
+  ddd_telefone: string;
+  ddd_celular: string;
+  numero_celular: string;
+
+  // Benefícios
+  plano_saude: string;
+
+  // Relógio Registrador
+  turno: string;
+  nr_cracha: string;
+  regra_apontamento: string;
+  seq_ini_turno: string;
+  bh_folha: string;
+  acum_b_horas: string;
+
+  // Outras Informações
+  cod_retencao: string;
+
+  // Cargos e Salários
+  tabela_salarial: string;
+  nivel_tabela: string;
+  faixa_tabela: string;
+
+  // Estrangeiro
+  calc_inss: string;
+
+  // Adicionais
+  adc_tempo_servico: string;
+  possui_periculosidade: string;
+  possui_insalubridade: string;
+
+  // Finalização
+  data_inicio_trabalho: string | null;
+
+  // Meta
+  protheus_response?: Record<string, unknown>;
+  sent_at?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export type AdmissionDataCreate = Omit<AdmissionData,
+  'id' | 'candidate_name' | 'candidate_email' | 'status_display' |
+  'filled_by' | 'filled_by_name' | 'protheus_response' | 'sent_at' |
+  'is_active' | 'created_at' | 'updated_at'
+>;
+
+export interface AdmissionPrefill {
+  nome: string;
+  nome_completo: string;
+  sexo: string;
+  data_nascimento: string | null;
+  nivel_escolaridade: string;
+  email: string;
+  cpf: string;
+  endereco: string;
+  num_endereco: string;
+  desc_logradouro: string;
+  municipio: string;
+  bairro: string;
+  estado: string;
+  cep: string;
 }
