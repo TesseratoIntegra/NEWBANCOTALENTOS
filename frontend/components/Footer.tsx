@@ -1,5 +1,6 @@
+'use client';
+import { ArrowUp, FileText, Mail, MapPin, Phone } from 'lucide-react';
 import Image from 'next/image';
-import { Mail, Phone, MapPin, ArrowUp } from 'lucide-react';
 
 const Footer = () => {
   const scrollToTop = () => {
@@ -10,57 +11,32 @@ const Footer = () => {
     <footer className="bg-gradient-to-br from-blue-800 to-blue-950 text-zinc-100">
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 lg:flex gap-8">
-          
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {/* Company Info */}
           <div className="space-y-4">
-            <Image src='https://raw.githubusercontent.com/Chiaperini-TI/Chiaperini-TI/main/chiaperini.png' alt="Chiaperini Logo" width={150} height={50} />
-            <p className="text-zinc-100 text-sm leading-relaxed w-[40%]">
-              Conectando futuros, criando oportunidades. Sua plataforma de confiança para encontrar os melhores talentos e serviços especializados.
+            <Image
+              src="https://raw.githubusercontent.com/Chiaperini-TI/Chiaperini-TI/main/chiaperini.png"
+              alt="Chiaperini Logo"
+              width={150}
+              height={50}
+            />
+            <p className="text-zinc-100 text-sm leading-relaxed max-w-xs">
+              Conectando futuros, criando oportunidades. 
             </p>
+            <button
+              onClick={() =>
+                window.open('/pdf/relatorio de transparencia.pdf', '_blank')
+              }
+              className="flex items-center space-x-2 text-zinc-100 hover:text-yellow-300 transition-colors cursor-pointer"
+            >
+              <FileText className="w-4 h-4" />
+              <span className="text-sm">Relatório de Transparência</span>
+            </button>
           </div>
 
-          {/* Quick Links */}
-          {/* <div className="space-y-4">
-            <h4 className="text-lg font-semibold text-blue-100 mb-4">Links Rápidos</h4>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/" className="text-zinc-100 hover:text-yellow-300 transition-colors text-sm">
-                  Início
-                </Link>
-              </li>
-              <li>
-                <Link href="/servicos" className="text-zinc-100 hover:text-yellow-300 transition-colors text-sm">
-                  Serviços
-                </Link>
-              </li>
-              <li>
-                <Link href="/vagas" className="text-zinc-100 hover:text-yellow-300 transition-colors text-sm">
-                  Trabalhe Conosco
-                </Link>
-              </li>
-              <li>
-                <Link href="/sobre" className="text-zinc-100 hover:text-yellow-300 transition-colors text-sm">
-                  Sobre
-                </Link>
-              </li>
-            </ul>
-          </div> */}
-
-          {/* Services */}
-          {/* <div className="space-y-4">
-            <h4 className="text-lg font-semibold text-blue-100 mb-4">Nossos Serviços</h4>
-            <ul className="space-y-2">
-              <li className="text-zinc-100 text-sm">Jardinagem e Paisagismo</li>
-              <li className="text-zinc-100 text-sm">Vigilância e Segurança</li>
-              <li className="text-zinc-100 text-sm">Limpeza e Conservação</li>
-              <li className="text-zinc-100 text-sm">Consultoria Especializada</li>
-            </ul>
-          </div> */}
-
           {/* Contact Info */}
-          <div className="space-y-4 float-end justify-end place-content-end">
-            <h4 className="text-lg font-semibold text-yellow-300 mb-4">Contato</h4>
+          <div className="space-y-4">
+            <h4 className="text-lg font-semibold text-yellow-300">Contato</h4>
             <div className="space-y-3">
               <div className="flex items-center space-x-2">
                 <Mail className="w-4 h-4 text-blue-100" />
@@ -79,18 +55,33 @@ const Footer = () => {
               </div>
             </div>
           </div>
+
+          {/* Powered By */}
+          <div className="space-y-4 md:text-right">
+            <h4 className="text-lg font-semibold text-yellow-300">Desenvolvimento</h4>
+            <a
+              className="inline-flex items-center text-purple-300 hover:text-purple-400 transition-colors"
+              href="https://tesseratointegra.com.br/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Image
+                className="w-auto h-10"
+                width={300}
+                height={300}
+                src="/img/logo.png"
+                alt="Logo Tesserato"
+              />
+            </a>
+          </div>
         </div>
 
         {/* Divider */}
         <div className="border-t border-zinc-500 mt-8 pt-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <div className="text-zinc-100 text-sm text-center md:text-left">
-              © 2025 Banco de Talentos - Chiaperini Industrial. 
-              <div className="text-zinc-100 text-sm text-center md:text-left flex place-items-center gap-x-1">
-              Powered by <a className='text-purple-300 hover:text-purple-500 flex place-items-center' href="https://tesseratointegra.com.br/"> <Image className='w-auto h-12' width={300} height={300} src='/img/logo.png' alt='Logo Tesserato'></Image> </a>
-            </div>
-            </div>
-            {/* Back to Top Button */}
+            <span className="text-zinc-100 text-sm">
+              © 2025 Banco de Talentos - Chiaperini Industrial.
+            </span>
             <button
               onClick={scrollToTop}
               className="flex items-center space-x-2 text-zinc-100 hover:text-yellow-300 transition-colors group cursor-pointer"

@@ -5,6 +5,7 @@ import { CandidateEducation } from '@/types';
 import candidateService from '@/services/candidateService';
 import { toast } from 'react-hot-toast';
 import { Edit, Trash2, Plus, Save, X } from 'lucide-react';
+import DateInput from '@/components/ui/DateInput';
 
 export interface EducationSectionProps {
   educations: CandidateEducation[];
@@ -241,15 +242,11 @@ export default function EducationSection({ educations: initialEducations, onUpda
                 <label htmlFor="start_date" className="block text-sm font-medium text-zinc-700 mb-2">
                   Data de Início *
                 </label>
-                <input
-                  type="date"
+                <DateInput
                   id="start_date"
                   name="start_date"
                   value={formData.start_date}
-                  onChange={handleChange}
-                  required
-                  max={new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]} // Yesterday
-                  className="w-full px-3 py-2 bg-white border border-slate-400 rounded-md text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  onChange={(iso) => setFormData(prev => ({ ...prev, start_date: iso }))}
                 />
               </div>
 
@@ -257,14 +254,11 @@ export default function EducationSection({ educations: initialEducations, onUpda
                 <label htmlFor="end_date" className="block text-sm font-medium text-zinc-700 mb-2">
                   Data de Conclusão
                 </label>
-                <input
-                  type="date"
+                <DateInput
                   id="end_date"
                   name="end_date"
                   value={formData.end_date}
-                  onChange={handleChange}
-                  min={formData.start_date || undefined} // Cannot be before start date
-                  className="w-full px-3 py-2 bg-white border border-slate-400 rounded-md text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  onChange={(iso) => setFormData(prev => ({ ...prev, end_date: iso }))}
                 />
               </div>
             </div>

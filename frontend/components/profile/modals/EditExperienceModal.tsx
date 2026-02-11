@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { CandidateExperience } from '@/types';
 import { X, Save } from 'lucide-react';
+import DateInput from '@/components/ui/DateInput';
 
 interface EditExperienceModalProps {
   experience: CandidateExperience | null;
@@ -107,12 +108,10 @@ export default function EditExperienceModal({ experience, onClose, onSave }: Edi
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Data de Início *</label>
-              <input
-                type="date"
+              <DateInput
                 name="start_date"
                 value={formData.start_date}
-                onChange={handleChange}
-                required
+                onChange={(iso) => setFormData(prev => ({ ...prev, start_date: iso }))}
                 className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -120,13 +119,11 @@ export default function EditExperienceModal({ experience, onClose, onSave }: Edi
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Data de Término {!formData.is_current && '*'}
               </label>
-              <input
-                type="date"
+              <DateInput
                 name="end_date"
                 value={formData.end_date}
-                onChange={handleChange}
+                onChange={(iso) => setFormData(prev => ({ ...prev, end_date: iso }))}
                 disabled={formData.is_current}
-                required={!formData.is_current}
                 className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100"
               />
             </div>

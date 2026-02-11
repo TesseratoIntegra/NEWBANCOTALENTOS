@@ -29,16 +29,16 @@ class Application(Base):
         verbose_name='Vaga'
     )
 
-    # Dados básicos
-    name = models.CharField(max_length=500, verbose_name='Nome')
-    phone = models.CharField(max_length=20, verbose_name='Telefone')
-    state = models.CharField(max_length=2, verbose_name='Estado')
-    city = models.CharField(max_length=255, verbose_name='Cidade')
+    # Dados básicos (preenchidos automaticamente do perfil)
+    name = models.CharField(max_length=500, blank=True, default='', verbose_name='Nome')
+    phone = models.CharField(max_length=20, blank=True, default='', verbose_name='Telefone')
+    state = models.CharField(max_length=2, blank=True, default='', verbose_name='Estado')
+    city = models.CharField(max_length=255, blank=True, default='', verbose_name='Cidade')
 
     # Links e arquivos
     linkedin = models.URLField(blank=True, null=True, verbose_name='LinkedIn')
     portfolio = models.URLField(blank=True, null=True, verbose_name='Portfólio')
-    resume = models.FileField(upload_to=UniqueFilePathGenerator('resumes'), verbose_name='Currículo')
+    resume = models.FileField(upload_to=UniqueFilePathGenerator('resumes'), blank=True, verbose_name='Currículo')
 
     # Status e controle
     status = models.CharField(

@@ -39,76 +39,13 @@ class ApplicationService {
     }
   }
 
-  /* Criar nova candidatura */
-  async createApplication(applicationData: {
-    job: number;
-    name: string;
-    phone: string;
-    state: string;
-    city: string;
-    linkedin?: string;
-    portfolio?: string;
-    resume: File;
-    cover_letter?: string;
-    salary_expectation?: number;
-    observations?: string;
-  }): Promise<Application> {
+  /* Criar nova candidatura (simplificado - backend preenche dados do perfil) */
+  async createApplication(data: { job: number }): Promise<Application> {
     try {
-      console.log('[applicationService] createApplication iniciado');
-      console.log('[applicationService] Dados recebidos:', {
-        job: applicationData.job,
-        name: applicationData.name,
-        phone: applicationData.phone,
-        state: applicationData.state,
-        city: applicationData.city,
-        hasResume: !!applicationData.resume,
-        resumeName: applicationData.resume?.name,
-        resumeSize: applicationData.resume?.size,
-      });
-
-      const formData = new FormData();
-
-      // Campos obrigatórios
-      formData.append('job', applicationData.job.toString());
-      formData.append('name', applicationData.name);
-      formData.append('phone', applicationData.phone);
-      formData.append('state', applicationData.state);
-      formData.append('city', applicationData.city);
-      formData.append('resume', applicationData.resume);
-
-      console.log('[applicationService] FormData montado com campos obrigatórios');
-
-      // Campos opcionais
-      if (applicationData.linkedin) formData.append('linkedin', applicationData.linkedin);
-      if (applicationData.portfolio) formData.append('portfolio', applicationData.portfolio);
-      if (applicationData.cover_letter) formData.append('cover_letter', applicationData.cover_letter);
-      if (applicationData.observations) formData.append('observations', applicationData.observations);
-      if (applicationData.salary_expectation) {
-        formData.append('salary_expectation', applicationData.salary_expectation.toString());
-      }
-
-      console.log('[applicationService] Fazendo POST para /applications/');
-
-      // IMPORTANTE: NÃO definir Content-Type manualmente para FormData!
-      // O browser precisa adicionar o boundary automaticamente.
-      // Definir manualmente causa ERR_NETWORK em mobile.
-      const response = await apiClient.post('/applications/', formData);
-
-      console.log('[applicationService] Resposta recebida:', response.status);
-      console.log('[applicationService] Dados da resposta:', response.data);
-
+      const response = await apiClient.post('/applications/', data);
       return response.data;
     } catch (error) {
-      console.error('[applicationService] ERRO ao criar candidatura:', error);
-      console.error('[applicationService] Tipo de erro:', typeof error);
-      if (error && typeof error === 'object') {
-        console.error('[applicationService] Propriedades do erro:', Object.keys(error));
-        if ('response' in error) {
-          const axiosError = error as any;
-          console.error('[applicationService] Status da resposta:', axiosError.response?.status);
-          console.error('[applicationService] Dados da resposta de erro:', axiosError.response?.data);
-        }
-      }
+      console.error('[applicationService] Erro ao criar candidatura:', error);
       throw error;
     }
   }

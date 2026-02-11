@@ -136,20 +136,12 @@ function Navbar() {
     // Usar o hook customizado para gerenciar o timer
     const canClickJobStart = useJobStartTimer(isAuthenticated, user?.user_type, pathname);
 
-    const handlePdfClick = useCallback(() => {
-        window.open('/pdf/relatorio de transparencia.pdf', '_blank')
-    }, []);
-
     // Memoizar os links para evitar recriação desnecessária
     const links = useMemo(() => [
         { href: '/vagas', target: '', label: 'Início', icon: Icon.House },
-        ...(isAuthenticated && user?.user_type === 'candidate' ? [
-            { href: '/candidaturas', target: '', label: 'Minhas Candidaturas', icon: Icon.Person },
-        ] : []),
         ...(isAuthenticated && user?.user_type === 'recruiter' ? [
             { href: '/admin-panel', target: '', label: 'Painel Colaboradores', icon: Icon.Person },
         ] : []),
-        { href: '#', target: '_blank', label: 'Relatório de Transparência', icon: Icon.FileEarmarkPdf }
     ], [isAuthenticated, user?.user_type]);
 
     const toggleMenu = useCallback(() => {
@@ -170,10 +162,6 @@ function Navbar() {
         setIsMenuOpen(false);
     }, []);
 
-    const handleMobileMenuPdfClick = useCallback(() => {
-        handlePdfClick();
-        setIsMenuOpen(false);
-    }, [handlePdfClick]);
 
     return (
         <header className="bg-gradient-to-r from-blue-800 to-blue-950 fixed top-0 left-0 z-50 w-full">
@@ -192,7 +180,6 @@ function Navbar() {
                                     href={href}
                                     label={label}
                                     icon={icon}
-                                    onClick={href === '#' ? handlePdfClick : undefined}
                                     pathname={pathname}
                                 />
                             ))}
@@ -263,8 +250,7 @@ function Navbar() {
                                 label={label}
                                 icon={icon}
                                 pathname={pathname}
-                                onClick={href === '#' ? handleMobileMenuPdfClick : handleMobileMenuClose}
-                                isPdf={href === '#'}
+                                onClick={handleMobileMenuClose}
                             />
                         ))}
 

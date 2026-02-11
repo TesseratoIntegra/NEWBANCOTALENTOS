@@ -329,7 +329,7 @@ export default function LoginPage() {
     const canProceed = createEmail.trim() !== '' && createName.trim() !== '';
 
     return(
-            <div className={`min-h-screen w-full bg-zinc-100 flex justify-center items-center duration-300`}>
+            <div className="min-h-screen w-full bg-zinc-100 flex justify-center items-center duration-300">
 
                 <ResetPassword isOpen={openResetModal} ></ResetPassword>
 
@@ -337,12 +337,15 @@ export default function LoginPage() {
                     <Image width={300} height={100} src="https://raw.githubusercontent.com/Chiaperini-TI/Chiaperini-TI/main/chiaperini.png" alt="Logo Chiaperini" className="w-32 m-auto mb-4 animate-fade-down animate-delay-[100ms] inline"/>
                 </a>
 
-                <div className="inline" id="all">
-                    <div className=' rounded-md border-zinc-400 w-80 2xl:w-96 pt-16 pb-20 mb-7 z-10 relative mt-[-1rem] animate-fade-down px-4 overflow-hidden duration-300'>
+                <div id="all">
+                    <div className='rounded-md w-80 2xl:w-96 pt-16 pb-6 z-10 relative animate-fade-down px-4 duration-300'>
+                        {/* Header decorativo */}
                         <div className="mb-7 bg-transparent absolute top-0 left-0 w-full pt-5 text-2xl text-zinc-200 text-center flex justify-center place-items-center">
-                            <div className="borde r border-zinc-400 w-[27rem] h-44 rounded-[100%] top-[-4.5rem] -translate-x-1/2 left-1/2 absolute"></div>
-                            <label className="text-2xl animate-fade-down font-bold text-blue-950 quicksand">Banco de Talentos </label>
+                            <div className="w-[27rem] h-44 rounded-[100%] top-[-4.5rem] -translate-x-1/2 left-1/2 absolute"></div>
+                            <label className="text-2xl animate-fade-down font-bold text-blue-950 quicksand">Banco de Talentos</label>
                         </div>
+
+                        {/* Icone e titulo */}
                         <div className="flex justify-center place-items-center">
                             <Icon.PersonFill className={`text-center w-14 h-14 ${startLogin ? 'ml-[-2rem]' : 'ml-0'} text-blue-950 duration-300`}/>
                             <ArrowRight className={`${sign && startLogin ? 'opacity-100' : 'opacity-0'} absolute text-center w-8 h-8 ml-[3rem] duration-300 text-zinc-600`}/>
@@ -357,165 +360,186 @@ export default function LoginPage() {
                             </h1>
                         </div>
 
-                        <div className={`h-14 w-full relative ${sign ? 'opacity-100 animate-fade animate-delay-[300ms]' : 'opacity-0 pointer-events-none'}`}>
-                            <label htmlFor="user" className={`ml-1 absolute z-20 ${userActive || userValue.length !== 0 ?'left-1 top-0 text-sm text-blue-950':'left-10 top-6 text-base text-zinc-700'} duration-300`}>E-mail</label>
-                            <div className="absolute bottom-0 overflow-hidden pl-1 pr-2 w-full" ref={inputWrapperRef}>
-                                <div className="flex place-items-center border-b border-zinc-400">
-                                    <label htmlFor="user" className="absolute left-1 top-0">
-                                        <UserRound className={`h-9 text-xl w-9 p-2 absolute top-0 text-zinc-500 ${userActive?'opacity-0':'opacity-100'} duration-300`}/>
-                                        <UserRound className={`h-9 text-xl w-9 p-2 absolute top-0 ${userActive?'opacity-100':'opacity-0'} duration-300`} style={{color: '#173a70'}}/>
-                                    </label>
-                                    <input
-                                        id="user"
-                                        value={userValue}
-                                        type="email"
-                                        className="focus:outline-0 focus:ring-0 w-full h-9 pl-9 pr-2 text-zinc-900 bg-transparent"
-                                        onChange={handleUserInputChange}
-                                        onClick={handleUserInputClick}
-                                        onAnimationStart={(e) => { if (e.animationName === 'onAutoFillStart') handleAutoFill('user'); }}
-                                        disabled={isLoading}
-                                        onKeyDown={handleKeyDown}
-                                    />
+                        {/* Container dos modos - apenas o ativo ocupa espaco */}
+                        <div className="relative">
+
+                            {/* === MODO LOGIN === */}
+                            <div className={`${sign ? 'duration-300' : 'absolute inset-x-0 top-0 opacity-0 pointer-events-none duration-300'}`}>
+                                <div className={`h-14 w-full relative ${sign ? 'animate-fade animate-delay-[300ms]' : ''}`}>
+                                    <label htmlFor="user" className={`ml-1 absolute z-20 ${userActive || userValue.length !== 0 ?'left-1 top-0 text-sm text-blue-950':'left-10 top-6 text-base text-zinc-700'} duration-300`}>E-mail</label>
+                                    <div className="absolute bottom-0 overflow-hidden pl-1 pr-2 w-full" ref={inputWrapperRef}>
+                                        <div className="flex place-items-center border-b border-zinc-400">
+                                            <label htmlFor="user" className="absolute left-1 top-0">
+                                                <UserRound className={`h-9 text-xl w-9 p-2 absolute top-0 text-zinc-500 ${userActive?'opacity-0':'opacity-100'} duration-300`}/>
+                                                <UserRound className={`h-9 text-xl w-9 p-2 absolute top-0 ${userActive?'opacity-100':'opacity-0'} duration-300`} style={{color: '#173a70'}}/>
+                                            </label>
+                                            <input
+                                                id="user"
+                                                value={userValue}
+                                                type="email"
+                                                className="focus:outline-0 focus:ring-0 w-full h-9 pl-9 pr-2 text-zinc-900 bg-transparent"
+                                                onChange={handleUserInputChange}
+                                                onClick={handleUserInputClick}
+                                                onAnimationStart={(e) => { if (e.animationName === 'onAutoFillStart') handleAutoFill('user'); }}
+                                                disabled={isLoading}
+                                                onKeyDown={handleKeyDown}
+                                            />
+                                        </div>
+                                        <div className={`${userActive?'w-full':'w-0'} m-auto duration-300 h-[2px] bg-gradient-to-r from-blue-800 to-blue-400`}></div>
+                                    </div>
                                 </div>
-                                <div className={`${userActive?'w-full':'w-0'} m-auto duration-300 h-[2px] bg-gradient-to-r from-blue-800 to-blue-400`}></div>
-                            </div>
-                        </div>
 
-                        <div className={`h-14 w-full relative mt-3 ${sign ? 'opacity-100 animate-fade animate-delay-[500ms]' : 'opacity-0 pointer-events-none'}`}>
-                            <label htmlFor="password" className={`ml-1 absolute z-20 ${passwordActive || passwordValue.length !== 0 ?'left-1 top-0 text-sm text-blue-950':'left-10 top-6 text-base text-zinc-700'} duration-300`}>Senha</label>
-                            <div className="absolute bottom-0 overflow-hidden pl-1 pr-2 w-full" ref={inputWrapperRefPassword}>
-                                <div className="flex place-items-center border-b border-zinc-400">
-                                    <label htmlFor="password" className="absolute left-1 top-0">
-                                        <Lock className={`h-9 text-xl w-9 p-2 absolute top-0 text-zinc-500 ${passwordActive?'opacity-0':'opacity-100'} duration-300`}/>
-                                        <Lock className={`h-9 text-xl w-9 p-2 absolute top-0 ${passwordActive?'opacity-100':'opacity-0'} duration-300`} style={{color: '#173a70'}}/>
-                                    </label>
-                                    <input
-                                        id="password"
-                                        value={passwordValue}
-                                        type={showPassword ? "text" : "password"}
-                                        className="focus:outline-0 focus:ring-0 w-full h-9 px-9 text-zinc-900 bg-transparent"
-                                        onChange={handlePasswordInputChange}
-                                        onClick={handlePasswordInputClick}
-                                        onAnimationStart={(e) => { if (e.animationName === 'onAutoFillStart') handleAutoFill('password'); }}
-                                        disabled={isLoading}
-                                        onKeyDown={handleKeyDown}
-                                    />
-                                    <Eye className={`h-9 text-xl w-9 p-2 text-blue-400 absolute right-1 ${showPassword?'opacity-100':'opacity-0 pointer-events-none'} duration-300 cursor-pointer`} onClick={togglePasswordVisibility}/>
-                                    <EyeOff className={`h-9 text-xl w-9 p-2 text-zinc-500 absolute right-1 ${showPassword?'opacity-0 pointer-events-none':'opacity-100'} duration-300 cursor-pointer`} onClick={togglePasswordVisibility}/>
+                                <div className={`h-14 w-full relative mt-3 ${sign ? 'animate-fade animate-delay-[500ms]' : ''}`}>
+                                    <label htmlFor="password" className={`ml-1 absolute z-20 ${passwordActive || passwordValue.length !== 0 ?'left-1 top-0 text-sm text-blue-950':'left-10 top-6 text-base text-zinc-700'} duration-300`}>Senha</label>
+                                    <div className="absolute bottom-0 overflow-hidden pl-1 pr-2 w-full" ref={inputWrapperRefPassword}>
+                                        <div className="flex place-items-center border-b border-zinc-400">
+                                            <label htmlFor="password" className="absolute left-1 top-0">
+                                                <Lock className={`h-9 text-xl w-9 p-2 absolute top-0 text-zinc-500 ${passwordActive?'opacity-0':'opacity-100'} duration-300`}/>
+                                                <Lock className={`h-9 text-xl w-9 p-2 absolute top-0 ${passwordActive?'opacity-100':'opacity-0'} duration-300`} style={{color: '#173a70'}}/>
+                                            </label>
+                                            <input
+                                                id="password"
+                                                value={passwordValue}
+                                                type={showPassword ? "text" : "password"}
+                                                className="focus:outline-0 focus:ring-0 w-full h-9 px-9 text-zinc-900 bg-transparent"
+                                                onChange={handlePasswordInputChange}
+                                                onClick={handlePasswordInputClick}
+                                                onAnimationStart={(e) => { if (e.animationName === 'onAutoFillStart') handleAutoFill('password'); }}
+                                                disabled={isLoading}
+                                                onKeyDown={handleKeyDown}
+                                            />
+                                            <Eye className={`h-9 text-xl w-9 p-2 text-blue-400 absolute right-1 ${showPassword?'opacity-100':'opacity-0 pointer-events-none'} duration-300 cursor-pointer`} onClick={togglePasswordVisibility}/>
+                                            <EyeOff className={`h-9 text-xl w-9 p-2 text-zinc-500 absolute right-1 ${showPassword?'opacity-0 pointer-events-none':'opacity-100'} duration-300 cursor-pointer`} onClick={togglePasswordVisibility}/>
+                                        </div>
+                                        <div className={`${passwordActive?'w-full':'w-0'} m-auto duration-300 h-[2px] bg-gradient-to-r from-blue-800 to-blue-400`}></div>
+                                    </div>
                                 </div>
-                                <div className={`${passwordActive?'w-full':'w-0'} m-auto duration-300 h-[2px] bg-gradient-to-r from-blue-800 to-blue-400`}></div>
+
+                                <p className={`${sign ? 'animate-fade-up' : ''} mt-2 text-center text-base font-bold cursor-pointer text-transparent bg-clip-text bg-gradient-to-r from-blue-950 to-blue-700 hover:from-blue-800 hover:to-blue-400`} onClick={()=>setOpenResetModal(true)}>Esqueci minha senha</p>
+
+                                <div className="mt-5">
+                                    <div
+                                        className={`bg-gradient-to-r from-blue-950 to-blue-900 border border-zinc-400 text-zinc-100 w-full h-10 flex justify-center place-items-center font-bold duration-300 rounded-md ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-60 cursor-pointer'}`}
+                                        onClick={!isLoading ? handleLogin : undefined}
+                                    >
+                                        {isLoading ? 'Carregando...' : 'Login'}
+                                    </div>
+                                </div>
                             </div>
+
+                            {/* === MODO CADASTRO === */}
+                            <div className={`${!sign ? 'duration-300' : 'absolute inset-x-0 top-0 opacity-0 pointer-events-none duration-300'}`}>
+                                {!nextStep ? (
+                                    /* Step 1: Email, Nome, Sobrenome */
+                                    <div className="px-2">
+                                        <div className="animate-fade-up animate-delay-[100ms]">
+                                            <label htmlFor="create-email" className="text-zinc-700 text-sm font-medium">E-mail</label>
+                                            <input
+                                                id="create-email"
+                                                type="email"
+                                                placeholder="Digite aqui e-mail..."
+                                                className="text-zinc-800 w-full h-10 bg-transparent mb-4 border-b border-zinc-400 focus:border-blue-500 focus:outline-none"
+                                                value={createEmail}
+                                                onChange={handleCreateEmailChange}
+                                                disabled={isLoading}
+                                            />
+                                        </div>
+
+                                        <div className="animate-fade-up animate-delay-[200ms]">
+                                            <label htmlFor="create-name" className="text-zinc-700 text-sm font-medium">Nome</label>
+                                            <input
+                                                id="create-name"
+                                                type="text"
+                                                placeholder="Digite aqui seu nome..."
+                                                className="text-zinc-800 w-full h-10 bg-transparent mb-4 border-b border-zinc-400 focus:border-blue-500 focus:outline-none"
+                                                value={createName}
+                                                onChange={handleCreateNameChange}
+                                                disabled={isLoading}
+                                            />
+                                        </div>
+
+                                        <div className="animate-fade-up animate-delay-[250ms]">
+                                            <label htmlFor="create-last-name" className="text-zinc-700 text-sm font-medium">Sobrenome</label>
+                                            <input
+                                                id="create-last-name"
+                                                type="text"
+                                                placeholder="Digite aqui seu sobrenome..."
+                                                className="text-zinc-800 w-full h-10 bg-transparent mb-4 border-b border-zinc-400 focus:border-blue-500 focus:outline-none"
+                                                value={createLastName}
+                                                onChange={handleCreateLastNameChange}
+                                                disabled={isLoading}
+                                            />
+                                        </div>
+
+                                        <div className="animate-fade-up animate-delay-[300ms] mt-3">
+                                            <div
+                                                className={`bg-gradient-to-r from-blue-950 to-blue-900 text-zinc-100 w-full h-10 flex justify-center place-items-center font-bold duration-300 rounded-md gap-1 ${canProceed ? 'hover:opacity-70 cursor-pointer' : 'opacity-40 cursor-not-allowed'}`}
+                                                onClick={handleNextStep}
+                                            >
+                                                Próximo <ArrowRight className="w-4 h-4"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    /* Step 2: Senhas */
+                                    <div className="px-2 animate-fade-up">
+                                        <div className="animate-fade-up animate-delay-[100ms]">
+                                            <label htmlFor="create-password1" className="text-zinc-700 text-sm font-medium">Senha</label>
+                                            <input
+                                                id="create-password1"
+                                                type="password"
+                                                placeholder="Digite sua senha..."
+                                                className="text-zinc-800 w-full h-10 bg-transparent mb-4 border-b border-zinc-400 focus:border-blue-500 focus:outline-none"
+                                                value={createPassword}
+                                                onChange={handleCreatePasswordChange}
+                                                disabled={isLoading}
+                                            />
+                                        </div>
+
+                                        <div className="animate-fade-up animate-delay-[200ms]">
+                                            <label htmlFor="create-password2" className="text-zinc-700 text-sm font-medium">Confirmar Senha</label>
+                                            <input
+                                                id="create-password2"
+                                                type="password"
+                                                placeholder="Confirme sua senha..."
+                                                className="text-zinc-800 w-full h-10 bg-transparent mb-4 border-b border-zinc-400 focus:border-blue-500 focus:outline-none"
+                                                value={createPassword2}
+                                                onChange={handleCreatePassword2Change}
+                                                disabled={isLoading}
+                                            />
+                                        </div>
+
+                                        <div className="animate-fade-up animate-delay-[300ms] mt-3">
+                                            <div
+                                                className={`bg-gradient-to-r from-blue-950 to-blue-900 text-zinc-100 w-full h-10 flex justify-center place-items-center font-bold duration-300 rounded-md ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-70 cursor-pointer'}`}
+                                                onClick={!isLoading ? handleRegister : undefined}
+                                            >
+                                                {isLoading ? 'Carregando...' : 'Criar Usuário'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
                         </div>
-
-                        <p className={`${sign ? 'opacity-100 animate-fade-up' : 'opacity-0 pointer-events-none'} mt-2 text-center text-base font-bold cursor-pointer text-transparent bg-clip-text bg-gradient-to-r from-blue-950 to-blue-700 hover:from-blue-800 hover:to-blue-400`} onClick={()=>setOpenResetModal(true)}>Esqueci minha senha</p>
-
-                        <div className={`w-full h-40 absolute left-0 top-48 px-6 ${sign ? 'opacity-0 pointer-events-none' : nextStep ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-                            <div className={`${sign ? 'opacity-0 pointer-events-none' : 'animate-fade-up animate-delay-[100ms]'}`}>
-                                <label htmlFor="create-email" className="text-zinc-700">E-mail</label>
-                                <input 
-                                    id="create-email" 
-                                    type="email" 
-                                    placeholder="Digite aqui e-mail..." 
-                                    className="text-zinc-800 w-full h-10 bg-transparent -mt-2 mb-4 border-b border-zinc-700 focus:border-blue-400 focus:outline-none" 
-                                    value={createEmail}
-                                    onChange={handleCreateEmailChange}
-                                    disabled={isLoading}
-                                />
-                            </div>
-
-                            <div className={`${sign ? 'opacity-0 pointer-events-none' : 'animate-fade-up animate-delay-[200ms]'}`}>
-                                <label htmlFor="create-name" className="text-zinc-700">Nome</label>
-                                <input
-                                    id="create-name"
-                                    type="text"
-                                    placeholder="Digite aqui seu nome..."
-                                    className="text-zinc-800 w-full h-10 bg-transparent -mt-2 mb-4 border-b border-zinc-700 focus:border-blue-400 focus:outline-none"
-                                    value={createName}
-                                    onChange={handleCreateNameChange}
-                                    disabled={isLoading}
-                                />
-                            </div>
-
-                            <div className={`${sign ? 'opacity-0 pointer-events-none' : 'animate-fade-up animate-delay-[250ms]'}`}>
-                                <label htmlFor="create-last-name" className="text-zinc-700">Sobrenome</label>
-                                <input
-                                    id="create-last-name"
-                                    type="text"
-                                    placeholder="Digite aqui seu sobrenome..."
-                                    className="text-zinc-800 w-full h-10 bg-transparent -mt-2 mb-4 border-b border-zinc-700 focus:border-blue-400 focus:outline-none"
-                                    value={createLastName}
-                                    onChange={handleCreateLastNameChange}
-                                    disabled={isLoading}
-                                />
-                            </div>
-
-                            <div className={`${sign ? 'opacity-0 pointer-events-none' : 'animate-fade-up animate-delay-[300ms]'} mt-3 group ${canProceed ? 'cursor-pointer' : 'cursor-not-allowed'}`} onClick={handleNextStep}>
-                                <p className={`flex gap-1 justify-center m-auto text-center duration-300 ${canProceed ? 'text-zinc-900 opacity-60 hover:opacity-100' : 'text-zinc-500 opacity-40'}`}>
-                                    Próximo <ArrowRight/>
-                                </p>
-                                <div className={`w-0 m-auto h-[1px] duration-300 ${canProceed ? 'group-hover:w-[42%] bg-zinc-700' : 'bg-zinc-500'}`}></div>
-                            </div>
-                        </div>
-
-                        <div className={`w-full h-40 absolute left-0 top-48 px-6 ${sign ? 'opacity-0 pointer-events-none' : nextStep ? 'animate-fade-up' : 'opacity-0 pointer-events-none'}`}>
-                            <div className={`${sign ? 'opacity-0 pointer-events-none' : 'animate-fade-up animate-delay-[100ms]'}`}>
-                                <label htmlFor="create-password1" className="text-zinc-400">Senha</label>
-                                <input 
-                                    id="create-password1" 
-                                    type="password" 
-                                    placeholder="Digite sua senha..." 
-                                    className="text-zinc-800 w-full h-10 bg-transparent -mt-2 mb-4 border-b border-zinc-700 focus:border-blue-400 focus:outline-none"
-                                    value={createPassword}
-                                    onChange={handleCreatePasswordChange}
-                                    disabled={isLoading}
-                                />
-                            </div>
-
-                            <div className={`${sign ? 'opacity-0 pointer-events-none' : 'animate-fade-up animate-delay-[200ms]'}`}>
-                                <label htmlFor="create-password2" className="text-zinc-400">Confirmar Senha</label>
-                                <input 
-                                    id="create-password2" 
-                                    type="password" 
-                                    placeholder="Confirme sua senha..." 
-                                    className="text-zinc-800 w-full h-10 bg-transparent -mt-2 mb-4 border-b border-zinc-700 focus:border-blue-400 focus:outline-none"
-                                    value={createPassword2}
-                                    onChange={handleCreatePassword2Change}
-                                    disabled={isLoading}
-                                />
-                            </div>
-                        </div>
-
-                        <div className={`${sign ? 'opacity-100 animate-fade-up' : 'opacity-0 pointer-events-none'} animate-duration-[500ms] absolute w-[85%] -translate-x-1/2 left-1/2 duration-300`}>
-                            <div 
-                                className={`bg-gradient-to-r from-blue-950 to-blue-900 border border-zinc-400 text-zinc-100 w-full h-10 flex justify-center place-items-center mt-5 font-bold duration-300 rounded-md ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-60 cursor-pointer'}`}
-                                onClick={!isLoading ? handleLogin : undefined}
-                            >
-                                {isLoading ? 'Carregando...' : 'Login'}
-                            </div>
-                        </div>
-
-                        <div className={`${sign ? 'opacity-0 pointer-events-none' : nextStep ? 'animate-fade-up' : 'opacity-0 pointer-events-none'} animate-duration-[500ms] absolute w-[85%] -translate-x-1/2 left-1/2 mt-4 duration-300`}>
-                            <div 
-                                className={`bg-gradient-to-r from-zinc-300 to-zinc-100 border border-zinc-400 text-zinc-800 w-full h-10 flex justify-center place-items-center mt-5 font-bold duration-300 rounded-md ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-60 cursor-pointer'}`}
-                                onClick={!isLoading ? handleRegister : undefined}
-                            >
-                                {isLoading ? 'Carregando...' : 'Criar Usuário'}
-                            </div>
-                        </div>
-
                     </div>
 
-                    <div className={`absolute cursor-pointer -translate-1/2 left-1/2 w-auto text-center h-10 m-auto text-zinc-800 text-sm ${sign ? 'mt-[1rem] animate-fade-up opacity-100' : 'mt-[-3rem] opacity-0'} duration-500`} onClick={toggleSign}>
-                        Não tem uma conta?<br/> 
-                        <label className="text-base font-bold cursor-pointer text-transparent bg-clip-text bg-gradient-to-r from-blue-950 to-blue-700 hover:from-blue-800 hover:to-blue-400">Criar conta</label>
-                    </div>
-
-                    <div className={`absolute cursor-pointer -translate-1/2 left-1/2 w-auto text-center h-10 m-auto text-zinc-800 text-sm ${!sign ? 'mt-[1rem] animate-fade-up opacity-100' : 'mt-[-3rem] opacity-0'} duration-500`} onClick={toggleSign}>
-                        Já possui um login?<br/> 
-                        <label className="text-base font-bold cursor-pointer text-transparent bg-clip-text bg-gradient-to-r from-blue-950 to-blue-700 hover:from-blue-800 hover:to-blue-400">Faça seu Login</label>
+                    {/* Links de alternancia - flow normal */}
+                    <div className={`text-center cursor-pointer text-zinc-800 text-sm mt-2 duration-500 ${sign ? 'animate-fade-up' : 'animate-fade-up'}`} onClick={toggleSign}>
+                        {sign ? (
+                            <>
+                                Não tem uma conta?<br/>
+                                <span className="text-base font-bold cursor-pointer text-transparent bg-clip-text bg-gradient-to-r from-blue-950 to-blue-700 hover:from-blue-800 hover:to-blue-400">Criar conta</span>
+                            </>
+                        ) : (
+                            <>
+                                Já possui um login?<br/>
+                                <span className="text-base font-bold cursor-pointer text-transparent bg-clip-text bg-gradient-to-r from-blue-950 to-blue-700 hover:from-blue-800 hover:to-blue-400">Faça seu Login</span>
+                            </>
+                        )}
                     </div>
                 </div>
-                
+
             </div>
     )
 }

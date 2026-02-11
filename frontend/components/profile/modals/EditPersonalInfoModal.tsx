@@ -7,6 +7,7 @@ import { X, Save, Upload } from 'lucide-react';
 import * as Icon from 'react-bootstrap-icons';
 import candidateService from '@/services/candidateService';
 import { toast } from 'react-hot-toast';
+import DateInput from '@/components/ui/DateInput';
 
 interface EditPersonalInfoModalProps {
   profile: CandidateProfile;
@@ -151,11 +152,10 @@ export default function EditPersonalInfoModal({ profile, user, onClose, onSave, 
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Data de Nascimento</label>
-              <input
-                type="date"
+              <DateInput
                 name="date_of_birth"
                 value={formData.date_of_birth}
-                onChange={handleChange}
+                onChange={(iso) => setFormData(prev => ({ ...prev, date_of_birth: iso }))}
                 className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>

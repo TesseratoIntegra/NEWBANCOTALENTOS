@@ -1,12 +1,16 @@
+'use client'
 import Link from "next/link";
-import { ArrowRight, Users } from "lucide-react";
+import { ArrowRight, UserPlus } from "lucide-react";
 import React from "react";
 import SplitTextOrig from "./SliptText";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Memoize SplitText para evitar rerenderizações desnecessárias
 const SplitText = React.memo(SplitTextOrig);
 
-const Hero = React.memo(function Hero() {
+export default function Hero() {
+    const { isAuthenticated } = useAuth();
+
     return (
         <section className="pt-18 lg:pt-28 pb-20 px-4 bg-gradient-to-r from-blue-800 to-blue-950">
             <div className="max-w-7xl mx-auto text-center">
@@ -52,14 +56,14 @@ const Hero = React.memo(function Hero() {
                         Explorar Vagas
                         <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </Link>
-                    <Link href="/candidaturas" className="w-full lg:w-auto mx-auto lg:m-0 justify-center animate-fade animate-delay-[800ms] group border-2 border-yellow-500/60 hover:border-white/70 text-slate-100 px-8 py-4 rounded-md font-semibold text-lg transition-all duration-300 flex items-center gap-2 quicksand">
-                        Minhas Candidaturas
-                        <Users className="w-5 h-5" />
-                    </Link>
+                    {!isAuthenticated && (
+                        <Link href="/login" className="w-full lg:w-auto mx-auto lg:m-0 justify-center animate-fade animate-delay-[800ms] group border-2 border-yellow-500/60 hover:border-white/70 text-slate-100 px-8 py-4 rounded-md font-semibold text-lg transition-all duration-300 flex items-center gap-2 quicksand">
+                            Crie seu Perfil
+                            <UserPlus className="w-5 h-5" />
+                        </Link>
+                    )}
                 </div>
             </div>
         </section>
     );
-});
-
-export default Hero;
+}

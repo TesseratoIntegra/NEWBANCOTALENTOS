@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { formatTEL } from '@/functions/FormatTEL';
+import DateInput from '@/components/ui/DateInput';
 import Image from 'next/image';
 import { CandidateProfile } from '@/types';
 import candidateService from '@/services/candidateService';
@@ -337,11 +338,19 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
     return age;
   };
 
-  const maxDateFor14 = (() => {
-    const d = new Date();
-    d.setFullYear(d.getFullYear() - 14);
-    return d.toISOString().split('T')[0];
-  })();
+  const handleDateOfBirthChange = (isoDate: string) => {
+    setFormData(prev => ({ ...prev, date_of_birth: isoDate }));
+    if (isoDate && calculateAge(isoDate) < 14) {
+      setFormErrors(prev => ({ ...prev, date_of_birth: 'A idade mínima é de 14 anos' }));
+      toast.error('A idade mínima é de 14 anos. Por favor, insira uma data válida.');
+    } else {
+      setFormErrors(prev => {
+        const copy = { ...prev };
+        delete copy.date_of_birth;
+        return copy;
+      });
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -350,18 +359,7 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
       return;
     }
     if (name === 'date_of_birth') {
-      setFormData(prev => ({ ...prev, [name]: value }));
-      if (value && calculateAge(value) < 14) {
-        setFormErrors(prev => ({ ...prev, date_of_birth: 'A idade mínima é de 14 anos' }));
-        toast.error('A idade mínima é de 14 anos. Por favor, insira uma data válida.');
-      } else {
-        setFormErrors(prev => {
-          const copy = { ...prev };
-          delete copy.date_of_birth;
-          return copy;
-        });
-      }
-      return;
+      return; // Handled by handleDateOfBirthChange
     }
     if (name === 'cpf') {
       const formattedValue = formatCPF(value);
@@ -462,14 +460,12 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
             <label htmlFor="date_of_birth" className="block text-sm font-medium text-zinc-700 mb-2">
               Data de Nascimento *
             </label>
-            <input
-              type="date"
+            <DateInput
               id="date_of_birth"
               name="date_of_birth"
-              value={formData.date_of_birth}
-              onChange={handleChange}
-              max={maxDateFor14}
-              className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.date_of_birth ? 'border-red-500' : 'border-slate-400'}`}
+              value={formData.date_of_birth || ''}
+              onChange={handleDateOfBirthChange}
+              error={!!formErrors.date_of_birth}
             />
             <p className="text-xs mt-1 text-slate-600">
               Idade mínima é 14 anos

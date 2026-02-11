@@ -7,6 +7,7 @@ import { ArrowLeft, Save, Layers, Check } from 'lucide-react';
 import selectionProcessService from '@/services/selectionProcessService';
 import jobService from '@/services/jobService';
 import { Job, CreateSelectionProcess, ProcessTemplate } from '@/types';
+import DateInput from '@/components/ui/DateInput';
 
 export default function NovoProcessoPage() {
   return (
@@ -290,11 +291,10 @@ function NovoProcessoContent() {
             <label className="block text-sm font-medium text-zinc-300 mb-2">
               Data de Início
             </label>
-            <input
-              type="date"
+            <DateInput
               name="start_date"
               value={formData.start_date}
-              onChange={handleChange}
+              onChange={(iso) => setFormData(prev => ({ ...prev, start_date: iso }))}
               className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
@@ -302,12 +302,10 @@ function NovoProcessoContent() {
             <label className="block text-sm font-medium text-zinc-300 mb-2">
               Data de Término
             </label>
-            <input
-              type="date"
+            <DateInput
               name="end_date"
               value={formData.end_date}
-              onChange={handleChange}
-              min={formData.start_date || undefined}
+              onChange={(iso) => setFormData(prev => ({ ...prev, end_date: iso }))}
               className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>

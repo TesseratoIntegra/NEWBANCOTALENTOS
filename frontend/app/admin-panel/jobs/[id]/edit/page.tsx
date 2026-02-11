@@ -7,6 +7,7 @@ import { adminJobService, UpdateJobData } from '@/services/adminJobService';
 import companyService from '@/services/companyService';
 import { Job, Company } from '@/types/index';
 import { formatRS } from '@/functions/FormatRS';
+import DateInput from '@/components/ui/DateInput';
 
 interface EditJobPageProps {
   params: Promise<{
@@ -279,13 +280,11 @@ export default function EditJobPage({ params }: EditJobPageProps) {
               <label htmlFor="closure" className="block text-sm font-medium text-zinc-300 mb-2">
                 Data de Encerramento *
               </label>
-              <input
-                type="date"
+              <DateInput
                 id="closure"
                 name="closure"
                 value={formData.closure}
-                onChange={handleChange}
-                required
+                onChange={(iso) => setFormData(prev => ({ ...prev, closure: iso }))}
                 className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>

@@ -75,15 +75,12 @@ class ApplicationSerializer(serializers.ModelSerializer):
 
 
 class ApplicationCreateSerializer(serializers.ModelSerializer):
-    """Serializer para criação de candidaturas"""
+    """Serializer para criação de candidaturas - simplificado.
+    Aceita apenas o ID da vaga; dados do candidato são preenchidos do perfil."""
 
     class Meta:
         model = Application
-        fields = [
-            'job', 'name', 'phone', 'state', 'city', 'linkedin', 
-            'portfolio', 'resume', 'cover_letter', 'salary_expectation', 
-            'observations'
-        ]
+        fields = ['job']
 
     def validate(self, data):
         """Validações para criação com mensagens claras e específicas"""
@@ -100,6 +97,13 @@ class ApplicationCreateSerializer(serializers.ModelSerializer):
         if user.user_type != 'candidate':
             raise serializers.ValidationError({
                 'user': 'Apenas candidatos podem se candidatar a vagas.'
+            })
+
+        # Validação de perfil
+        profile = getattr(user, 'candidate_profile', None)
+        if not profile:
+            raise serializers.ValidationError({
+                'user': 'Você precisa completar seu perfil antes de se candidatar.'
             })
 
         job = data.get('job')
@@ -127,9 +131,22 @@ class ApplicationCreateSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        """Criação associando ao usuário logado"""
+        """Criação associando ao usuário logado e preenchendo dados do perfil"""
         request = self.context.get('request')
-        validated_data['candidate'] = request.user
+        user = request.user
+        profile = user.candidate_profile
+
+        validated_data['candidate'] = user
+        validated_data['name'] = user.full_name or user.name
+        validated_data['phone'] = profile.phone_secondary or ''
+        validated_data['state'] = profile.state or ''
+        validated_data['city'] = profile.city or ''
+
+        if profile.linkedin_url:
+            validated_data['linkedin'] = profile.linkedin_url
+        if profile.portfolio_url:
+            validated_data['portfolio'] = profile.portfolio_url
+
         return super().create(validated_data)
 
 

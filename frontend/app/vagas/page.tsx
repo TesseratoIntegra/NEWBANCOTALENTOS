@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ChevronRight, Building2, Search, Zap, MapPin, Clock, Monitor, Calendar, Filter, X } from 'lucide-react';
+import { ChevronRight, Building2, Search, MapPin, Clock, Monitor, Calendar, Filter, X } from 'lucide-react';
 import Hero from '@/components/Hero';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -167,41 +167,27 @@ const Home = () => {
     return validJobs.slice(startIndex, endIndex);
   };
 
-  // Mock data para as features da plataforma
-  const featuresData = [
-    {
-      icon: Search,
-      title: "Busca Inteligente",
-      description: "Sistema avançado de busca que conecta perfis e vagas com base em compatibilidade real, não apenas palavras-chave."
-    },
-    {
-      icon: Building2,
-      title: "Empresas Premium",
-      description: "Parceria com as melhores empresas do mercado, oferecendo oportunidades exclusivas e de alta qualidade."
-    },
-    {
-      icon: Zap,
-      title: "Processo Ágil",
-      description: "Candidature-se com apenas alguns cliques e acompanhe o status das suas aplicações em tempo real."
-    }
-  ];
-
-  // Mock data para os passos "Como funciona"
+  // Passos "Como funciona" - fluxo real do candidato
   const howItWorksData = [
     {
       step: 1,
-      title: "Explore Empresas",
-      description: "Navegue por nossa rede de empresas e descubra oportunidades que combinam com seu perfil."
+      title: "Crie seu Perfil",
+      description: "Cadastre-se e preencha seu perfil com dados pessoais, formação, experiência profissional, habilidades e idiomas."
     },
     {
       step: 2,
-      title: "Candidate-se",
-      description: "Aplique-se às vagas que se alinham com seus objetivos e competências com apenas alguns cliques."
+      title: "Explore Vagas",
+      description: "Navegue pelas oportunidades disponíveis, filtre por empresa, localidade, modelo de trabalho e candidate-se com poucos cliques."
     },
     {
       step: 3,
+      title: "Participe do Processo",
+      description: "Acompanhe suas candidaturas, participe de processos seletivos com etapas personalizadas e conquiste sua vaga."
+    },
+    {
+      step: 4,
       title: "Conquiste sua Vaga",
-      description: "Acompanhe o status das suas candidaturas para conquistar sua próxima oportunidade."
+      description: "Após aprovado, envie seus documentos e complete a admissão diretamente pela plataforma."
     }
   ];
 
@@ -212,46 +198,8 @@ const Home = () => {
       {/* Hero Section */}
       <Hero/>
 
-      {/* Features Section */}
-      <section className="pt-20 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-8">
-              <SplitText
-                text="Por que escolher nossa plataforma?"
-                className="text-2xl lg:text-4xl font-bold text-blue-900 mb-2 quicksand"
-                delay={30}
-                duration={0.6}
-              />
-              <ScrollReveal>
-                <p className="text-lg text-slate-600 max-w-3xl mx-auto">
-                  Oferecemos uma experiência completa e diferenciada para conectar os melhores talentos às empresas mais inovadoras do mercado.
-                </p>
-              </ScrollReveal>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuresData.map((feature, index) => {
-              const IconComponent = feature.icon;
-              return (
-                <ScrollReveal delay={400 * index} key={index}>
-                <div className=" px-6 py-6 rounded-md border-blue-900/50 border duration-300 hover:transform hover:-translate-y-2">
-                  <div className="w-12 h-12 bg-gradient-to-r from-blue-800 to-blue-900 rounded-md flex items-center justify-center mb-3 transition-transform">
-                    <IconComponent className="w-5 h-5 text-yellow-400" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-blue-900 mb-1 quicksand">{feature.title}</h3>
-                  <p className="text-slate-800 leading-relaxed">
-                    {feature.description}
-                  </p>
-                </div>
-                </ScrollReveal>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
       {/* How it Works Section */}
-      <section className="pt-16 pb-10 mt-20 px-4 border-t border-blue-900/50">
+      <section className="pt-16 pb-10 mt-20 px-4 border-t border-blue-900/50" id="avaliable">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-6">
             <SplitText
@@ -267,7 +215,7 @@ const Home = () => {
             </ScrollReveal>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {howItWorksData.map((item, index) => (
               <ScrollReveal delay={400 * index} key={index}>
               <div className={`relative ${index === howItWorksData.length - 1 ? '' : ''}`}>
@@ -276,7 +224,7 @@ const Home = () => {
                     {item.step}
                   </div>
                   <h3 className="text-2xl font-bold text-blue-900 mb-1 quicksand">{item.title}</h3>
-                  <p className="text-slate-600" id='avaliable'>
+                  <p className="text-slate-600">
                     {item.description}
                   </p>
                 </div>

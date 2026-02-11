@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import candidateService from '@/services/candidateService';
-import applicationService from '@/services/applicationService';
-import { CandidateProfile, CandidateEducation, CandidateExperience, CandidateSkill, CandidateLanguage, Application, CandidateInProcess } from '@/types';
+import { CandidateProfile, CandidateEducation, CandidateExperience, CandidateSkill, CandidateLanguage, CandidateInProcess } from '@/types';
 import selectionProcessService from '@/services/selectionProcessService';
 import { toast } from 'react-hot-toast';
 import Navbar from '@/components/Navbar';
@@ -150,7 +149,6 @@ export default function ProfileViewPage() {
   const [experiences, setExperiences] = useState<CandidateExperience[]>([]);
   const [skills, setSkills] = useState<CandidateSkill[]>([]);
   const [languages, setLanguages] = useState<CandidateLanguage[]>([]);
-  const [applications, setApplications] = useState<Application[]>([]);
   const [myProcesses, setMyProcesses] = useState<CandidateInProcess[]>([]);
 
   // Estados dos modais
@@ -172,13 +170,12 @@ export default function ProfileViewPage() {
   const loadProfile = async () => {
     try {
       setLoading(true);
-      const [profileData, educationsData, experiencesData, skillsData, languagesData, applicationsData, processesData] = await Promise.all([
+      const [profileData, educationsData, experiencesData, skillsData, languagesData, processesData] = await Promise.all([
         candidateService.getCandidateProfile().catch(() => null),
         candidateService.getCandidateEducations().catch(() => []),
         candidateService.getCandidateExperiences().catch(() => []),
         candidateService.getCandidateSkills().catch(() => []),
         candidateService.getCandidateLanguages().catch(() => []),
-        applicationService.getMyApplications().catch(() => []),
         selectionProcessService.getMyProcesses().catch(() => [])
       ]);
 
@@ -193,7 +190,6 @@ export default function ProfileViewPage() {
       setExperiences(Array.isArray(experiencesData) ? experiencesData : experiencesData.results || []);
       setSkills(Array.isArray(skillsData) ? skillsData : skillsData.results || []);
       setLanguages(Array.isArray(languagesData) ? languagesData : languagesData.results || []);
-      setApplications(Array.isArray(applicationsData) ? applicationsData : applicationsData.results || []);
       setMyProcesses(Array.isArray(processesData) ? processesData : []);
 
       // Mostrar banner de aprovação apenas na primeira vez
@@ -948,19 +944,13 @@ export default function ProfileViewPage() {
 
         {/* Minhas Candidaturas */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center mb-4">
             <h2 className="text-xl font-bold text-blue-900 flex items-center gap-2">
               <FileText className="w-5 h-5" />
               Minhas Candidaturas
             </h2>
-            <Link
-              href="/candidaturas"
-              className="text-blue-500 hover:text-blue-700 text-sm font-medium"
-            >
-              Ver todas
-            </Link>
           </div>
-          <ApplicationsSection applications={applications} />
+          <ApplicationsSection />
         </div>
 
       </div>

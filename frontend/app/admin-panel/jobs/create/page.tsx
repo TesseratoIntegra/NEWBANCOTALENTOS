@@ -12,6 +12,7 @@ import { adminJobService } from '@/services/adminJobService';
 import companyService from '@/services/companyService';
 import locationService, { State, City } from '@/services/locationService';
 import { Company } from '@/types';
+import DateInput from '@/components/ui/DateInput';
 
 type CreateCompanyModalProps = {
   isOpen: boolean;
@@ -499,13 +500,18 @@ export default function CreateJobPage() {
               <label htmlFor="closure" className="block text-sm font-medium text-zinc-300 mb-2">
                 Data de Encerramento *
               </label>
-              <input
-                type="date"
-                id="closure"
-                {...register('closure')}
-                min={getTomorrowDate()}
-                required
-                className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              <Controller
+                name="closure"
+                control={control}
+                render={({ field }) => (
+                  <DateInput
+                    id="closure"
+                    name="closure"
+                    value={field.value || ''}
+                    onChange={(iso) => field.onChange(iso)}
+                    className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                )}
               />
               {errors.closure && <span className="text-red-500 text-xs">{errors.closure.message}</span>}
               <p className="text-xs text-zinc-400 mt-1">

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft, Save, CheckCircle, Send, Loader2 } from 'lucide-react';
 import admissionService from '@/services/admissionService';
 import { AdmissionData, AdmissionPrefill } from '@/types';
+import DateInput from '@/components/ui/DateInput';
 
 type TabKey =
   | 'cadastrais'
@@ -483,9 +484,19 @@ export default function AdmissaoPage() {
               <option key={`${opt.value}-${idx}`} value={opt.value}>{opt.label}</option>
             ))}
           </select>
+        ) : field.type === 'date' ? (
+          <DateInput
+            name={field.key}
+            value={value}
+            onChange={(iso) => handleFieldChange(field.key, iso)}
+            disabled={isReadonly}
+            className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100
+                       focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                       disabled:opacity-50 disabled:cursor-not-allowed"
+          />
         ) : (
           <input
-            type={field.type === 'date' ? 'date' : field.type === 'number' ? 'number' : 'text'}
+            type={field.type === 'number' ? 'number' : 'text'}
             value={value}
             onChange={e => handleFieldChange(field.key, e.target.value)}
             disabled={isReadonly}
@@ -516,10 +527,10 @@ export default function AdmissaoPage() {
             <label className="block text-sm font-medium text-zinc-300">
               Data de Inicio do Trabalho *
             </label>
-            <input
-              type="date"
+            <DateInput
+              name="data_inicio_trabalho"
               value={formData.data_inicio_trabalho || ''}
-              onChange={e => handleFieldChange('data_inicio_trabalho', e.target.value)}
+              onChange={(iso) => handleFieldChange('data_inicio_trabalho', iso)}
               disabled={isReadonly}
               className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100
                          focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
