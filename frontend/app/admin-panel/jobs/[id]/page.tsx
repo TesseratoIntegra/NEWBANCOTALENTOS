@@ -9,6 +9,8 @@ import { Job, Company } from '@/types/index';
 import { PencilIcon, TrashIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import AuthService from '@/services/auth';
 import * as XLSX from 'xlsx';
+import toast from 'react-hot-toast';
+import { confirmDialog } from '@/lib/confirmDialog';
 
 interface JobDetailsPageProps {
   params: Promise<{
@@ -88,7 +90,7 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
   }, [resolvedParams]);
 
   const handleDelete = async () => {
-    if (!job || !confirm('Tem certeza que deseja excluir esta vaga?')) {
+    if (!job || !(await confirmDialog('Tem certeza que deseja excluir esta vaga?'))) {
       return;
     }
 
@@ -96,14 +98,14 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
       await adminJobService.deleteJob(job.id);
       router.push('/admin-panel/jobs');
     } catch (err) {
-      alert('Erro ao excluir vaga');
+      toast.error('Erro ao excluir vaga');
       console.error(err);
     }
   };
 
   const handleDownloadExcel = () => {
     if (applications.length === 0) {
-      alert('Não há candidaturas para exportar');
+      toast.error('Não há candidaturas para exportar');
       return;
     }
 
@@ -190,7 +192,7 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-64">
-        <div className="text-zinc-300">Carregando vaga...</div>
+        <div className="text-slate-600">Carregando vaga...</div>
       </div>
     );
   }
@@ -199,10 +201,10 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
     return (
       <div className="flex items-center justify-center min-h-64">
         <div className="text-center">
-          <div className="text-red-400 mb-4">{error || 'Vaga não encontrada'}</div>
+          <div className="text-red-600 mb-4">{error || 'Vaga não encontrada'}</div>
           <Link
             href="/admin-panel/jobs"
-            className="text-indigo-400 hover:text-indigo-300"
+            className="text-sky-600 hover:text-sky-500"
           >
             ← Voltar para lista
           </Link>
@@ -226,21 +228,21 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
         <div className="flex items-center justify-between mb-4">
           <Link
             href="/admin-panel/jobs"
-            className="text-indigo-400 hover:text-indigo-300"
+            className="text-sky-600 hover:text-sky-500"
           >
             ← Voltar para lista
           </Link>
           <div className="flex items-center space-x-2">
             <Link
               href={`/admin-panel/jobs/${job.id}/edit`}
-              className="flex items-center space-x-2 px-4 py-2 bg-yellow-400/90 hover:bg-yellow-600 text-zinc-800 rounded-md font-medium transition-colors"
+              className="flex items-center space-x-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-md font-medium transition-colors"
             >
               <PencilIcon className="h-4 w-4" />
               <span>Editar</span>
             </Link>
             <button
               onClick={handleDelete}
-              className="flex items-center space-x-2 px-4 py-2 bg-red-600/90 hover:bg-red-800 text-white rounded-md font-medium transition-colors cursor-pointer"
+              className="flex items-center space-x-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md font-medium transition-colors cursor-pointer"
             >
               <TrashIcon className="h-4 w-4" />
               <span>Excluir</span>
@@ -248,12 +250,12 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
           </div>
         </div>
         <div className="flex items-center space-x-4">
-          <h1 className="text-2xl font-bold text-zinc-100">{job.title}</h1>
+          <h1 className="text-2xl font-bold text-slate-800">{job.title}</h1>
           <span
             className={`px-3 py-1 rounded-full text-sm font-medium ${
               job.is_active
-                ? 'bg-green-900 text-green-300'
-                : 'bg-red-900 text-red-300'
+                ? 'bg-emerald-50 text-emerald-700'
+                : 'bg-red-50 text-red-700'
             }`}
           >
             {job.is_active ? 'Ativa' : 'Inativa'}
@@ -263,78 +265,78 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
 
       <div className="space-y-6">
         {/* Informações Básicas */}
-        <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-md p-6 border border-zinc-700">
-          <h2 className="text-lg font-semibold text-zinc-100 mb-4">
+        <div className="bg-white border border-slate-200 shadow-sm rounded-md p-6 border border-slate-200">
+          <h2 className="text-lg font-semibold text-slate-800 mb-4">
             Informações Básicas
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* ...existing code... */}
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="block text-sm font-medium text-slate-500 mb-1">
                 Localização
               </label>
-              <p className="text-zinc-100">{job.location}</p>
+              <p className="text-slate-800">{job.location}</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="block text-sm font-medium text-slate-500 mb-1">
                 Tipo de Contrato
               </label>
-              <p className="text-zinc-100">{getJobTypeLabel(job.job_type)}</p>
+              <p className="text-slate-800">{getJobTypeLabel(job.job_type)}</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="block text-sm font-medium text-slate-500 mb-1">
                 Modelo de Trabalho
               </label>
-              <p className="text-zinc-100">{getTypeModelsLabel(job.type_models)}</p>
+              <p className="text-slate-800">{getTypeModelsLabel(job.type_models)}</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="block text-sm font-medium text-slate-500 mb-1">
                 Faixa Salarial
               </label>
-              <p className="text-zinc-100">{job.salary_range || 'Não informado'}</p>
+              <p className="text-slate-800">{job.salary_range || 'Não informado'}</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="block text-sm font-medium text-slate-500 mb-1">
                 Data de Encerramento
               </label>
-              <p className="text-zinc-100">
+              <p className="text-slate-800">
                 {new Date(job.closure).toLocaleDateString('pt-BR')}
               </p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="block text-sm font-medium text-slate-500 mb-1">
                 Empresa
               </label>
-              <p className="text-zinc-100">
+              <p className="text-slate-800">
                 {company ? (
                   <span>
                     {company.name}
-                    <span className="text-zinc-400 text-sm ml-2">(ID: {job.company})</span>
+                    <span className="text-slate-500 text-sm ml-2">(ID: {job.company})</span>
                   </span>
                 ) : (
-                  <span className="text-zinc-400">
+                  <span className="text-slate-500">
                     ID: {job.company} (carregando nome...)
                   </span>
                 )}
               </p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="block text-sm font-medium text-slate-500 mb-1">
                 Status
               </label>
-              <p className="text-zinc-100">{job.is_active ? 'Ativa' : 'Inativa'}</p>
+              <p className="text-slate-800">{job.is_active ? 'Ativa' : 'Inativa'}</p>
             </div>
           </div>
         </div>
 
         {/* Listagem de Candidaturas */}
-        <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-md p-6 border border-zinc-700">
+        <div className="bg-white border border-slate-200 shadow-sm rounded-md p-6 border border-slate-200">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-zinc-100">Candidaturas para esta vaga</h2>
+            <h2 className="text-lg font-semibold text-slate-800">Candidaturas para esta vaga</h2>
             {applications.length > 0 && (
               <button
                 onClick={handleDownloadExcel}
-                className="flex items-center space-x-2 px-4 py-2 bg-green-600/90 hover:bg-green-700 text-white rounded-md font-medium transition-colors cursor-pointer"
+                className="flex items-center space-x-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md font-medium transition-colors cursor-pointer"
               >
                 <ArrowDownTrayIcon className="h-4 w-4" />
                 <span>Baixar Excel</span>
@@ -345,35 +347,35 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
             <input
               type="text"
               placeholder="Pesquisar por nome ou cidade..."
-              className="w-full md:w-1/2 px-4 py-2 rounded-md border border-zinc-600 bg-zinc-800 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              className="w-full md:w-1/2 px-4 py-2 rounded-md border border-slate-300 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
             />
           </div>
           {filteredApplications.length === 0 ? (
-            <div className="text-zinc-400">Nenhuma candidatura encontrada para esta vaga.</div>
+            <div className="text-slate-500">Nenhuma candidatura encontrada para esta vaga.</div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-zinc-700">
+              <table className="min-w-full divide-y divide-slate-200">
                 <thead>
                   <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-zinc-400">Nome</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-zinc-400">Status</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-zinc-400">Data de Inscrição</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-zinc-400">Telefone</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-zinc-400">Cidade</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-zinc-400">Estado</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-slate-500">Nome</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-slate-500">Status</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-slate-500">Data de Inscrição</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-slate-500">Telefone</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-slate-500">Cidade</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-slate-500">Estado</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredApplications.map(app => (
-                    <tr key={app.id} className="border-b border-zinc-700 hover:bg-zinc-800 cursor-pointer" onClick={() => router.push(`/admin-panel/candidaturas/${app.id}`)}>
-                      <td className="px-4 py-2 text-zinc-100 font-medium">{app.candidate_name}</td>
-                      <td className="px-4 py-2 text-zinc-300">{getStatusLabel(app.status)}</td>
-                      <td className="px-4 py-2 text-zinc-300">{new Date(app.applied_at).toLocaleDateString('pt-BR')}</td>
-                      <td className="px-4 py-2 text-zinc-300">{app.phone}</td>
-                      <td className="px-4 py-2 text-zinc-300">{app.city}</td>
-                      <td className="px-4 py-2 text-zinc-300">{app.state}</td>
+                    <tr key={app.id} className="border-b border-slate-200 hover:bg-white cursor-pointer" onClick={() => router.push(`/admin-panel/candidaturas/${app.id}`)}>
+                      <td className="px-4 py-2 text-slate-800 font-medium">{app.candidate_name}</td>
+                      <td className="px-4 py-2 text-slate-600">{getStatusLabel(app.status)}</td>
+                      <td className="px-4 py-2 text-slate-600">{new Date(app.applied_at).toLocaleDateString('pt-BR')}</td>
+                      <td className="px-4 py-2 text-slate-600">{app.phone}</td>
+                      <td className="px-4 py-2 text-slate-600">{app.city}</td>
+                      <td className="px-4 py-2 text-slate-600">{app.state}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -384,53 +386,53 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
 
         {/* ...existing code... */}
         {/* Descrição */}
-        <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-md p-6 border border-zinc-700">
-          <h2 className="text-lg font-semibold text-zinc-100 mb-4">
+        <div className="bg-white border border-slate-200 shadow-sm rounded-md p-6 border border-slate-200">
+          <h2 className="text-lg font-semibold text-slate-800 mb-4">
             Descrição da Vaga
           </h2>
-          <div className="prose prose-invert max-w-none">
-            <p className="text-zinc-300 whitespace-pre-wrap">{job.description}</p>
+          <div className="prose prose max-w-none">
+            <p className="text-slate-600 whitespace-pre-wrap">{job.description}</p>
           </div>
         </div>
         {/* Requisitos */}
         {job.requirements && (
-          <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-md p-6 border border-zinc-700">
-            <h2 className="text-lg font-semibold text-zinc-100 mb-4">
+          <div className="bg-white border border-slate-200 shadow-sm rounded-md p-6 border border-slate-200">
+            <h2 className="text-lg font-semibold text-slate-800 mb-4">
               Requisitos
             </h2>
-            <div className="prose prose-invert max-w-none">
-              <p className="text-zinc-300 whitespace-pre-wrap">{job.requirements}</p>
+            <div className="prose prose max-w-none">
+              <p className="text-slate-600 whitespace-pre-wrap">{job.requirements}</p>
             </div>
           </div>
         )}
         {/* Responsabilidades */}
         {job.responsibilities && (
-          <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-md p-6 border border-zinc-700">
-            <h2 className="text-lg font-semibold text-zinc-100 mb-4">
+          <div className="bg-white border border-slate-200 shadow-sm rounded-md p-6 border border-slate-200">
+            <h2 className="text-lg font-semibold text-slate-800 mb-4">
               Responsabilidades
             </h2>
-            <div className="prose prose-invert max-w-none">
-              <p className="text-zinc-300 whitespace-pre-wrap">{job.responsibilities}</p>
+            <div className="prose prose max-w-none">
+              <p className="text-slate-600 whitespace-pre-wrap">{job.responsibilities}</p>
             </div>
           </div>
         )}
         {/* Metadados */}
-        <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-md p-6 border border-zinc-700">
-          <h2 className="text-lg font-semibold text-zinc-100 mb-4">
+        <div className="bg-white border border-slate-200 shadow-sm rounded-md p-6 border border-slate-200">
+          <h2 className="text-lg font-semibold text-slate-800 mb-4">
             Informações do Sistema
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="block text-sm font-medium text-slate-500 mb-1">
                 Criada em
               </label>
-              <p className="text-zinc-300">{formatDate(job.created_at)}</p>
+              <p className="text-slate-600">{formatDate(job.created_at)}</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">
+              <label className="block text-sm font-medium text-slate-500 mb-1">
                 Última atualização
               </label>
-              <p className="text-zinc-300">{formatDate(job.updated_at)}</p>
+              <p className="text-slate-600">{formatDate(job.updated_at)}</p>
             </div>
           </div>
         </div>

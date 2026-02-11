@@ -105,8 +105,8 @@ class CandidateProfileFilter(FilterSet):
     # Filtro para buscar candidatos que se candidataram a uma vaga específica
     applied_to_job = NumberFilter(method='filter_by_job')
 
-    # Filtro por status do perfil
-    profile_status = CharFilter(field_name='profile_status')
+    # Filtro por status do pipeline (computado)
+    pipeline_status = CharFilter(method='filter_pipeline_status')
 
     class Meta:
         model = CandidateProfile
@@ -120,13 +120,58 @@ class CandidateProfileFilter(FilterSet):
             'desired_salary_min': ['gte', 'lte'],
             'desired_salary_max': ['gte', 'lte'],
             'preferred_work_shift': ['exact'],
-            'profile_status': ['exact', 'in'],
         }
 
     def filter_by_job(self, queryset, name, value):
         """Filtra candidatos que se candidataram a uma vaga específica"""
         if value:
             return queryset.filter(user__applications__job_id=value).distinct()
+        return queryset
+
+    def filter_pipeline_status(self, queryset, name, value):
+        """Filtra por status do pipeline (original ou computado)."""
+        from admission.models import DocumentType
+        from django.db.models import Count, Q
+
+        # Status originais do banco
+        if value in ('pending', 'awaiting_review', 'rejected', 'changes_requested'):
+            return queryset.filter(profile_status=value)
+
+        # Todos os computados partem de profile_status='approved'
+        approved = queryset.filter(profile_status='approved')
+        required_types = DocumentType.objects.filter(is_active=True, is_required=True)
+        total_required = required_types.count()
+
+        if total_required > 0:
+            annotated = approved.annotate(
+                _approved_req=Count(
+                    'candidate_documents',
+                    filter=Q(
+                        candidate_documents__is_active=True,
+                        candidate_documents__status='approved',
+                        candidate_documents__document_type__in=required_types,
+                    )
+                )
+            )
+            docs_complete = annotated.filter(_approved_req__gte=total_required)
+            docs_incomplete = annotated.filter(_approved_req__lt=total_required)
+        else:
+            docs_complete = approved
+            docs_incomplete = approved.none()
+
+        if value == 'documents_pending':
+            return docs_incomplete
+        elif value == 'documents_complete':
+            return docs_complete.exclude(
+                admission_data__status__in=['draft', 'completed', 'sent', 'confirmed']
+            )
+        elif value == 'admission_in_progress':
+            return docs_complete.filter(
+                admission_data__status__in=['draft', 'completed', 'sent']
+            )
+        elif value == 'admitted':
+            return docs_complete.filter(admission_data__status='confirmed')
+
         return queryset
 
 
@@ -382,6 +427,82 @@ class CandidateProfileViewSet(viewsets.ModelViewSet):
             'profile_observations': profile.profile_observations,
             'profile_reviewed_at': profile.profile_reviewed_at.isoformat(),
             'pending_observation_sections': profile.pending_observation_sections,
+        })
+
+    @action(detail=False, methods=['get'], url_path='me/notifications')
+    def my_notifications(self, request):
+        """Retorna notificações pendentes do candidato."""
+        user = request.user
+        if user.user_type != 'candidate':
+            return Response(
+                {'detail': 'Apenas candidatos podem acessar este endpoint.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        try:
+            profile = CandidateProfile.objects.get(user=user)
+        except CandidateProfile.DoesNotExist:
+            return Response(
+                {'detail': 'Perfil de candidato não encontrado.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        notifications = []
+
+        # 1. Perfil com alterações solicitadas
+        if profile.profile_status == 'changes_requested':
+            notifications.append({
+                'type': 'profile_changes',
+                'title': 'Alterações solicitadas',
+                'message': 'O recrutador solicitou alterações no seu perfil.',
+                'link': '/perfil',
+                'icon': 'profile'
+            })
+
+        # 2. Documentos rejeitados (só se perfil aprovado)
+        if profile.profile_status == 'approved':
+            from admission.models import CandidateDocument
+            rejected_count = CandidateDocument.objects.filter(
+                candidate=profile, is_active=True, status='rejected'
+            ).count()
+            if rejected_count > 0:
+                notifications.append({
+                    'type': 'documents_rejected',
+                    'title': 'Documentos rejeitados',
+                    'message': f'{rejected_count} documento(s) rejeitado(s). Verifique o motivo e reenvie.',
+                    'link': '/perfil/documentos',
+                    'icon': 'document',
+                    'count': rejected_count
+                })
+
+        # 3. Processos seletivos — aprovação/reprovação final
+        from selection_process.models import CandidateInProcess
+        process_updates = CandidateInProcess.objects.filter(
+            candidate_profile=profile,
+            status__in=['approved', 'rejected']
+        ).select_related('process')
+
+        for proc in process_updates:
+            if proc.status == 'approved':
+                notifications.append({
+                    'type': 'process_approved',
+                    'title': f'Aprovado: {proc.process.title}',
+                    'message': 'Parabéns! Você foi aprovado no processo seletivo.',
+                    'link': '/perfil',
+                    'icon': 'process_approved'
+                })
+            elif proc.status == 'rejected':
+                notifications.append({
+                    'type': 'process_rejected',
+                    'title': f'Reprovado: {proc.process.title}',
+                    'message': 'Infelizmente você não foi aprovado neste processo.',
+                    'link': '/perfil',
+                    'icon': 'process_rejected'
+                })
+
+        return Response({
+            'count': len(notifications),
+            'notifications': notifications
         })
 
 

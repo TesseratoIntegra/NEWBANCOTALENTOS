@@ -1,12 +1,13 @@
 // services/candidateService.ts
 import axios from 'axios';
-import { 
-  CandidateProfile, 
-  CandidateEducation, 
-  CandidateExperience, 
-  CandidateSkill, 
+import {
+  CandidateProfile,
+  CandidateEducation,
+  CandidateExperience,
+  CandidateSkill,
   CandidateLanguage,
-  PaginatedResponse 
+  PaginatedResponse,
+  CandidateNotificationsResponse
 } from '@/types';
 
 import AuthService from './auth';
@@ -77,7 +78,7 @@ class CandidateService {
       if (params?.experience_years_min !== undefined) queryParams.append('experience_years__gte', params.experience_years_min.toString());
       if (params?.experience_years_max !== undefined) queryParams.append('experience_years__lte', params.experience_years_max.toString());
       if (params?.applied_to_job !== undefined) queryParams.append('applied_to_job', params.applied_to_job.toString());
-      if (params?.profile_status) queryParams.append('profile_status', params.profile_status);
+      if (params?.profile_status) queryParams.append('pipeline_status', params.profile_status);
 
       const url = `${this.baseUrl}/candidates/profiles/?${queryParams.toString()}`;
       const response = await axios.get(url, this.getAxiosConfig());
@@ -341,6 +342,21 @@ class CandidateService {
     }
   }
 
+  // === NOTIFICATIONS ===
+
+  async getMyNotifications(): Promise<CandidateNotificationsResponse> {
+    try {
+      const response = await axios.get(
+        `${this.baseUrl}/candidates/profiles/me/notifications/`,
+        this.getAxiosConfig()
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar notificações:', error);
+      return { count: 0, notifications: [] };
+    }
+  }
+
   // === UTILITY METHODS ===
 
   /* Obter opções de nível de escolaridade */
@@ -397,23 +413,30 @@ class CandidateService {
     ];
   }
 
-  /* Obter opções de status do perfil */
+  /* Obter opções de status do pipeline */
   getProfileStatusOptions(): Array<{ value: string; label: string }> {
     return [
       { value: 'pending', label: 'Em análise' },
       { value: 'awaiting_review', label: 'Aguardando Revisão' },
-      { value: 'approved', label: 'Aprovado' },
+      { value: 'documents_pending', label: 'Docs. Pendentes' },
+      { value: 'documents_complete', label: 'Docs. Completos' },
+      { value: 'admission_in_progress', label: 'Em Admissão' },
+      { value: 'admitted', label: 'Admitido' },
       { value: 'rejected', label: 'Reprovado' },
-      { value: 'changes_requested', label: 'Aguardando Candidato' }
+      { value: 'changes_requested', label: 'Aguardando Candidato' },
     ];
   }
 
-  /* Obter label e cor do status do perfil */
+  /* Obter label e cor do status do pipeline */
   getProfileStatusLabel(status: string): { label: string; color: string; bgColor: string } {
     const statusMap: Record<string, { label: string; color: string; bgColor: string }> = {
       pending: { label: 'Em análise', color: 'text-amber-700', bgColor: 'bg-amber-100' },
       awaiting_review: { label: 'Aguardando Revisão', color: 'text-blue-700', bgColor: 'bg-blue-100' },
       approved: { label: 'Aprovado', color: 'text-green-700', bgColor: 'bg-green-100' },
+      documents_pending: { label: 'Docs. Pendentes', color: 'text-violet-700', bgColor: 'bg-violet-100' },
+      documents_complete: { label: 'Docs. Completos', color: 'text-teal-700', bgColor: 'bg-teal-100' },
+      admission_in_progress: { label: 'Em Admissão', color: 'text-indigo-700', bgColor: 'bg-indigo-100' },
+      admitted: { label: 'Admitido', color: 'text-emerald-800', bgColor: 'bg-emerald-200' },
       rejected: { label: 'Reprovado', color: 'text-red-700', bgColor: 'bg-red-100' },
       changes_requested: { label: 'Aguardando Candidato', color: 'text-orange-700', bgColor: 'bg-orange-100' },
     };

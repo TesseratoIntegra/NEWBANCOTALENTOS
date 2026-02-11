@@ -95,17 +95,17 @@ function AdminSectionAlert({ sectionKey, profile }: { sectionKey: string; profil
   return (
     <div className={`flex items-start gap-2 rounded-lg px-3 py-2 mb-3 text-sm ${
       isCompleted
-        ? 'bg-green-900/30 border border-green-700/50'
-        : 'bg-orange-900/30 border border-orange-700/50'
+        ? 'bg-emerald-50 border border-emerald-200'
+        : 'bg-orange-50 border border-orange-200'
     }`}>
       <span className={`w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 ${
         isCompleted ? 'bg-green-500' : 'bg-orange-500 animate-pulse'
       }`} />
       <div className="flex-1 min-w-0">
-        <p className={`text-xs font-semibold ${isCompleted ? 'text-green-400' : 'text-orange-400'}`}>
+        <p className={`text-xs font-semibold ${isCompleted ? 'text-emerald-600' : 'text-orange-600'}`}>
           {isCompleted ? 'Candidato atualizou esta seção' : 'Pendente — aguardando candidato'}
         </p>
-        <p className={`text-xs mt-0.5 ${isCompleted ? 'text-green-500/70 line-through' : 'text-orange-300/80'}`}>{text}</p>
+        <p className={`text-xs mt-0.5 ${isCompleted ? 'text-emerald-400 line-through' : 'text-orange-500'}`}>{text}</p>
       </div>
     </div>
   );
@@ -116,9 +116,9 @@ function getSectionRingClass(sectionKey: string, profile: CandidateProfile): str
   if (!showStatuses.includes(profile.profile_status || '') || !profile.profile_observations) return '';
   const observations = parseSectionObservations(profile.profile_observations);
   if (!observations[sectionKey]) return '';
-  if (profile.profile_status === 'awaiting_review') return 'ring-2 ring-green-500/50';
+  if (profile.profile_status === 'awaiting_review') return 'ring-2 ring-emerald-300';
   const pending = profile.pending_observation_sections || [];
-  return pending.includes(sectionKey) ? 'ring-2 ring-orange-500/50' : 'ring-2 ring-green-500/50';
+  return pending.includes(sectionKey) ? 'ring-2 ring-orange-300' : 'ring-2 ring-emerald-300';
 }
 
 function AdminStructuredObservations({ text, isRejected, pendingSections }: { text: string; isRejected?: boolean; pendingSections?: string[] }) {
@@ -131,11 +131,11 @@ function AdminStructuredObservations({ text, isRejected, pendingSections }: { te
   }
 
   if (sections.length === 0) {
-    return <p className="text-zinc-300 text-sm whitespace-pre-line">{text}</p>;
+    return <p className="text-slate-600 text-sm whitespace-pre-line">{text}</p>;
   }
 
-  const borderColor = isRejected ? 'border-red-500/50' : 'border-orange-500/50';
-  const titleColor = isRejected ? 'text-red-300' : 'text-orange-300';
+  const borderColor = isRejected ? 'border-red-200' : 'border-orange-200';
+  const titleColor = isRejected ? 'text-red-600' : 'text-orange-600';
 
   return (
     <div className="space-y-2">
@@ -144,19 +144,19 @@ function AdminStructuredObservations({ text, isRejected, pendingSections }: { te
         const isCompleted = pendingSections && sectionKey && !pendingSections.includes(sectionKey);
 
         return (
-          <div key={idx} className={`border-l-2 ${isCompleted ? 'border-green-500/50' : borderColor} pl-3 py-1`}>
+          <div key={idx} className={`border-l-2 ${isCompleted ? 'border-emerald-200' : borderColor} pl-3 py-1`}>
             <div className="flex items-center gap-2">
               {pendingSections && sectionKey && (
                 isCompleted
-                  ? <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
-                  : <AlertCircle className="w-4 h-4 text-orange-400 flex-shrink-0" />
+                  ? <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                  : <AlertCircle className="w-4 h-4 text-orange-600 flex-shrink-0" />
               )}
-              <p className={`text-sm font-semibold ${isCompleted ? 'text-green-300' : titleColor}`}>
+              <p className={`text-sm font-semibold ${isCompleted ? 'text-emerald-600' : titleColor}`}>
                 {section.title}
-                {isCompleted && <span className="font-normal text-green-500 ml-2">— Atualizado pelo candidato</span>}
+                {isCompleted && <span className="font-normal text-emerald-500 ml-2">— Atualizado pelo candidato</span>}
               </p>
             </div>
-            <p className="text-zinc-300 text-sm whitespace-pre-line">{section.content}</p>
+            <p className="text-slate-600 text-sm whitespace-pre-line">{section.content}</p>
           </div>
         );
       })}
@@ -287,18 +287,18 @@ export default function TalentoDetalhesPage() {
 
   const getProfileStatusInfo = (status?: string) => {
     const statusMap: Record<string, { label: string; bgColor: string; textColor: string; borderColor: string }> = {
-      pending: { label: 'Em análise', bgColor: 'bg-amber-900/50', textColor: 'text-amber-300', borderColor: 'border-amber-700' },
-      awaiting_review: { label: 'Aguardando Revisão', bgColor: 'bg-blue-900/50', textColor: 'text-blue-300', borderColor: 'border-blue-700' },
-      approved: { label: 'Aprovado', bgColor: 'bg-green-900/50', textColor: 'text-green-300', borderColor: 'border-green-700' },
-      rejected: { label: 'Reprovado', bgColor: 'bg-red-900/50', textColor: 'text-red-300', borderColor: 'border-red-700' },
-      changes_requested: { label: 'Aguardando Candidato', bgColor: 'bg-orange-900/50', textColor: 'text-orange-300', borderColor: 'border-orange-700' },
+      pending: { label: 'Em análise', bgColor: 'bg-amber-50', textColor: 'text-amber-700', borderColor: 'border-amber-200' },
+      awaiting_review: { label: 'Aguardando Revisão', bgColor: 'bg-sky-50', textColor: 'text-sky-700', borderColor: 'border-sky-200' },
+      approved: { label: 'Aprovado', bgColor: 'bg-emerald-50', textColor: 'text-emerald-700', borderColor: 'border-emerald-200' },
+      rejected: { label: 'Reprovado', bgColor: 'bg-red-50', textColor: 'text-red-700', borderColor: 'border-red-200' },
+      changes_requested: { label: 'Aguardando Candidato', bgColor: 'bg-orange-50', textColor: 'text-orange-700', borderColor: 'border-orange-200' },
     };
     return statusMap[status || 'pending'] || statusMap.pending;
   };
 
   const handleReviewDocument = async (docId: number, status: 'approved' | 'rejected') => {
     if (status === 'rejected' && !reviewObs.trim()) {
-      alert('Informe o motivo da rejeição.');
+      toast.error('Informe o motivo da rejeição.');
       return;
     }
     try {
@@ -350,7 +350,7 @@ export default function TalentoDetalhesPage() {
   if (loading) {
     return (
       <div className="flex justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-400"></div>
       </div>
     );
   }
@@ -360,13 +360,13 @@ export default function TalentoDetalhesPage() {
       <div className="space-y-4">
         <button
           onClick={() => router.back()}
-          className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors"
+          className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
           Voltar
         </button>
-        <div className="bg-red-900/50 border border-red-500 rounded-lg p-6 text-center">
-          <p className="text-red-200">{error || 'Talento não encontrado'}</p>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <p className="text-red-600">{error || 'Talento não encontrado'}</p>
         </div>
       </div>
     );
@@ -378,14 +378,14 @@ export default function TalentoDetalhesPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <Link
           href="/admin-panel/talentos"
-          className="inline-flex items-center gap-2 text-zinc-400 hover:text-white transition-colors"
+          className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
           Voltar para lista
         </Link>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
           {(() => {
             const statusInfo = getProfileStatusInfo(profile.profile_status);
             return (
@@ -399,35 +399,35 @@ export default function TalentoDetalhesPage() {
           })()}
           <button
             onClick={() => handleUpdateProfileStatus('approved', '')}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-sm font-medium transition-all shadow-sm hover:shadow-md cursor-pointer"
           >
-            <CheckCircle className="h-5 w-5" />
+            <CheckCircle className="h-4 w-4" />
             Aprovar
           </button>
           <button
             onClick={() => setShowStatusModal(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 px-5 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-full text-sm font-medium transition-all cursor-pointer"
           >
-            <AlertCircle className="h-5 w-5" />
+            <AlertCircle className="h-4 w-4" />
             Observações
           </button>
           <button
             onClick={() => { setDefaultModalStatus('rejected'); setShowStatusModal(true); }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 px-5 py-2 border border-red-200 text-red-600 hover:bg-red-50 rounded-full text-sm font-medium transition-all cursor-pointer"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
             Reprovar
           </button>
         </div>
       </div>
 
       {/* Profile Header */}
-      <div className={`bg-zinc-800 rounded-lg p-6 border border-zinc-700 ${getSectionRingClass('dadosPessoais', profile)}`}>
+      <div className={`bg-white rounded-lg p-6 border border-slate-200 ${getSectionRingClass('dadosPessoais', profile)}`}>
         <AdminSectionAlert sectionKey="dadosPessoais" profile={profile} />
         <div className="flex flex-col md:flex-row gap-6">
           {/* Photo */}
           <div className="flex-shrink-0">
-            <div className="w-32 h-32 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-4xl overflow-hidden">
+            <div className="w-32 h-32 rounded-full bg-sky-600 flex items-center justify-center text-white font-bold text-4xl overflow-hidden">
               {profile.image_profile ? (
                 <img
                   src={profile.image_profile}
@@ -442,40 +442,40 @@ export default function TalentoDetalhesPage() {
 
           {/* Basic Info */}
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-white mb-1">
+            <h1 className="text-2xl font-bold text-slate-900 mb-1">
               {`${profile.user_name || ''} ${profile.user_last_name || ''}`.trim() || 'Nome não informado'}
             </h1>
-            <p className="text-lg text-indigo-400 mb-4">
+            <p className="text-lg text-sky-600 mb-4">
               {profile.current_position || 'Cargo não informado'}
               {profile.current_company && (
-                <span className="text-zinc-400"> em {profile.current_company}</span>
+                <span className="text-slate-500"> em {profile.current_company}</span>
               )}
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {profile.user_email && (
-                <div className="flex items-center gap-2 text-zinc-300">
-                  <Mail className="h-4 w-4 text-zinc-500" />
-                  <a href={`mailto:${profile.user_email}`} className="hover:text-indigo-400">
+                <div className="flex items-center gap-2 text-slate-600">
+                  <Mail className="h-4 w-4 text-slate-400" />
+                  <a href={`mailto:${profile.user_email}`} className="hover:text-sky-600">
                     {profile.user_email}
                   </a>
                 </div>
               )}
               {profile.phone_secondary && (
-                <div className="flex items-center gap-2 text-zinc-300">
-                  <Phone className="h-4 w-4 text-zinc-500" />
+                <div className="flex items-center gap-2 text-slate-600">
+                  <Phone className="h-4 w-4 text-slate-400" />
                   {profile.phone_secondary}
                 </div>
               )}
               {(profile.city || profile.state) && (
-                <div className="flex items-center gap-2 text-zinc-300">
-                  <MapPin className="h-4 w-4 text-zinc-500" />
+                <div className="flex items-center gap-2 text-slate-600">
+                  <MapPin className="h-4 w-4 text-slate-400" />
                   {[profile.city, profile.state].filter(Boolean).join(', ')}
                 </div>
               )}
               {profile.experience_years && (
-                <div className="flex items-center gap-2 text-zinc-300">
-                  <Briefcase className="h-4 w-4 text-zinc-500" />
+                <div className="flex items-center gap-2 text-slate-600">
+                  <Briefcase className="h-4 w-4 text-slate-400" />
                   {profile.experience_years} anos de experiência
                 </div>
               )}
@@ -488,7 +488,7 @@ export default function TalentoDetalhesPage() {
                   href={profile.linkedin_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 bg-zinc-700 rounded-lg hover:bg-indigo-600 transition-colors text-zinc-300 hover:text-white"
+                  className="p-2 bg-slate-100 rounded-lg hover:bg-sky-600 transition-colors text-slate-600 hover:text-white"
                   title="LinkedIn"
                 >
                   <Linkedin className="h-5 w-5" />
@@ -499,7 +499,7 @@ export default function TalentoDetalhesPage() {
                   href={profile.github_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 bg-zinc-700 rounded-lg hover:bg-zinc-600 transition-colors text-zinc-300 hover:text-white"
+                  className="p-2 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors text-slate-600 hover:text-slate-900"
                   title="GitHub"
                 >
                   <Github className="h-5 w-5" />
@@ -510,22 +510,57 @@ export default function TalentoDetalhesPage() {
                   href={profile.portfolio_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 bg-zinc-700 rounded-lg hover:bg-zinc-600 transition-colors text-zinc-300 hover:text-white"
+                  className="p-2 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors text-slate-600 hover:text-slate-900"
                   title="Portfólio"
                 >
                   <Globe className="h-5 w-5" />
                 </a>
               )}
             </div>
+
+            {/* Availability Flags */}
+            <div className="flex flex-wrap gap-2 mt-4">
+              <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm ${
+                profile.available_for_work
+                  ? 'bg-slate-100 text-slate-700 border border-slate-300'
+                  : 'bg-slate-50 text-slate-400 border border-slate-200'
+              }`}>
+                {profile.available_for_work ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
+                Disponível
+              </span>
+              <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm ${
+                profile.accepts_remote_work
+                  ? 'bg-slate-100 text-slate-700 border border-slate-300'
+                  : 'bg-slate-50 text-slate-400 border border-slate-200'
+              }`}>
+                {profile.accepts_remote_work ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
+                Remoto
+              </span>
+              <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm ${
+                profile.accepts_relocation
+                  ? 'bg-slate-100 text-slate-700 border border-slate-300'
+                  : 'bg-slate-50 text-slate-400 border border-slate-200'
+              }`}>
+                {profile.accepts_relocation ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
+                Mudança
+              </span>
+              <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm ${
+                profile.can_travel
+                  ? 'bg-slate-100 text-slate-700 border border-slate-300'
+                  : 'bg-slate-50 text-slate-400 border border-slate-200'
+              }`}>
+                {profile.can_travel ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
+                Viagens
+              </span>
+            </div>
           </div>
 
-          {/* Status Tags */}
-          <div className="flex flex-wrap gap-2 md:flex-col md:items-end">
-            {/* Profile Status Badge */}
+          {/* Status Badge */}
+          <div className="flex-shrink-0 md:self-start">
             {(() => {
               const statusInfo = getProfileStatusInfo(profile.profile_status);
               return (
-                <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${statusInfo.bgColor} ${statusInfo.textColor} border ${statusInfo.borderColor}`}>
+                <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium ${statusInfo.bgColor} ${statusInfo.textColor} border ${statusInfo.borderColor}`}>
                   {profile.profile_status === 'approved' ? <CheckCircle className="h-4 w-4" /> :
                    profile.profile_status === 'rejected' ? <X className="h-4 w-4" /> :
                    profile.profile_status === 'awaiting_review' ? <Clock className="h-4 w-4" /> :
@@ -534,38 +569,6 @@ export default function TalentoDetalhesPage() {
                 </span>
               );
             })()}
-            <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm ${
-              profile.available_for_work
-                ? 'bg-green-900/50 text-green-300 border border-green-700'
-                : 'bg-zinc-700 text-zinc-400 border border-zinc-600'
-            }`}>
-              {profile.available_for_work ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
-              Disponível
-            </span>
-            <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm ${
-              profile.accepts_remote_work
-                ? 'bg-blue-900/50 text-blue-300 border border-blue-700'
-                : 'bg-zinc-700 text-zinc-400 border border-zinc-600'
-            }`}>
-              {profile.accepts_remote_work ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
-              Remoto
-            </span>
-            <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm ${
-              profile.accepts_relocation
-                ? 'bg-purple-900/50 text-purple-300 border border-purple-700'
-                : 'bg-zinc-700 text-zinc-400 border border-zinc-600'
-            }`}>
-              {profile.accepts_relocation ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
-              Mudança
-            </span>
-            <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm ${
-              profile.can_travel
-                ? 'bg-amber-900/50 text-amber-300 border border-amber-700'
-                : 'bg-zinc-700 text-zinc-400 border border-zinc-600'
-            }`}>
-              {profile.can_travel ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
-              Viagens
-            </span>
           </div>
         </div>
       </div>
@@ -574,24 +577,24 @@ export default function TalentoDetalhesPage() {
       {profile.profile_observations && (
         <div className={`rounded-lg p-4 border ${
           profile.profile_status === 'rejected'
-            ? 'bg-red-900/30 border-red-500/50'
+            ? 'bg-red-50 border-red-200'
             : profile.profile_status === 'awaiting_review'
-            ? 'bg-green-900/30 border-green-500/50'
-            : 'bg-orange-900/30 border-orange-500/50'
+            ? 'bg-emerald-50 border-emerald-200'
+            : 'bg-orange-50 border-orange-200'
         }`}>
           <div className="flex items-start gap-3">
             {profile.profile_status === 'awaiting_review' ? (
-              <CheckCircle className="h-5 w-5 flex-shrink-0 mt-0.5 text-green-400" />
+              <CheckCircle className="h-5 w-5 flex-shrink-0 mt-0.5 text-emerald-600" />
             ) : (
               <AlertCircle className={`h-5 w-5 flex-shrink-0 mt-0.5 ${
-                profile.profile_status === 'rejected' ? 'text-red-400' : 'text-orange-400'
+                profile.profile_status === 'rejected' ? 'text-red-600' : 'text-orange-600'
               }`} />
             )}
             <div className="flex-1">
               <h3 className={`font-medium ${
-                profile.profile_status === 'rejected' ? 'text-red-300'
-                : profile.profile_status === 'awaiting_review' ? 'text-green-300'
-                : 'text-orange-300'
+                profile.profile_status === 'rejected' ? 'text-red-600'
+                : profile.profile_status === 'awaiting_review' ? 'text-emerald-600'
+                : 'text-orange-600'
               }`}>
                 {profile.profile_status === 'rejected'
                   ? 'Motivo da Reprovação'
@@ -611,7 +614,7 @@ export default function TalentoDetalhesPage() {
                 />
               </div>
               {profile.profile_reviewed_at && (
-                <p className="text-zinc-500 text-xs mt-2">
+                <p className="text-slate-400 text-xs mt-2">
                   Enviado em {new Date(profile.profile_reviewed_at).toLocaleDateString('pt-BR', {
                     day: '2-digit',
                     month: '2-digit',
@@ -639,12 +642,12 @@ export default function TalentoDetalhesPage() {
                 if (total === 0) return null;
 
                 return (
-                  <div className="mt-3 bg-zinc-700/50 rounded-lg p-3">
+                  <div className="mt-3 bg-slate-50 rounded-lg p-3">
                     <div className="flex items-center justify-between text-sm mb-2">
-                      <span className="text-zinc-300 font-medium">Progresso do candidato</span>
-                      <span className="text-zinc-400">{completed} de {total} seções atualizadas</span>
+                      <span className="text-slate-600 font-medium">Progresso do candidato</span>
+                      <span className="text-slate-500">{completed} de {total} seções atualizadas</span>
                     </div>
-                    <div className="w-full bg-zinc-600 rounded-full h-2">
+                    <div className="w-full bg-slate-200 rounded-full h-2">
                       <div
                         className="bg-green-500 h-2 rounded-full transition-all duration-300"
                         style={{ width: `${(completed / total) * 100}%` }}
@@ -656,8 +659,8 @@ export default function TalentoDetalhesPage() {
                           key={key}
                           className={`text-xs px-2 py-1 rounded-full ${
                             !pendingSections.includes(key)
-                              ? 'bg-green-900/50 text-green-300'
-                              : 'bg-orange-900/50 text-orange-300'
+                              ? 'bg-emerald-50 text-emerald-600'
+                              : 'bg-orange-50 text-orange-600'
                           }`}
                         >
                           {!pendingSections.includes(key) ? '✓ ' : '○ '}
@@ -678,40 +681,40 @@ export default function TalentoDetalhesPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Professional Summary */}
           {(profile.professional_summary || parseSectionObservations(profile.profile_observations || '')['profissional']) && (
-            <div className={`bg-zinc-800 rounded-lg p-6 border border-zinc-700 ${getSectionRingClass('profissional', profile)}`}>
+            <div className={`bg-white rounded-lg p-6 border border-slate-200 ${getSectionRingClass('profissional', profile)}`}>
               <AdminSectionAlert sectionKey="profissional" profile={profile} />
-              <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                <User className="h-5 w-5 text-indigo-400" />
+              <h2 className="text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                <User className="h-5 w-5 text-sky-600" />
                 Resumo Profissional
               </h2>
-              <p className="text-zinc-300 whitespace-pre-line">{profile.professional_summary || 'Nenhum resumo cadastrado'}</p>
+              <p className="text-slate-600 whitespace-pre-line">{profile.professional_summary || 'Nenhum resumo cadastrado'}</p>
             </div>
           )}
 
           {/* Experience */}
-          <div className={`bg-zinc-800 rounded-lg p-6 border border-zinc-700 ${getSectionRingClass('experiencia', profile)}`}>
+          <div className={`bg-white rounded-lg p-6 border border-slate-200 ${getSectionRingClass('experiencia', profile)}`}>
             <AdminSectionAlert sectionKey="experiencia" profile={profile} />
-            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <Briefcase className="h-5 w-5 text-indigo-400" />
+            <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+              <Briefcase className="h-5 w-5 text-sky-600" />
               Experiência Profissional
             </h2>
             {experiences.length === 0 ? (
-              <p className="text-zinc-500 text-sm">Nenhuma experiência cadastrada</p>
+              <p className="text-slate-400 text-sm">Nenhuma experiência cadastrada</p>
             ) : (
               <div className="space-y-4">
                 {experiences.map((exp) => (
-                  <div key={exp.id} className="border-l-2 border-indigo-500 pl-4">
-                    <h3 className="font-medium text-white">{exp.position}</h3>
-                    <p className="text-indigo-400 text-sm">{exp.company}</p>
-                    <p className="text-zinc-500 text-xs mt-1">
+                  <div key={exp.id} className="border-l-2 border-sky-400 pl-4">
+                    <h3 className="font-medium text-slate-900">{exp.position}</h3>
+                    <p className="text-sky-600 text-sm">{exp.company}</p>
+                    <p className="text-slate-400 text-xs mt-1">
                       {formatDate(exp.start_date)} - {exp.is_current ? 'Atual' : formatDate(exp.end_date)}
                     </p>
                     {exp.description && (
-                      <p className="text-zinc-400 text-sm mt-2">{exp.description}</p>
+                      <p className="text-slate-500 text-sm mt-2">{exp.description}</p>
                     )}
                     {exp.achievements && (
-                      <p className="text-zinc-400 text-sm mt-1">
-                        <span className="text-zinc-500">Conquistas:</span> {exp.achievements}
+                      <p className="text-slate-500 text-sm mt-1">
+                        <span className="text-slate-400">Conquistas:</span> {exp.achievements}
                       </p>
                     )}
                   </div>
@@ -721,25 +724,25 @@ export default function TalentoDetalhesPage() {
           </div>
 
           {/* Education */}
-          <div className={`bg-zinc-800 rounded-lg p-6 border border-zinc-700 ${getSectionRingClass('formacao', profile)}`}>
+          <div className={`bg-white rounded-lg p-6 border border-slate-200 ${getSectionRingClass('formacao', profile)}`}>
             <AdminSectionAlert sectionKey="formacao" profile={profile} />
-            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <GraduationCap className="h-5 w-5 text-indigo-400" />
+            <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+              <GraduationCap className="h-5 w-5 text-sky-600" />
               Formação Acadêmica
             </h2>
             {educations.length === 0 ? (
-              <p className="text-zinc-500 text-sm">Nenhuma formação cadastrada</p>
+              <p className="text-slate-400 text-sm">Nenhuma formação cadastrada</p>
             ) : (
               <div className="space-y-4">
                 {educations.map((edu) => (
-                  <div key={edu.id} className="border-l-2 border-indigo-500 pl-4">
-                    <h3 className="font-medium text-white">{edu.course}</h3>
-                    <p className="text-indigo-400 text-sm">{edu.institution}</p>
-                    <p className="text-zinc-500 text-xs mt-1">
+                  <div key={edu.id} className="border-l-2 border-sky-400 pl-4">
+                    <h3 className="font-medium text-slate-900">{edu.course}</h3>
+                    <p className="text-sky-600 text-sm">{edu.institution}</p>
+                    <p className="text-slate-400 text-xs mt-1">
                       {getEducationLabel(edu.degree)} | {formatDate(edu.start_date)} - {edu.is_current ? 'Cursando' : formatDate(edu.end_date)}
                     </p>
                     {edu.description && (
-                      <p className="text-zinc-400 text-sm mt-2">{edu.description}</p>
+                      <p className="text-slate-500 text-sm mt-2">{edu.description}</p>
                     )}
                   </div>
                 ))}
@@ -749,9 +752,9 @@ export default function TalentoDetalhesPage() {
 
           {/* Processos Seletivos */}
           {candidateProcesses.length > 0 && (
-            <div className="bg-zinc-800 rounded-lg p-6 border border-zinc-700">
-              <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <ClipboardList className="h-5 w-5 text-indigo-400" />
+            <div className="bg-white rounded-lg p-6 border border-slate-200">
+              <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                <ClipboardList className="h-5 w-5 text-sky-600" />
                 Processos Seletivos ({candidateProcesses.length})
               </h2>
               <div className="space-y-4">
@@ -762,17 +765,17 @@ export default function TalentoDetalhesPage() {
                     <Link
                       key={cp.id}
                       href={`/admin-panel/processos-seletivos/${cp.process}/candidatos/${cp.id}`}
-                      className="block p-4 bg-zinc-700/50 rounded-lg hover:bg-zinc-700 transition-colors group"
+                      className="block p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors group"
                     >
                       <div className="flex items-center justify-between mb-3">
-                        <p className="font-medium text-white truncate">
+                        <p className="font-medium text-slate-900 truncate">
                           {cp.process_title || `Processo #${cp.process}`}
                         </p>
                         <div className="flex items-center gap-2 ml-3">
                           <span className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${statusInfo.bgColor} ${statusInfo.textColor}`}>
                             {statusInfo.label}
                           </span>
-                          <ExternalLink className="w-4 h-4 text-zinc-500 group-hover:text-indigo-400 transition-colors flex-shrink-0" />
+                          <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-sky-600 transition-colors flex-shrink-0" />
                         </div>
                       </div>
                       {stages.length > 0 && (
@@ -784,15 +787,15 @@ export default function TalentoDetalhesPage() {
                                   stage.status === 'completed'
                                     ? 'bg-green-500'
                                     : stage.status === 'current'
-                                    ? 'bg-indigo-500'
-                                    : 'bg-zinc-600'
+                                    ? 'bg-sky-500'
+                                    : 'bg-slate-200'
                                 }`} />
                                 <span className={`text-[10px] mt-1 truncate max-w-full px-0.5 text-center ${
                                   stage.status === 'completed'
-                                    ? 'text-green-400 font-medium'
+                                    ? 'text-emerald-600 font-medium'
                                     : stage.status === 'current'
-                                    ? 'text-indigo-300 font-semibold'
-                                    : 'text-zinc-500'
+                                    ? 'text-sky-500 font-semibold'
+                                    : 'text-slate-400'
                                 }`}>
                                   {stage.status === 'completed' && <CheckCircle className="w-3 h-3 inline mr-0.5 -mt-0.5" />}
                                   {stage.name}
@@ -800,7 +803,7 @@ export default function TalentoDetalhesPage() {
                               </div>
                               {idx < stages.length - 1 && (
                                 <div className={`w-1 h-2 flex-shrink-0 ${
-                                  stage.status === 'completed' ? 'bg-green-700' : 'bg-zinc-600'
+                                  stage.status === 'completed' ? 'bg-emerald-300' : 'bg-slate-200'
                                 }`} />
                               )}
                             </div>
@@ -816,12 +819,12 @@ export default function TalentoDetalhesPage() {
 
           {/* Documentos */}
           {candidateDocs.length > 0 && (
-            <div className="bg-zinc-800 rounded-lg p-6 border border-zinc-700">
-              <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <FileText className="h-5 w-5 text-indigo-400" />
+            <div className="bg-white rounded-lg p-6 border border-slate-200">
+              <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                <FileText className="h-5 w-5 text-sky-600" />
                 Documentos
                 {docsSummary && (
-                  <span className="text-sm font-normal text-zinc-400 ml-2">
+                  <span className="text-sm font-normal text-slate-500 ml-2">
                     {docsSummary.approved} de {docsSummary.required_types} obrigatórios aprovados
                   </span>
                 )}
@@ -830,7 +833,7 @@ export default function TalentoDetalhesPage() {
               {/* Progress bar */}
               {docsSummary && docsSummary.required_types > 0 && (
                 <div className="mb-4">
-                  <div className="w-full bg-zinc-700 rounded-full h-2">
+                  <div className="w-full bg-slate-100 rounded-full h-2">
                     <div
                       className="bg-green-500 h-2 rounded-full transition-all"
                       style={{ width: `${(docsSummary.approved / docsSummary.required_types) * 100}%` }}
@@ -847,23 +850,23 @@ export default function TalentoDetalhesPage() {
 
                   return (
                     <div key={docType.id} className={`p-3 rounded-lg border ${
-                      status === 'approved' ? 'bg-green-900/20 border-green-700/50' :
-                      status === 'rejected' ? 'bg-red-900/20 border-red-700/50' :
-                      status === 'pending' ? 'bg-yellow-900/20 border-yellow-700/50' :
-                      'bg-zinc-700/30 border-zinc-600'
+                      status === 'approved' ? 'bg-emerald-50 border-emerald-200' :
+                      status === 'rejected' ? 'bg-red-50 border-red-200' :
+                      status === 'pending' ? 'bg-amber-50 border-amber-200' :
+                      'bg-slate-100/30 border-slate-300'
                     }`}>
                       <div className="flex items-center justify-between">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="text-white font-medium text-sm">{docType.name}</span>
+                            <span className="text-slate-900 font-medium text-sm">{docType.name}</span>
                             {docType.is_required && (
-                              <span className="text-red-400 text-xs">*</span>
+                              <span className="text-red-600 text-xs">*</span>
                             )}
                             <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${
-                              status === 'approved' ? 'bg-green-900/50 text-green-300' :
-                              status === 'rejected' ? 'bg-red-900/50 text-red-300' :
-                              status === 'pending' ? 'bg-yellow-900/50 text-yellow-300' :
-                              'bg-zinc-700 text-zinc-400'
+                              status === 'approved' ? 'bg-emerald-50 text-emerald-600' :
+                              status === 'rejected' ? 'bg-red-50 text-red-600' :
+                              status === 'pending' ? 'bg-amber-50 text-amber-700' :
+                              'bg-slate-100 text-slate-500'
                             }`}>
                               {status === 'approved' ? 'Aprovado' :
                                status === 'rejected' ? 'Rejeitado' :
@@ -873,13 +876,13 @@ export default function TalentoDetalhesPage() {
                           </div>
                           {doc && (
                             <div className="flex items-center gap-2 mt-1">
-                              <span className="text-xs text-zinc-400">{doc.original_filename}</span>
+                              <span className="text-xs text-slate-500">{doc.original_filename}</span>
                               {doc.file_url && (
                                 <a
                                   href={doc.file_url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-indigo-400 hover:text-indigo-300 text-xs"
+                                  className="text-sky-600 hover:text-sky-500 text-xs"
                                 >
                                   <Download className="h-3 w-3 inline" /> Ver
                                 </a>
@@ -887,7 +890,7 @@ export default function TalentoDetalhesPage() {
                             </div>
                           )}
                           {doc?.observations && (
-                            <p className="text-xs text-zinc-500 mt-1">Obs: {doc.observations}</p>
+                            <p className="text-xs text-slate-400 mt-1">Obs: {doc.observations}</p>
                           )}
                         </div>
 
@@ -901,25 +904,25 @@ export default function TalentoDetalhesPage() {
                                   value={reviewObs}
                                   onChange={(e) => setReviewObs(e.target.value)}
                                   placeholder="Observação (obrigatória p/ rejeição)"
-                                  className="px-2 py-1 bg-zinc-700 border border-zinc-600 rounded text-xs text-white placeholder-zinc-400 w-48"
+                                  className="px-2 py-1 bg-slate-100 border border-slate-300 rounded text-xs text-slate-900 placeholder-slate-400 w-48"
                                 />
                                 <button
                                   onClick={() => handleReviewDocument(doc.id, 'approved')}
-                                  className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs"
+                                  className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs"
                                   title="Aprovar"
                                 >
                                   <Check className="h-3 w-3" />
                                 </button>
                                 <button
                                   onClick={() => handleReviewDocument(doc.id, 'rejected')}
-                                  className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs"
+                                  className="px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs"
                                   title="Rejeitar"
                                 >
                                   <X className="h-3 w-3" />
                                 </button>
                                 <button
                                   onClick={() => { setReviewingDoc(null); setReviewObs(''); }}
-                                  className="text-zinc-400 hover:text-white text-xs"
+                                  className="text-slate-500 hover:text-slate-900 text-xs"
                                 >
                                   Cancelar
                                 </button>
@@ -927,7 +930,7 @@ export default function TalentoDetalhesPage() {
                             ) : (
                               <button
                                 onClick={() => setReviewingDoc(doc.id)}
-                                className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs"
+                                className="px-3 py-1 bg-sky-600 hover:bg-sky-700 text-white rounded text-xs"
                               >
                                 Revisar
                               </button>
@@ -943,36 +946,36 @@ export default function TalentoDetalhesPage() {
           )}
 
           {/* Candidaturas */}
-          <div className="bg-zinc-800 rounded-lg p-6 border border-zinc-700">
-            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <FileText className="h-5 w-5 text-indigo-400" />
+          <div className="bg-white rounded-lg p-6 border border-slate-200">
+            <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+              <FileText className="h-5 w-5 text-sky-600" />
               Candidaturas ({applications.length})
             </h2>
             {applications.length === 0 ? (
-              <p className="text-zinc-500 text-sm">Nenhuma candidatura registrada</p>
+              <p className="text-slate-400 text-sm">Nenhuma candidatura registrada</p>
             ) : (
               <div className="space-y-3">
                 {applications.map((app) => {
                   const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
-                    submitted: { bg: 'bg-amber-900/50', text: 'text-amber-300', label: 'Em análise' },
-                    in_process: { bg: 'bg-blue-900/50', text: 'text-blue-300', label: 'Em processo' },
-                    interview_scheduled: { bg: 'bg-purple-900/50', text: 'text-purple-300', label: 'Entrevista' },
-                    approved: { bg: 'bg-green-900/50', text: 'text-green-300', label: 'Aprovado' },
-                    rejected: { bg: 'bg-red-900/50', text: 'text-red-300', label: 'Reprovado' },
-                    withdrawn: { bg: 'bg-zinc-700', text: 'text-zinc-400', label: 'Retirado' },
+                    submitted: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Em análise' },
+                    in_process: { bg: 'bg-sky-50', text: 'text-sky-700', label: 'Em processo' },
+                    interview_scheduled: { bg: 'bg-violet-50', text: 'text-violet-700', label: 'Entrevista' },
+                    approved: { bg: 'bg-emerald-50', text: 'text-emerald-700', label: 'Aprovado' },
+                    rejected: { bg: 'bg-red-50', text: 'text-red-700', label: 'Reprovado' },
+                    withdrawn: { bg: 'bg-slate-100', text: 'text-slate-500', label: 'Retirado' },
                   };
                   const config = statusConfig[app.status] || statusConfig.submitted;
 
                   return (
-                    <div key={app.id} className="flex items-center justify-between p-3 bg-zinc-700/50 rounded-lg">
+                    <div key={app.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                       <div className="min-w-0 flex-1">
-                        <p className="font-medium text-white truncate">
+                        <p className="font-medium text-slate-900 truncate">
                           {app.job_title || `Vaga #${app.job}`}
                         </p>
                         {app.company_name && (
-                          <p className="text-sm text-zinc-400 truncate">{app.company_name}</p>
+                          <p className="text-sm text-slate-500 truncate">{app.company_name}</p>
                         )}
-                        <p className="text-xs text-zinc-500 mt-1">
+                        <p className="text-xs text-slate-400 mt-1">
                           {new Date(app.applied_at).toLocaleDateString('pt-BR')}
                         </p>
                       </div>
@@ -990,47 +993,47 @@ export default function TalentoDetalhesPage() {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Skills */}
-          <div className={`bg-zinc-800 rounded-lg p-6 border border-zinc-700 ${getSectionRingClass('habilidades', profile)}`}>
+          <div className={`bg-white rounded-lg p-6 border border-slate-200 ${getSectionRingClass('habilidades', profile)}`}>
             <AdminSectionAlert sectionKey="habilidades" profile={profile} />
-            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <Award className="h-5 w-5 text-indigo-400" />
+            <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+              <Award className="h-5 w-5 text-sky-600" />
               Habilidades
             </h2>
             {skills.length === 0 && !profile.skills ? (
-              <p className="text-zinc-500 text-sm">Nenhuma habilidade cadastrada</p>
+              <p className="text-slate-400 text-sm">Nenhuma habilidade cadastrada</p>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {skills.map((skill) => (
                   <span
                     key={skill.id}
-                    className="px-3 py-1 bg-indigo-900/50 text-indigo-300 rounded-full text-sm"
+                    className="px-3 py-1 bg-sky-50 text-sky-500 rounded-full text-sm"
                     title={getSkillLabel(skill.level)}
                   >
                     {skill.skill_name}
                   </span>
                 ))}
                 {profile.skills && skills.length === 0 && (
-                  <p className="text-zinc-300 text-sm">{profile.skills}</p>
+                  <p className="text-slate-600 text-sm">{profile.skills}</p>
                 )}
               </div>
             )}
           </div>
 
           {/* Languages */}
-          <div className={`bg-zinc-800 rounded-lg p-6 border border-zinc-700 ${getSectionRingClass('idiomas', profile)}`}>
+          <div className={`bg-white rounded-lg p-6 border border-slate-200 ${getSectionRingClass('idiomas', profile)}`}>
             <AdminSectionAlert sectionKey="idiomas" profile={profile} />
-            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <Languages className="h-5 w-5 text-indigo-400" />
+            <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+              <Languages className="h-5 w-5 text-sky-600" />
               Idiomas
             </h2>
             {languages.length === 0 ? (
-              <p className="text-zinc-500 text-sm">Nenhum idioma cadastrado</p>
+              <p className="text-slate-400 text-sm">Nenhum idioma cadastrado</p>
             ) : (
               <div className="space-y-3">
                 {languages.map((lang) => (
                   <div key={lang.id} className="flex justify-between items-center">
-                    <span className="text-zinc-300">{lang.language}</span>
-                    <span className="text-sm text-indigo-400">{getLanguageLabel(lang.proficiency)}</span>
+                    <span className="text-slate-600">{lang.language}</span>
+                    <span className="text-sm text-sky-600">{getLanguageLabel(lang.proficiency)}</span>
                   </div>
                 ))}
               </div>
@@ -1038,28 +1041,28 @@ export default function TalentoDetalhesPage() {
           </div>
 
           {/* Additional Info */}
-          <div className="bg-zinc-800 rounded-lg p-6 border border-zinc-700">
-            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-indigo-400" />
+          <div className="bg-white rounded-lg p-6 border border-slate-200">
+            <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-sky-600" />
               Informações Adicionais
             </h2>
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
-                <span className="text-zinc-500">Escolaridade</span>
-                <span className="text-zinc-300">{getEducationLabel(profile.education_level)}</span>
+                <span className="text-slate-400">Escolaridade</span>
+                <span className="text-slate-600">{getEducationLabel(profile.education_level)}</span>
               </div>
               {(profile.desired_salary_min || profile.desired_salary_max) && (
                 <div className="flex justify-between">
-                  <span className="text-zinc-500">Pretensão salarial</span>
-                  <span className="text-zinc-300">
+                  <span className="text-slate-400">Pretensão salarial</span>
+                  <span className="text-slate-600">
                     {formatCurrency(profile.desired_salary_min)} - {formatCurrency(profile.desired_salary_max)}
                   </span>
                 </div>
               )}
               {profile.preferred_work_shift && (
                 <div className="flex justify-between">
-                  <span className="text-zinc-500">Turno preferido</span>
-                  <span className="text-zinc-300">
+                  <span className="text-slate-400">Turno preferido</span>
+                  <span className="text-slate-600">
                     {profile.preferred_work_shift === 'morning' ? 'Manhã' :
                      profile.preferred_work_shift === 'afternoon' ? 'Tarde' :
                      profile.preferred_work_shift === 'night' ? 'Noite' : 'Flexível'}
@@ -1067,24 +1070,24 @@ export default function TalentoDetalhesPage() {
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-zinc-500">Possui veículo</span>
-                <span className="text-zinc-300">{profile.has_vehicle ? 'Sim' : 'Não'}</span>
+                <span className="text-slate-400">Possui veículo</span>
+                <span className="text-slate-600">{profile.has_vehicle ? 'Sim' : 'Não'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-zinc-500">Possui CNH</span>
-                <span className="text-zinc-300">{profile.has_cnh ? 'Sim' : 'Não'}</span>
+                <span className="text-slate-400">Possui CNH</span>
+                <span className="text-slate-600">{profile.has_cnh ? 'Sim' : 'Não'}</span>
               </div>
             </div>
           </div>
 
           {/* Certifications */}
           {profile.certifications && (
-            <div className="bg-zinc-800 rounded-lg p-6 border border-zinc-700">
-              <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                <Award className="h-5 w-5 text-indigo-400" />
+            <div className="bg-white rounded-lg p-6 border border-slate-200">
+              <h2 className="text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                <Award className="h-5 w-5 text-sky-600" />
                 Certificações
               </h2>
-              <p className="text-zinc-300 text-sm whitespace-pre-line">{profile.certifications}</p>
+              <p className="text-slate-600 text-sm whitespace-pre-line">{profile.certifications}</p>
             </div>
           )}
         </div>

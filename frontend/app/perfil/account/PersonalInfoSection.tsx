@@ -39,16 +39,12 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
 
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
-  const [states, setStates] = useState<State[]>([]);
+  const [states] = useState<State[]>(locationService.getStates());
   const [cities, setCities] = useState<City[]>([]);
   const [selectedStateId, setSelectedStateId] = useState<number | null>(null);
-  const [loadingStates, setLoadingStates] = useState(false);
   const [loadingCities, setLoadingCities] = useState(false);
+  const [loadingCep, setLoadingCep] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    loadStates();
-  }, []);
 
   useEffect(() => {
     if (profile) {
@@ -111,18 +107,6 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
       setFormData(prev => ({ ...prev, city: '' }));
     }
   }, [selectedStateId]);
-
-  const loadStates = async () => {
-    try {
-      setLoadingStates(true);
-      const statesData = await locationService.getStates();
-      setStates(statesData);
-    } catch (error) {
-      console.error('Erro ao carregar estados:', error);
-    } finally {
-      setLoadingStates(false);
-    }
-  };
 
   const loadCities = async (stateId: number) => {
     try {
@@ -221,12 +205,12 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
 
     if (file) {
       if (!file.type.startsWith('image/')) {
-        alert('Por favor, selecione apenas arquivos de imagem.');
+        toast.error('Por favor, selecione apenas arquivos de imagem.');
         return;
       }
 
       if (file.size > 5 * 1024 * 1024) {
-        alert('A imagem deve ter no máximo 5MB.');
+        toast.error('A imagem deve ter no máximo 5MB.');
         return;
       }
 
@@ -298,12 +282,25 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
     const cleanCep = cep.replace(/\D/g, '');
     if (cleanCep.length !== 8) return;
 
+    setLoadingCep(true);
     try {
       const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
       const data = await response.json();
       if (data.erro) {
         toast.error('CEP não encontrado');
         return;
+      }
+
+      // Buscar cidades em paralelo se o estado mudou
+      const stateObj = data.uf ? locationService.getStateByUF(data.uf) : null;
+      if (stateObj) {
+        setSelectedStateId(stateObj.id);
+        // Busca cidades imediatamente (não espera o useEffect)
+        setLoadingCities(true);
+        locationService.getCitiesByState(stateObj.id).then(citiesData => {
+          setCities(citiesData);
+          setLoadingCities(false);
+        });
       }
 
       setFormData(prev => ({
@@ -313,15 +310,10 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
         city: data.localidade || prev.city,
         state: data.uf || prev.state,
       }));
-
-      if (data.uf && states.length > 0) {
-        const stateObj = states.find(s => s.sigla === data.uf);
-        if (stateObj) {
-          setSelectedStateId(stateObj.id);
-        }
-      }
     } catch (error) {
       console.error('Erro ao buscar CEP:', error);
+    } finally {
+      setLoadingCep(false);
     }
   };
 
@@ -536,17 +528,26 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
             <label htmlFor="zip_code" className="block text-sm font-medium text-zinc-700 mb-2">
               CEP *
             </label>
-            <input
-              type="text"
-              id="zip_code"
-              name="zip_code"
-              value={formData.zip_code || ''}
-              onChange={handleChange}
-              placeholder="00000-000"
-              maxLength={9}
-              className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.zip_code ? 'border-red-500' : 'border-slate-400'}`}
-            />
-            <p className="text-xs mt-1 text-slate-600">Digite o CEP para preencher automaticamente</p>
+            <div className="relative">
+              <input
+                type="text"
+                id="zip_code"
+                name="zip_code"
+                value={formData.zip_code || ''}
+                onChange={handleChange}
+                placeholder="00000-000"
+                maxLength={9}
+                className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.zip_code ? 'border-red-500' : 'border-slate-400'}`}
+              />
+              {loadingCep && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
+            </div>
+            <p className="text-xs mt-1 text-slate-600">
+              {loadingCep ? 'Buscando endereço...' : 'Digite o CEP para preencher automaticamente'}
+            </p>
             {formErrors.zip_code && <p className="text-xs text-red-500 mt-1">{formErrors.zip_code}</p>}
           </div>
         </div>
@@ -563,10 +564,9 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
               value={formData.state}
               onChange={handleStateChange}
               className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.state ? 'border-red-500' : 'border-slate-400'}`}
-              disabled={loadingStates}
             >
               <option value="">
-                {loadingStates ? 'Carregando...' : 'Selecione um estado'}
+                Selecione um estado
               </option>
               {states.map((state) => (
                 <option key={state.id} value={state.sigla}>

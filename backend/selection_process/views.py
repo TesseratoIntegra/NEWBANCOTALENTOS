@@ -277,13 +277,31 @@ class SelectionProcessViewSet(viewsets.ModelViewSet):
                 user__email__icontains=search
             )
 
-        # Serializar de forma simples
+        # Filtro por vaga
+        applied_to_job = request.query_params.get('applied_to_job', '')
+        if applied_to_job:
+            candidates = candidates.filter(
+                user__applications__job_id=int(applied_to_job)
+            ).distinct()
+
+        # Serializar com dados ampliados
         data = [{
             'id': c.id,
             'name': c.user.name,
             'email': c.user.email,
             'current_position': c.current_position,
-            'image_profile': c.image_profile.url if c.image_profile else None
+            'image_profile': request.build_absolute_uri(c.image_profile.url) if c.image_profile else None,
+            'city': c.city,
+            'state': c.state,
+            'experience_years': c.experience_years,
+            'applications_summary': [
+                {
+                    'job_id': app.job.id,
+                    'job_title': app.job.title,
+                    'status': app.status,
+                }
+                for app in c.user.applications.select_related('job').order_by('-applied_at')[:5]
+            ]
         } for c in candidates[:50]]  # Limitar a 50
 
         return Response(data)

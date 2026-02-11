@@ -7,6 +7,8 @@ import companyService from '@/services/companyService';
 import { Job, Company } from '@/types/index';
 import { TrashIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import * as XLSX from 'xlsx';
+import toast from 'react-hot-toast';
+import { confirmDialog } from '@/lib/confirmDialog';
 
 export default function JobsListPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -38,7 +40,7 @@ export default function JobsListPage() {
   }, []);
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Tem certeza que deseja excluir esta vaga?')) {
+    if (!(await confirmDialog('Tem certeza que deseja excluir esta vaga?'))) {
       return;
     }
 
@@ -46,7 +48,7 @@ export default function JobsListPage() {
       await adminJobService.deleteJob(id);
       setJobs(Array.isArray(jobs) ? jobs.filter(job => job.id !== id) : []);
     } catch (err) {
-      alert('Erro ao excluir vaga');
+      toast.error('Erro ao excluir vaga');
       console.error(err);
     }
   };
@@ -88,7 +90,7 @@ export default function JobsListPage() {
 
   const handleDownloadExcel = () => {
     if (filteredJobs.length === 0) {
-      alert('Não há vagas para exportar');
+      toast.error('Não há vagas para exportar');
       return;
     }
 
@@ -130,7 +132,7 @@ export default function JobsListPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-64">
-        <div className="text-zinc-300">Carregando vagas...</div>
+        <div className="text-slate-600">Carregando vagas...</div>
       </div>
     );
   }
@@ -138,7 +140,7 @@ export default function JobsListPage() {
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-64">
-        <div className="text-red-400">{error}</div>
+        <div className="text-red-600">{error}</div>
       </div>
     );
   }
@@ -147,8 +149,8 @@ export default function JobsListPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-100">Gerenciar Vagas</h1>
-          <p className="text-zinc-400 mt-1">
+          <h1 className="text-2xl font-bold text-slate-800">Gerenciar Vagas</h1>
+          <p className="text-slate-500 mt-1">
             {filteredJobs.length} vaga(s) encontrada(s)
           </p>
         </div>
@@ -156,7 +158,7 @@ export default function JobsListPage() {
           {filteredJobs.length > 0 && (
             <button
               onClick={handleDownloadExcel}
-              className="flex items-center space-x-2 px-4 py-2 bg-green-600/90 hover:bg-green-700 text-white rounded-md font-medium transition-colors cursor-pointer"
+              className="flex items-center space-x-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md font-medium transition-colors cursor-pointer"
             >
               <ArrowDownTrayIcon className="h-4 w-4" />
               <span>Baixar Excel</span>
@@ -164,7 +166,7 @@ export default function JobsListPage() {
           )}
           <Link
             href="/admin-panel/jobs/create"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md font-medium transition-colors"
+            className="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-md font-medium transition-colors"
           >
             + Nova Vaga
           </Link>
@@ -177,8 +179,8 @@ export default function JobsListPage() {
           onClick={() => setFilter('all')}
           className={`px-4 py-2 rounded-md font-medium transition-colors ${
             filter === 'all'
-              ? 'bg-indigo-600 text-white'
-              : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
+              ? 'bg-sky-600 text-white'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
           }`}
         >
           Todas ({jobs.length})
@@ -188,7 +190,7 @@ export default function JobsListPage() {
           className={`px-4 py-2 rounded-md font-medium transition-colors ${
             filter === 'active'
               ? 'bg-green-600 text-white'
-              : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
           }`}
         >
           Ativas ({Array.isArray(jobs) ? jobs.filter(j => j.is_active).length : 0})
@@ -198,7 +200,7 @@ export default function JobsListPage() {
           className={`px-4 py-2 rounded-md font-medium transition-colors ${
             filter === 'inactive'
               ? 'bg-red-600 text-white'
-              : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
           }`}
         >
           Inativas ({Array.isArray(jobs) ? jobs.filter(j => !j.is_active).length : 0})
@@ -208,83 +210,83 @@ export default function JobsListPage() {
       {/* Lista de Vagas */}
       {filteredJobs.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-zinc-400">Nenhuma vaga encontrada</p>
+          <p className="text-slate-500">Nenhuma vaga encontrada</p>
           <Link
             href="/admin-panel/jobs/create"
-            className="text-indigo-400 hover:text-indigo-300 mt-2 inline-block"
+            className="text-sky-600 hover:text-sky-500 mt-2 inline-block"
           >
             Criar primeira vaga →
           </Link>
         </div>
       ) : (
-        <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-md border border-zinc-700 overflow-hidden">
+        <div className="bg-white border border-slate-200 shadow-sm rounded-md border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-zinc-700">
+              <thead className="bg-slate-100">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">
                     Título
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">
                     Empresa
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">
                     Localização
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">
                     Tipo
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">
                     Modelo
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">
                     Criada em
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">
                     Deletar
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-700">
+              <tbody className="divide-y divide-slate-200">
                 {filteredJobs.map((job) => (
-                  <tr key={job.id} className="hover:bg-zinc-800 cursor-pointer" onClick={() => window.location.href = `/admin-panel/jobs/${job.id}`}>
+                  <tr key={job.id} className="hover:bg-white cursor-pointer" onClick={() => window.location.href = `/admin-panel/jobs/${job.id}`}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <div className="text-sm font-medium text-zinc-100">
+                        <div className="text-sm font-medium text-slate-800">
                           {job.title}
                         </div>
-                        <div className="text-sm text-zinc-400 truncate max-w-xs">
+                        <div className="text-sm text-slate-500 truncate max-w-xs">
                           {job.description}
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-300">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
                       {getCompanyName(job.company)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-300">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
                       {job.location}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-300">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
                       {getJobTypeLabel(job.job_type)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-300">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
                       {getTypeModelsLabel(job.type_models)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
                         className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           job.is_active
-                            ? 'bg-green-900 text-green-300'
-                            : 'bg-red-900 text-red-300'
+                            ? 'bg-emerald-50 text-emerald-700'
+                            : 'bg-red-50 text-red-700'
                         }`}
                       >
                         {job.is_active ? 'Ativa' : 'Inativa'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-300">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
                       {formatDate(job.created_at)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -294,7 +296,7 @@ export default function JobsListPage() {
                             e.stopPropagation();
                             handleDelete(job.id);
                           }}
-                          className="text-red-400 hover:text-red-300 cursor-pointer"
+                          className="text-red-600 hover:text-red-700 cursor-pointer"
                           title="Excluir"
                         >
                           <TrashIcon className="h-5 w-5" />

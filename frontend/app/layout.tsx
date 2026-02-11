@@ -5,6 +5,7 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from 'react-hot-toast';
 import AuthInterceptorProvider from "@/components/AuthProvider";
+import { ThemeProvider } from 'next-themes';
 
 const QuicksandText = Quicksand({
   variable: "--font-quicksand",
@@ -27,36 +28,38 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" data-theme='dark'>
+    <html lang="pt-BR" suppressHydrationWarning>
       <body className={`${QuicksandText.variable} ${InterText.variable} antialiased`}>
-        <AuthInterceptorProvider>
-          <AuthProvider>
-            {children}
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  background: '#27272a',
-                  color: '#ffffff',
-                  border: '1px solid #3f3f46',
-                },
-                success: {
-                  iconTheme: {
-                    primary: '#10b981',
-                    secondary: '#ffffff',
+        <ThemeProvider attribute="data-theme" defaultTheme="light" enableSystem={false}>
+          <AuthInterceptorProvider>
+            <AuthProvider>
+              {children}
+              <Toaster
+                position="top-right"
+                toastOptions={{
+                  duration: 4000,
+                  style: {
+                    background: '#ffffff',
+                    color: '#0f172a',
+                    border: '1px solid #e2e8f0',
                   },
-                },
-                error: {
-                  iconTheme: {
-                    primary: '#ef4444',
-                    secondary: '#ffffff',
+                  success: {
+                    iconTheme: {
+                      primary: '#10b981',
+                      secondary: '#ffffff',
+                    },
                   },
-                },
-              }}
-            />
-          </AuthProvider>
-        </AuthInterceptorProvider>
+                  error: {
+                    iconTheme: {
+                      primary: '#ef4444',
+                      secondary: '#ffffff',
+                    },
+                  },
+                }}
+              />
+            </AuthProvider>
+          </AuthInterceptorProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

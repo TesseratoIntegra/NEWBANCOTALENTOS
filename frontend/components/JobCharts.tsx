@@ -29,8 +29,8 @@ export default function JobCharts({ jobs }: JobChartsProps) {
     if (existing) {
       existing.count++;
     } else {
-      acc.push({ 
-        type, 
+      acc.push({
+        type,
         count: 1,
         label: getJobTypeLabel(type)
       });
@@ -45,8 +45,8 @@ export default function JobCharts({ jobs }: JobChartsProps) {
     if (existing) {
       existing.count++;
     } else {
-      acc.push({ 
-        type, 
+      acc.push({
+        type,
         count: 1,
         label: getTypeModelsLabel(type)
       });
@@ -93,7 +93,7 @@ export default function JobCharts({ jobs }: JobChartsProps) {
     .sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime());
 
   // Cores para os gráficos
-  const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+  const COLORS = ['#0284c7', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
   function getJobTypeLabel(type: string) {
     const labels = {
@@ -128,10 +128,10 @@ export default function JobCharts({ jobs }: JobChartsProps) {
   const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-zinc-800 border border-zinc-600 rounded-md p-3 shadow-lg">
-          <p className="text-zinc-200 font-medium">{label}</p>
+        <div className="bg-white border border-slate-200 rounded-md p-3 shadow-lg">
+          <p className="text-slate-800 font-medium">{label}</p>
           {payload.map((entry, index: number) => (
-            <p key={index} className="text-zinc-300" style={{ color: entry.color }}>
+            <p key={index} className="text-slate-600" style={{ color: entry.color }}>
               {entry.name}: {entry.value}
             </p>
           ))}
@@ -143,13 +143,13 @@ export default function JobCharts({ jobs }: JobChartsProps) {
 
   return (
     <div className="space-y-8">
-      <h2 className="text-2xl font-bold text-zinc-100 mb-6">Análise de Dados</h2>
-      
+      <h2 className="text-2xl font-bold text-slate-900 mb-6">Análise de Dados</h2>
+
       {/* Primeira linha de gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Gráfico de Pizza - Tipos de Contrato */}
-        <div className="bg-zinc-800 rounded-md p-6 border border-zinc-700">
-          <h3 className="text-lg font-semibold text-zinc-100 mb-4">
+        <div className="bg-white rounded-lg p-6 border border-slate-200 shadow-sm">
+          <h3 className="text-lg font-semibold text-slate-800 mb-4">
             Distribuição por Tipo de Contrato
           </h3>
           <ResponsiveContainer width="100%" height={300}>
@@ -174,24 +174,24 @@ export default function JobCharts({ jobs }: JobChartsProps) {
         </div>
 
         {/* Gráfico de Barras - Modalidades */}
-        <div className="bg-zinc-800 rounded-md p-6 border border-zinc-700">
-          <h3 className="text-lg font-semibold text-zinc-100 mb-4">
+        <div className="bg-white rounded-lg p-6 border border-slate-200 shadow-sm">
+          <h3 className="text-lg font-semibold text-slate-800 mb-4">
             Vagas por Modalidade
           </h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={typeModelsData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis 
-                dataKey="label" 
-                tick={{ fill: '#d1d5db' }}
-                axisLine={{ stroke: '#6b7280' }}
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis
+                dataKey="label"
+                tick={{ fill: '#475569' }}
+                axisLine={{ stroke: '#cbd5e1' }}
               />
-              <YAxis 
-                tick={{ fill: '#d1d5db' }}
-                axisLine={{ stroke: '#6b7280' }}
+              <YAxis
+                tick={{ fill: '#475569' }}
+                axisLine={{ stroke: '#cbd5e1' }}
               />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="count" fill="#6366f1" />
+              <Bar dataKey="count" fill="#0284c7" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -200,23 +200,23 @@ export default function JobCharts({ jobs }: JobChartsProps) {
       {/* Segunda linha de gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Gráfico de Barras Horizontais - Localizações */}
-        <div className="bg-zinc-800 rounded-md p-6 border border-zinc-700">
-          <h3 className="text-lg font-semibold text-zinc-100 mb-4">
+        <div className="bg-white rounded-lg p-6 border border-slate-200 shadow-sm">
+          <h3 className="text-lg font-semibold text-slate-800 mb-4">
             Top 10 Localizações
           </h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={locationData} layout="horizontal">
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis 
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis
                 type="number"
-                tick={{ fill: '#d1d5db' }}
-                axisLine={{ stroke: '#6b7280' }}
+                tick={{ fill: '#475569' }}
+                axisLine={{ stroke: '#cbd5e1' }}
               />
-              <YAxis 
+              <YAxis
                 type="category"
-                dataKey="location" 
-                tick={{ fill: '#d1d5db', fontSize: 12 }}
-                axisLine={{ stroke: '#6b7280' }}
+                dataKey="location"
+                tick={{ fill: '#475569', fontSize: 12 }}
+                axisLine={{ stroke: '#cbd5e1' }}
                 width={100}
               />
               <Tooltip content={<CustomTooltip />} />
@@ -226,42 +226,42 @@ export default function JobCharts({ jobs }: JobChartsProps) {
         </div>
 
         {/* Gráfico de Linha - Evolução temporal */}
-        <div className="bg-zinc-800 rounded-md p-6 border border-zinc-700">
-          <h3 className="text-lg font-semibold text-zinc-100 mb-4">
+        <div className="bg-white rounded-lg p-6 border border-slate-200 shadow-sm">
+          <h3 className="text-lg font-semibold text-slate-800 mb-4">
             Evolução das Vagas por Mês
           </h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={monthlyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis 
-                dataKey="month" 
-                tick={{ fill: '#d1d5db' }}
-                axisLine={{ stroke: '#6b7280' }}
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis
+                dataKey="month"
+                tick={{ fill: '#475569' }}
+                axisLine={{ stroke: '#cbd5e1' }}
               />
-              <YAxis 
-                tick={{ fill: '#d1d5db' }}
-                axisLine={{ stroke: '#6b7280' }}
+              <YAxis
+                tick={{ fill: '#475569' }}
+                axisLine={{ stroke: '#cbd5e1' }}
               />
               <Tooltip content={<CustomTooltip />} />
               <Legend />
-              <Line 
-                type="monotone" 
-                dataKey="total" 
-                stroke="#6366f1" 
+              <Line
+                type="monotone"
+                dataKey="total"
+                stroke="#0284c7"
                 strokeWidth={2}
                 name="Total"
               />
-              <Line 
-                type="monotone" 
-                dataKey="active" 
-                stroke="#10b981" 
+              <Line
+                type="monotone"
+                dataKey="active"
+                stroke="#10b981"
                 strokeWidth={2}
                 name="Ativas"
               />
-              <Line 
-                type="monotone" 
-                dataKey="inactive" 
-                stroke="#ef4444" 
+              <Line
+                type="monotone"
+                dataKey="inactive"
+                stroke="#ef4444"
                 strokeWidth={2}
                 name="Inativas"
               />
@@ -272,41 +272,41 @@ export default function JobCharts({ jobs }: JobChartsProps) {
 
       {/* Estatísticas resumidas */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-zinc-800 rounded-md p-4 border border-zinc-700 text-center">
-          <h4 className="text-sm font-medium text-zinc-400">Média por Localização</h4>
-          <p className="text-2xl font-bold text-zinc-100">
+        <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm text-center">
+          <h4 className="text-sm font-medium text-slate-500">Média por Localização</h4>
+          <p className="text-2xl font-bold text-slate-800">
             {locationData.length > 0 ? (jobs.length / locationData.length).toFixed(1) : '0'}
           </p>
         </div>
-        
-        <div className="bg-zinc-800 rounded-md p-4 border border-zinc-700 text-center">
-          <h4 className="text-sm font-medium text-zinc-400">Modalidade Mais Popular</h4>
-          <p className="text-lg font-bold text-zinc-100">
-            {typeModelsData.length > 0 
-              ? typeModelsData.reduce((prev, current) => 
+
+        <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm text-center">
+          <h4 className="text-sm font-medium text-slate-500">Modalidade Mais Popular</h4>
+          <p className="text-lg font-bold text-slate-800">
+            {typeModelsData.length > 0
+              ? typeModelsData.reduce((prev, current) =>
                   prev.count > current.count ? prev : current
                 ).label
               : 'N/A'
             }
           </p>
         </div>
-        
-        <div className="bg-zinc-800 rounded-md p-4 border border-zinc-700 text-center">
-          <h4 className="text-sm font-medium text-zinc-400">Tipo Mais Comum</h4>
-          <p className="text-lg font-bold text-zinc-100">
-            {jobTypeData.length > 0 
-              ? jobTypeData.reduce((prev, current) => 
+
+        <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm text-center">
+          <h4 className="text-sm font-medium text-slate-500">Tipo Mais Comum</h4>
+          <p className="text-lg font-bold text-slate-800">
+            {jobTypeData.length > 0
+              ? jobTypeData.reduce((prev, current) =>
                   prev.count > current.count ? prev : current
                 ).label
               : 'N/A'
             }
           </p>
         </div>
-        
-        <div className="bg-zinc-800 rounded-md p-4 border border-zinc-700 text-center">
-          <h4 className="text-sm font-medium text-zinc-400">Taxa de Ativação</h4>
-          <p className="text-2xl font-bold text-zinc-100">
-            {jobs.length > 0 
+
+        <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm text-center">
+          <h4 className="text-sm font-medium text-slate-500">Taxa de Ativação</h4>
+          <p className="text-2xl font-bold text-slate-800">
+            {jobs.length > 0
               ? ((jobs.filter(job => job.is_active).length / jobs.length) * 100).toFixed(1)
               : '0'
             }%

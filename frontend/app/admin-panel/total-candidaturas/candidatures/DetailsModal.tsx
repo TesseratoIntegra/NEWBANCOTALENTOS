@@ -58,22 +58,22 @@ function DetailsModal({ candidate_profile_id, onClose }: ModalProps) {
 	if (!candidate_profile_id) return null;
 
 	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-			<div className="bg-zinc-900 rounded-lg p-6 w-full max-w-md relative">
+		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+			<div className="bg-slate-50 rounded-lg p-6 w-full max-w-md relative">
 				<button
 					onClick={onClose}
-					className="absolute top-2 right-4 text-zinc-400 hover:text-zinc-100 text-3xl cursor-pointer"
+					className="absolute top-2 right-4 text-slate-500 hover:text-slate-800 text-3xl cursor-pointer"
 					aria-label="Fechar"
 				>
 					&times;
 				</button>
-				<h2 className="text-2xl font-bold text-zinc-100 mb-4">Detalhes da Candidatura</h2>
+				<h2 className="text-2xl font-bold text-slate-800 mb-4">Detalhes da Candidatura</h2>
 				{loading ? (
-					<div className="text-zinc-300">Carregando...</div>
+					<div className="text-slate-600">Carregando...</div>
 				) : error ? (
-					<div className="text-red-400">{error}</div>
+					<div className="text-red-600">{error}</div>
 				) : profile ? (
-					<div className="space-y-2 text-zinc-300 text-sm">
+					<div className="space-y-2 text-slate-600 text-sm">
 						<div><strong>Nome:</strong> {profile.user_name}</div>
 						<div><strong>CPF:</strong> {profile.cpf}</div>
 						<div><strong>Email:</strong> {profile.user_email}</div>

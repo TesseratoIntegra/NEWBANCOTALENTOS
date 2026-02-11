@@ -146,6 +146,7 @@ export interface CandidateProfile {
   }>;
   // Campos do processo seletivo de perfil
   profile_status?: 'pending' | 'awaiting_review' | 'approved' | 'rejected' | 'changes_requested';
+  pipeline_status?: string;
   profile_observations?: string;
   pending_observation_sections?: string[];
   profile_reviewed_at?: string;
@@ -430,6 +431,14 @@ export interface AvailableCandidate {
   email: string;
   current_position?: string;
   image_profile?: string;
+  city?: string;
+  state?: string;
+  experience_years?: number;
+  applications_summary?: Array<{
+    job_id: number;
+    job_title: string;
+    status: string;
+  }>;
 }
 
 // Create/Update types
@@ -747,6 +756,24 @@ export type AdmissionDataCreate = Omit<AdmissionData,
   'filled_by' | 'filled_by_name' | 'protheus_response' | 'sent_at' |
   'is_active' | 'created_at' | 'updated_at'
 >;
+
+// ============================================
+// NOTIFICATION TYPES
+// ============================================
+
+export interface CandidateNotification {
+  type: string;
+  title: string;
+  message: string;
+  link: string;
+  icon: string;
+  count?: number;
+}
+
+export interface CandidateNotificationsResponse {
+  count: number;
+  notifications: CandidateNotification[];
+}
 
 export interface AdmissionPrefill {
   nome: string;

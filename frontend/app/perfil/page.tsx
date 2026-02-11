@@ -8,6 +8,7 @@ import candidateService from '@/services/candidateService';
 import { CandidateProfile, CandidateEducation, CandidateExperience, CandidateSkill, CandidateLanguage, CandidateInProcess } from '@/types';
 import selectionProcessService from '@/services/selectionProcessService';
 import { toast } from 'react-hot-toast';
+import { confirmDialog } from '@/lib/confirmDialog';
 import Navbar from '@/components/Navbar';
 import LoadChiap from '@/components/LoadChiap';
 import * as Icon from 'react-bootstrap-icons';
@@ -284,7 +285,7 @@ export default function ProfileViewPage() {
   };
 
   const handleDeleteExperience = async (id: number) => {
-    if (!confirm('Tem certeza que deseja excluir esta experiência?')) return;
+    if (!(await confirmDialog('Tem certeza que deseja excluir esta experiência?'))) return;
     try {
       await candidateService.deleteCandidateExperience(id);
       setExperiences(prev => prev.filter(e => e.id !== id));
@@ -295,7 +296,7 @@ export default function ProfileViewPage() {
   };
 
   const handleDeleteEducation = async (id: number) => {
-    if (!confirm('Tem certeza que deseja excluir esta formação?')) return;
+    if (!(await confirmDialog('Tem certeza que deseja excluir esta formação?'))) return;
     try {
       await candidateService.deleteCandidateEducation(id);
       setEducations(prev => prev.filter(e => e.id !== id));
@@ -306,7 +307,7 @@ export default function ProfileViewPage() {
   };
 
   const handleDeleteSkill = async (id: number) => {
-    if (!confirm('Tem certeza que deseja excluir esta habilidade?')) return;
+    if (!(await confirmDialog('Tem certeza que deseja excluir esta habilidade?'))) return;
     try {
       await candidateService.deleteCandidateSkill(id);
       setSkills(prev => prev.filter(s => s.id !== id));
@@ -317,7 +318,7 @@ export default function ProfileViewPage() {
   };
 
   const handleDeleteLanguage = async (id: number) => {
-    if (!confirm('Tem certeza que deseja excluir este idioma?')) return;
+    if (!(await confirmDialog('Tem certeza que deseja excluir este idioma?'))) return;
     try {
       await candidateService.deleteCandidateLanguage(id);
       setLanguages(prev => prev.filter(l => l.id !== id));

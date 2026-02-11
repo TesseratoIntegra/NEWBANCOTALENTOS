@@ -29,11 +29,11 @@ interface FieldDef {
 }
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  draft: { label: 'Rascunho', color: 'bg-yellow-900 text-yellow-300' },
-  completed: { label: 'Preenchido', color: 'bg-green-900 text-green-300' },
-  sent: { label: 'Enviado ao Protheus', color: 'bg-blue-900 text-blue-300' },
-  error: { label: 'Erro no Envio', color: 'bg-red-900 text-red-300' },
-  confirmed: { label: 'Confirmado', color: 'bg-emerald-900 text-emerald-300' },
+  draft: { label: 'Rascunho', color: 'bg-amber-50 text-amber-700 border border-amber-200' },
+  completed: { label: 'Preenchido', color: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
+  sent: { label: 'Enviado ao Protheus', color: 'bg-sky-50 text-sky-700 border border-sky-200' },
+  error: { label: 'Erro no Envio', color: 'bg-red-50 text-red-700 border border-red-200' },
+  confirmed: { label: 'Confirmado', color: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
 };
 
 // ============================================
@@ -457,15 +457,15 @@ export default function AdmissaoPage() {
 
     return (
       <div key={field.key} className="space-y-1">
-        <label className="block text-sm font-medium text-zinc-300">
+        <label className="block text-sm font-medium text-slate-600">
           {field.label}
           {isPrefilled && (
-            <span className="ml-2 px-2 py-0.5 text-xs rounded bg-indigo-900 text-indigo-300">
+            <span className="ml-2 px-2 py-0.5 text-xs rounded bg-sky-50 text-sky-700 border border-sky-200">
               Perfil
             </span>
           )}
           {hasLookup && (
-            <span className="ml-2 px-2 py-0.5 text-xs rounded bg-emerald-900 text-emerald-300">
+            <span className="ml-2 px-2 py-0.5 text-xs rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
               Protheus
             </span>
           )}
@@ -476,8 +476,8 @@ export default function AdmissaoPage() {
             value={value}
             onChange={e => handleFieldChange(field.key, e.target.value)}
             disabled={isReadonly}
-            className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100
-                       focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+            className="w-full px-3 py-2 bg-slate-100 border border-slate-300 rounded-md text-slate-800
+                       focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent
                        disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {selectOptions.map((opt, idx) => (
@@ -490,8 +490,8 @@ export default function AdmissaoPage() {
             value={value}
             onChange={(iso) => handleFieldChange(field.key, iso)}
             disabled={isReadonly}
-            className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100
-                       focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+            className="w-full px-3 py-2 bg-slate-100 border border-slate-300 rounded-md text-slate-800
+                       focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent
                        disabled:opacity-50 disabled:cursor-not-allowed"
           />
         ) : (
@@ -501,8 +501,8 @@ export default function AdmissaoPage() {
             onChange={e => handleFieldChange(field.key, e.target.value)}
             disabled={isReadonly}
             step={field.type === 'number' ? '0.01' : undefined}
-            className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100
-                       focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+            className="w-full px-3 py-2 bg-slate-100 border border-slate-300 rounded-md text-slate-800
+                       focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent
                        disabled:opacity-50 disabled:cursor-not-allowed"
           />
         )}
@@ -514,17 +514,17 @@ export default function AdmissaoPage() {
     const isReadonly = admissionStatus !== 'draft';
     return (
       <div className="space-y-6">
-        <div className="bg-zinc-800 border border-zinc-700 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-zinc-100 mb-4">
+        <div className="bg-white border border-slate-200 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-slate-800 mb-4">
             Finalizar Admissao
           </h3>
-          <p className="text-zinc-400 mb-6">
+          <p className="text-slate-500 mb-6">
             Preencha a data de inicio do trabalho e finalize o cadastro. Apos finalizado,
             os dados ficam prontos para envio ao Protheus.
           </p>
 
           <div className="max-w-sm space-y-1 mb-6">
-            <label className="block text-sm font-medium text-zinc-300">
+            <label className="block text-sm font-medium text-slate-600">
               Data de Inicio do Trabalho *
             </label>
             <DateInput
@@ -532,8 +532,8 @@ export default function AdmissaoPage() {
               value={formData.data_inicio_trabalho || ''}
               onChange={(iso) => handleFieldChange('data_inicio_trabalho', iso)}
               disabled={isReadonly}
-              className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100
-                         focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+              className="w-full px-3 py-2 bg-slate-100 border border-slate-300 rounded-md text-slate-800
+                         focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent
                          disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
@@ -542,7 +542,7 @@ export default function AdmissaoPage() {
             <button
               onClick={handleFinalize}
               disabled={finalizing || !formData.data_inicio_trabalho}
-              className="flex items-center space-x-2 px-6 py-3 bg-green-700 hover:bg-green-600
+              className="flex items-center space-x-2 px-6 py-3 bg-green-700 hover:bg-emerald-600
                          text-white rounded-md font-medium transition-colors
                          disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -556,16 +556,16 @@ export default function AdmissaoPage() {
           )}
 
           {admissionStatus === 'completed' && (
-            <div className="mt-4 p-4 bg-green-900/30 border border-green-800 rounded-md">
-              <p className="text-green-300 font-medium">
+            <div className="mt-4 p-4 bg-emerald-50/30 border border-green-800 rounded-md">
+              <p className="text-emerald-700 font-medium">
                 Admissao finalizada com sucesso! Dados prontos para envio ao Protheus.
               </p>
             </div>
           )}
 
           {admissionStatus === 'sent' && (
-            <div className="mt-4 p-4 bg-blue-900/30 border border-blue-800 rounded-md">
-              <p className="text-blue-300 font-medium">
+            <div className="mt-4 p-4 bg-sky-50 border border-sky-200 rounded-md">
+              <p className="text-sky-700 font-medium">
                 Dados enviados ao Protheus.
               </p>
             </div>
@@ -582,8 +582,8 @@ export default function AdmissaoPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-indigo-400" />
-        <span className="ml-3 text-zinc-300">Carregando dados de admissao...</span>
+        <Loader2 className="h-8 w-8 animate-spin text-sky-600" />
+        <span className="ml-3 text-slate-600">Carregando dados de admissao...</span>
       </div>
     );
   }
@@ -598,15 +598,15 @@ export default function AdmissaoPage() {
         <div className="flex items-center space-x-4">
           <Link
             href="/admin-panel/documentos"
-            className="text-zinc-400 hover:text-zinc-200 transition-colors"
+            className="text-slate-500 hover:text-slate-700 transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-zinc-100">
+            <h1 className="text-2xl font-bold text-slate-800">
               Admissao - {candidateName || `Candidato #${candidateId}`}
             </h1>
-            <p className="text-zinc-400 text-sm">
+            <p className="text-slate-500 text-sm">
               Preencha os campos para cadastro no Protheus ERP
             </p>
           </div>
@@ -619,7 +619,7 @@ export default function AdmissaoPage() {
             <button
               onClick={handleSaveDraft}
               disabled={saving}
-              className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700
+              className="flex items-center space-x-2 px-4 py-2 bg-sky-600 hover:bg-sky-700
                          text-white rounded-md text-sm font-medium transition-colors
                          disabled:opacity-50"
             >
@@ -636,18 +636,18 @@ export default function AdmissaoPage() {
 
       {/* Messages */}
       {error && (
-        <div className="p-4 bg-red-900/30 border border-red-800 rounded-md text-red-300">
+        <div className="p-4 bg-red-50/30 border border-red-800 rounded-md text-red-700">
           {error}
         </div>
       )}
       {successMsg && (
-        <div className="p-4 bg-green-900/30 border border-green-800 rounded-md text-green-300">
+        <div className="p-4 bg-emerald-50/30 border border-green-800 rounded-md text-emerald-700">
           {successMsg}
         </div>
       )}
 
       {/* Tabs Navigation */}
-      <div className="border-b border-zinc-700 overflow-x-auto">
+      <div className="border-b border-slate-200 overflow-x-auto">
         <nav className="flex space-x-1 min-w-max">
           {TABS.map(tab => (
             <button
@@ -655,13 +655,13 @@ export default function AdmissaoPage() {
               onClick={() => handleTabChange(tab.key)}
               className={`px-4 py-2 text-sm font-medium rounded-t-md transition-colors whitespace-nowrap ${
                 activeTab === tab.key
-                  ? 'bg-zinc-700 text-indigo-400 border-b-2 border-indigo-400'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
+                  ? 'bg-slate-100 text-sky-600 border-b-2 border-sky-500'
+                  : 'text-slate-500 hover:text-slate-700 hover:bg-white'
               }`}
             >
               {tab.label}
               {tab.key !== 'finalizacao' && (
-                <span className="ml-1 text-xs text-zinc-500">
+                <span className="ml-1 text-xs text-slate-400">
                   ({tab.fields.length})
                 </span>
               )}
@@ -671,7 +671,7 @@ export default function AdmissaoPage() {
       </div>
 
       {/* Tab Content */}
-      <div className="bg-zinc-800/50 border border-zinc-700 rounded-lg p-6">
+      <div className="bg-white/50 border border-slate-200 rounded-lg p-6">
         {activeTab === 'finalizacao' ? (
           renderFinalizacao()
         ) : currentTab ? (
@@ -689,11 +689,11 @@ export default function AdmissaoPage() {
             if (idx > 0) handleTabChange(TABS[idx - 1].key);
           }}
           disabled={activeTab === TABS[0].key}
-          className="px-4 py-2 text-sm text-zinc-400 hover:text-zinc-200 disabled:opacity-30 disabled:cursor-not-allowed"
+          className="px-4 py-2 text-sm text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed"
         >
           Anterior
         </button>
-        <span className="text-sm text-zinc-500">
+        <span className="text-sm text-slate-400">
           Aba {TABS.findIndex(t => t.key === activeTab) + 1} de {TABS.length}
         </span>
         <button
@@ -702,7 +702,7 @@ export default function AdmissaoPage() {
             if (idx < TABS.length - 1) handleTabChange(TABS[idx + 1].key);
           }}
           disabled={activeTab === TABS[TABS.length - 1].key}
-          className="px-4 py-2 text-sm text-indigo-400 hover:text-indigo-300 disabled:opacity-30 disabled:cursor-not-allowed"
+          className="px-4 py-2 text-sm text-sky-600 hover:text-sky-500 disabled:opacity-30 disabled:cursor-not-allowed"
         >
           Proximo
         </button>

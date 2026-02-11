@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import applicationService from '@/services/applicationService';
 import candidateService from '@/services/candidateService';
+import toast from 'react-hot-toast';
 
 import { Application } from '@/types/index';
 
@@ -57,14 +58,14 @@ export default function ApplicationDetailPage() {
 
   const getStatusColor = (status: string) => {
     const colors = {
-      submitted: 'bg-blue-900 text-blue-300',
-      in_process: 'bg-yellow-900 text-yellow-300',
-      interview_scheduled: 'bg-purple-900 text-purple-300',
-      approved: 'bg-green-900 text-green-300',
-      rejected: 'bg-red-900 text-red-300',
-      withdrawn: 'bg-gray-800 text-gray-400'
+      submitted: 'bg-sky-50 text-sky-700 border border-sky-200',
+      in_process: 'bg-amber-50 text-amber-700 border border-amber-200',
+      interview_scheduled: 'bg-violet-50 text-violet-700 border border-violet-200',
+      approved: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+      rejected: 'bg-red-50 text-red-700 border border-red-200',
+      withdrawn: 'bg-slate-100 text-slate-500 border border-slate-200'
     };
-    return colors[status as keyof typeof colors] || 'bg-gray-800 text-gray-400';
+    return colors[status as keyof typeof colors] || 'bg-slate-100 text-slate-500 border border-slate-200';
   };
 
   const getStatusLabel = (status: string) => {
@@ -126,7 +127,7 @@ export default function ApplicationDetailPage() {
       setApplication(prev => prev ? { ...prev, status: newStatus as Application['status'], recruiter_notes: notes } : null);
     } catch (err) {
       console.error('Erro ao atualizar status:', err);
-      alert('Erro ao atualizar status da candidatura');
+      toast.error('Erro ao atualizar status da candidatura');
     } finally {
       setUpdateLoading(false);
     }
@@ -151,7 +152,7 @@ export default function ApplicationDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-64">
-        <div className="text-zinc-300">Carregando candidatura...</div>
+        <div className="text-slate-600">Carregando candidatura...</div>
       </div>
     );
   }
@@ -159,10 +160,10 @@ export default function ApplicationDetailPage() {
   if (error || !application) {
     return (
       <div className="flex flex-col items-center justify-center min-h-64 space-y-4">
-        <div className="text-red-400">{error || 'Candidatura não encontrada'}</div>
+        <div className="text-red-600">{error || 'Candidatura não encontrada'}</div>
         <Link 
           href="/admin-panel/candidaturas"
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md transition-colors"
+          className="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-md transition-colors"
         >
           Voltar para candidaturas
         </Link>
@@ -177,14 +178,14 @@ export default function ApplicationDetailPage() {
         <div>
           <Link 
             href="/admin-panel/candidaturas"
-            className="text-indigo-400 hover:text-indigo-300 text-sm mb-2 inline-block"
+            className="text-sky-600 hover:text-sky-500 text-sm mb-2 inline-block"
           >
             ← Voltar para candidaturas
           </Link>
-          <h1 className="text-3xl font-bold text-zinc-100">
+          <h1 className="text-3xl font-bold text-slate-800">
             Candidatura de {application.candidate_name || application.name}
           </h1>
-          <p className="text-zinc-400">
+          <p className="text-slate-500">
             {application.job_title} • {application.company_name}
           </p>
         </div>
@@ -196,33 +197,33 @@ export default function ApplicationDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Dados do Candidato */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-zinc-800 rounded-md p-6 border border-zinc-700">
-            <h2 className="text-xl font-semibold text-zinc-100 mb-4">Dados do Candidato</h2>
+          <div className="bg-white rounded-md p-6 border border-slate-200">
+            <h2 className="text-xl font-semibold text-slate-800 mb-4">Dados do Candidato</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">Nome</label>
-                <p className="text-zinc-100">{application.candidate_name || application.name || 'Não informado'}</p>
+                <label className="block text-sm font-medium text-slate-500 mb-1">Nome</label>
+                <p className="text-slate-800">{application.candidate_name || application.name || 'Não informado'}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">Telefone</label>
-                <p className="text-zinc-100">{application.phone || 'Não informado'}</p>
+                <label className="block text-sm font-medium text-slate-500 mb-1">Telefone</label>
+                <p className="text-slate-800">{application.phone || 'Não informado'}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">Cidade</label>
-                <p className="text-zinc-100">{application.city || 'Não informado'}</p>
+                <label className="block text-sm font-medium text-slate-500 mb-1">Cidade</label>
+                <p className="text-slate-800">{application.city || 'Não informado'}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">Estado</label>
-                <p className="text-zinc-100">{application.state || 'Não informado'}</p>
+                <label className="block text-sm font-medium text-slate-500 mb-1">Estado</label>
+                <p className="text-slate-800">{application.state || 'Não informado'}</p>
               </div>
               {application.linkedin && (
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-zinc-400 mb-1">LinkedIn</label>
+                  <label className="block text-sm font-medium text-slate-500 mb-1">LinkedIn</label>
                   <a 
                     href={application.linkedin} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-indigo-400 hover:text-indigo-300 break-all"
+                    className="text-sky-600 hover:text-sky-500 break-all"
                   >
                     {application.linkedin}
                   </a>
@@ -230,12 +231,12 @@ export default function ApplicationDetailPage() {
               )}
               {application.portfolio && (
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-zinc-400 mb-1">Portfólio</label>
+                  <label className="block text-sm font-medium text-slate-500 mb-1">Portfólio</label>
                   <a 
                     href={application.portfolio} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-indigo-400 hover:text-indigo-300 break-all"
+                    className="text-sky-600 hover:text-sky-500 break-all"
                   >
                     {application.portfolio}
                   </a>
@@ -243,8 +244,8 @@ export default function ApplicationDetailPage() {
               )}
               {application.salary_expectation && (
                 <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-1">Pretensão Salarial</label>
-                  <p className="text-zinc-100">R$ {application.salary_expectation.toLocaleString('pt-BR')}</p>
+                  <label className="block text-sm font-medium text-slate-500 mb-1">Pretensão Salarial</label>
+                  <p className="text-slate-800">R$ {application.salary_expectation.toLocaleString('pt-BR')}</p>
                 </div>
               )}
             </div>
@@ -252,10 +253,10 @@ export default function ApplicationDetailPage() {
             {/* Currículo */}
             {application.resume && (
               <div className="mt-6">
-                <label className="block text-sm font-medium text-zinc-400 mb-2">Currículo</label>
+                <label className="block text-sm font-medium text-slate-500 mb-2">Currículo</label>
                 <button
                   onClick={downloadResume}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md flex items-center gap-2 transition-colors"
+                  className="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-md flex items-center gap-2 transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -268,9 +269,9 @@ export default function ApplicationDetailPage() {
             {/* Carta de Apresentação */}
             {application.cover_letter && (
               <div className="mt-6">
-                <label className="block text-sm font-medium text-zinc-400 mb-2">Carta de Apresentação</label>
-                <div className="bg-zinc-700 rounded-md p-4">
-                  <p className="text-zinc-100 whitespace-pre-wrap">{application.cover_letter}</p>
+                <label className="block text-sm font-medium text-slate-500 mb-2">Carta de Apresentação</label>
+                <div className="bg-slate-50 rounded-md p-4">
+                  <p className="text-slate-800 whitespace-pre-wrap">{application.cover_letter}</p>
                 </div>
               </div>
             )}
@@ -278,132 +279,132 @@ export default function ApplicationDetailPage() {
             {/* Observações do Candidato */}
             {application.observations && (
               <div className="mt-6">
-                <label className="block text-sm font-medium text-zinc-400 mb-2">Observações</label>
-                <div className="bg-zinc-700 rounded-md p-4">
-                  <p className="text-zinc-100 whitespace-pre-wrap">{application.observations}</p>
+                <label className="block text-sm font-medium text-slate-500 mb-2">Observações</label>
+                <div className="bg-slate-50 rounded-md p-4">
+                  <p className="text-slate-800 whitespace-pre-wrap">{application.observations}</p>
                 </div>
               </div>
             )}
           </div>
 
-          <div className="bg-zinc-800 rounded-md p-6 border border-zinc-700 max-w-full text-white min-h-70">
+          <div className="bg-white rounded-md p-6 border border-slate-200 max-w-full text-slate-900 min-h-70">
             {/* Dados detalhados do candidato */}
             {candidata && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">Nome</label>
-                  <p className="text-indigo-300">{candidata.user_name || 'Não informado'}</p>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">Nome</label>
+                  <p className="text-sky-500">{candidata.user_name || 'Não informado'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">Email</label>
-                  <p className='text-indigo-300'>{candidata.user_email || 'Não informado'}</p>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">Email</label>
+                  <p className='text-sky-500'>{candidata.user_email || 'Não informado'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">CPF</label>
-                  <p className='text-indigo-300'>{candidata.cpf || 'Não informado'}</p>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">CPF</label>
+                  <p className='text-sky-500'>{candidata.cpf || 'Não informado'}</p>
                 </div>
                 {/* Idade removida, não existe no tipo CandidateProfile */}
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">Data de Nascimento</label>
-                  <p className='text-indigo-300'>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">Data de Nascimento</label>
+                  <p className='text-sky-500'>
                     {formatDateToBrazilian(String(candidata.date_of_birth)) || 'Não informado'}
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">Gênero</label>
-                  <p className='text-indigo-300'>{candidata.gender || 'Não informado'}</p>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">Gênero</label>
+                  <p className='text-sky-500'>{candidata.gender || 'Não informado'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">Telefone Secundário</label>
-                  <p className='text-indigo-300'>{candidata.phone_secondary || 'Não informado'}</p>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">Telefone Secundário</label>
+                  <p className='text-sky-500'>{candidata.phone_secondary || 'Não informado'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">Cidade</label>
-                  <p className='text-indigo-300'>{candidata.city || 'Não informado'}</p>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">Cidade</label>
+                  <p className='text-sky-500'>{candidata.city || 'Não informado'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">Estado</label>
-                  <p className='text-indigo-300'>{candidata.state || 'Não informado'}</p>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">Estado</label>
+                  <p className='text-sky-500'>{candidata.state || 'Não informado'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">CEP</label>
-                  <p className='text-indigo-300'>{candidata.zip_code || 'Não informado'}</p>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">CEP</label>
+                  <p className='text-sky-500'>{candidata.zip_code || 'Não informado'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">Endereço</label>
-                  <p className='text-indigo-300'>{candidata.street || ''} {candidata.number || ''} {candidata.complement || ''} {candidata.neighborhood || ''}</p>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">Endereço</label>
+                  <p className='text-sky-500'>{candidata.street || ''} {candidata.number || ''} {candidata.complement || ''} {candidata.neighborhood || ''}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">Resumo Profissional</label>
-                  <p className='text-indigo-300'>{candidata.professional_summary || 'Não informado'}</p>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">Resumo Profissional</label>
+                  <p className='text-sky-500'>{candidata.professional_summary || 'Não informado'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">Cargo Atual</label>
-                  <p className='text-indigo-300'>{candidata.current_position || 'Não informado'}</p>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">Cargo Atual</label>
+                  <p className='text-sky-500'>{candidata.current_position || 'Não informado'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">Empresa Atual</label>
-                  <p className='text-indigo-300'>{candidata.current_company || 'Não informado'}</p>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">Empresa Atual</label>
+                  <p className='text-sky-500'>{candidata.current_company || 'Não informado'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">Nível de Escolaridade</label>
-                  <p className='text-indigo-300'>{candidata.education_level || 'Não informado'}</p>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">Nível de Escolaridade</label>
+                  <p className='text-sky-500'>{candidata.education_level || 'Não informado'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">Anos de Experiência</label>
-                  <p className='text-indigo-300'>{candidata.experience_years || 'Não informado'}</p>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">Anos de Experiência</label>
+                  <p className='text-sky-500'>{candidata.experience_years || 'Não informado'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">Pretensão Salarial Mínima</label>
-                  <p className='text-indigo-300'>{candidata.desired_salary_min || 'Não informado'}</p>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">Pretensão Salarial Mínima</label>
+                  <p className='text-sky-500'>{candidata.desired_salary_min || 'Não informado'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">Pretensão Salarial Máxima</label>
-                  <p className='text-indigo-300'>{candidata.desired_salary_max || 'Não informado'}</p>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">Pretensão Salarial Máxima</label>
+                  <p className='text-sky-500'>{candidata.desired_salary_max || 'Não informado'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">Skills</label>
-                  <p className='text-indigo-300'>{candidata.skills || 'Não informado'}</p>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">Skills</label>
+                  <p className='text-sky-500'>{candidata.skills || 'Não informado'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">Certificações</label>
-                  <p className='text-indigo-300'>{candidata.certifications || 'Não informado'}</p>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">Certificações</label>
+                  <p className='text-sky-500'>{candidata.certifications || 'Não informado'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">LinkedIn</label>
-                  <p className='text-indigo-300'>{candidata.linkedin_url || 'Não informado'}</p>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">LinkedIn</label>
+                  <p className='text-sky-500'>{candidata.linkedin_url || 'Não informado'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">GitHub</label>
-                  <p className='text-indigo-300'>{candidata.github_url || 'Não informado'}</p>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">GitHub</label>
+                  <p className='text-sky-500'>{candidata.github_url || 'Não informado'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">Portfólio</label>
-                  <p className='text-indigo-300'>{candidata.portfolio_url || 'Não informado'}</p>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">Portfólio</label>
+                  <p className='text-sky-500'>{candidata.portfolio_url || 'Não informado'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">Disponível para trabalho</label>
-                  <p className='text-indigo-300'>{candidata.available_for_work ? 'Sim' : 'Não'}</p>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">Disponível para trabalho</label>
+                  <p className='text-sky-500'>{candidata.available_for_work ? 'Sim' : 'Não'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">Pode viajar</label>
-                  <p className='text-indigo-300'>{candidata.can_travel ? 'Sim' : 'Não'}</p>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">Pode viajar</label>
+                  <p className='text-sky-500'>{candidata.can_travel ? 'Sim' : 'Não'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">Aceita trabalho remoto</label>
-                  <p className='text-indigo-300'>{candidata.accepts_remote_work ? 'Sim' : 'Não'}</p>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">Aceita trabalho remoto</label>
+                  <p className='text-sky-500'>{candidata.accepts_remote_work ? 'Sim' : 'Não'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">Aceita mudança de cidade</label>
-                  <p className='text-indigo-300'>{candidata.accepts_relocation ? 'Sim' : 'Não'}</p>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">Aceita mudança de cidade</label>
+                  <p className='text-sky-500'>{candidata.accepts_relocation ? 'Sim' : 'Não'}</p>
                 </div>
                 <div className='col-span-2'>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">Turno Preferido</label>
-                  <p className='text-indigo-300'>{candidata.preferred_work_shift || 'Não informado'}</p>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">Turno Preferido</label>
+                  <p className='text-sky-500'>{candidata.preferred_work_shift || 'Não informado'}</p>
                 </div>
              
                 <div className='col-span-1'>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">Educação</label>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">Educação</label>
                   {educations.length > 0 ? (
                     <ul className="list-disc ml-6">
                       {educations.map((edu: CandidateEducation) => (
@@ -417,10 +418,10 @@ export default function ApplicationDetailPage() {
                         </li>
                       ))}
                     </ul>
-                  ) : <p className="text-indigo-300">Não informado</p>}
+                  ) : <p className="text-sky-500">Não informado</p>}
                 </div>
                 <div className='col-span-1'>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">Experiências</label>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">Experiências</label>
                   {experiences.length > 0 ? (
                     <ul className="list-disc ml-6">
                       {experiences.map((exp: CandidateExperience) => (
@@ -434,11 +435,11 @@ export default function ApplicationDetailPage() {
                         </li>
                       ))}
                     </ul>
-                  ) : <p className="text-indigo-300">Não informado</p>}
+                  ) : <p className="text-sky-500">Não informado</p>}
                 </div>
 
                 <div className='col-span-1'>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">Skills Detalhadas</label>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">Skills Detalhadas</label>
                   {detailedSkills.length > 0 ? (
                     <ul className="list-disc ml-6">
                       {detailedSkills.map((skill: CandidateSkill) => (
@@ -449,10 +450,10 @@ export default function ApplicationDetailPage() {
                         </li>
                       ))}
                     </ul>
-                  ) : <p className="text-indigo-300">Não informado</p>}
+                  ) : <p className="text-sky-500">Não informado</p>}
                 </div>
                 <div className='col-span-1'>
-                  <label className="block text-sm font-medium mb-1 text-slate-100">Idiomas</label>
+                  <label className="block text-sm font-medium mb-1 text-slate-600">Idiomas</label>
                   {languages.length > 0 ? (
                     <ul className="list-disc ml-6">
                       {languages.map((lang: CandidateLanguage) => (
@@ -463,7 +464,7 @@ export default function ApplicationDetailPage() {
                         </li>
                       ))}
                     </ul>
-                  ) : <p className="text-indigo-300">Não informado</p>}
+                  ) : <p className="text-sky-500">Não informado</p>}
                 </div>
               </div>
             )}
@@ -473,31 +474,31 @@ export default function ApplicationDetailPage() {
         {/* Painel de Ações */}
         <div className="space-y-6">
           {/* Informações da Candidatura */}
-          <div className="bg-zinc-800 rounded-md p-6 border border-zinc-700">
-            <h3 className="text-lg font-semibold text-zinc-100 mb-4">Informações da Candidatura</h3>
+          <div className="bg-white rounded-md p-6 border border-slate-200">
+            <h3 className="text-lg font-semibold text-slate-800 mb-4">Informações da Candidatura</h3>
             <div className="space-y-3 text-sm">
               <div>
-                <span className="text-zinc-400">Data da candidatura:</span>
-                <p className="text-zinc-100">{formatDate(application.applied_at)}</p>
+                <span className="text-slate-500">Data da candidatura:</span>
+                <p className="text-slate-800">{formatDate(application.applied_at)}</p>
               </div>
               {application.reviewed_at && (
                 <div>
-                  <span className="text-zinc-400">Última análise:</span>
-                  <p className="text-zinc-100">{formatDate(application.reviewed_at)}</p>
+                  <span className="text-slate-500">Última análise:</span>
+                  <p className="text-slate-800">{formatDate(application.reviewed_at)}</p>
                 </div>
               )}
               {application.days_since_application !== undefined && (
                 <div>
-                  <span className="text-zinc-400">Dias desde candidatura:</span>
-                  <p className="text-zinc-100">{application.days_since_application} dias</p>
+                  <span className="text-slate-500">Dias desde candidatura:</span>
+                  <p className="text-slate-800">{application.days_since_application} dias</p>
                 </div>
               )}
             </div>
           </div>
 
           {/* Alterar Status */}
-          <div className="bg-zinc-800 rounded-md p-6 border border-zinc-700">
-            <h3 className="text-lg font-semibold text-zinc-100 mb-4">Alterar Status</h3>
+          <div className="bg-white rounded-md p-6 border border-slate-200">
+            <h3 className="text-lg font-semibold text-slate-800 mb-4">Alterar Status</h3>
             <div className="space-y-3">
               {statusOptions.map(option => (
                 <button
@@ -506,8 +507,8 @@ export default function ApplicationDetailPage() {
                   disabled={updateLoading || application.status === option.value}
                   className={`w-full text-left px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                     application.status === option.value
-                      ? 'bg-indigo-600 text-white cursor-default'
-                      : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
+                      ? 'bg-sky-600 text-white cursor-default'
+                      : 'bg-slate-50 text-slate-600 hover:bg-slate-200'
                   } ${updateLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   {option.label}
@@ -517,8 +518,8 @@ export default function ApplicationDetailPage() {
           </div>
 
           {/* Observações do Recrutador */}
-          <div className="bg-zinc-800 rounded-md p-6 border border-zinc-700">
-            <h3 className="text-lg font-semibold text-zinc-100 mb-4">Observações do Recrutador</h3>
+          <div className="bg-white rounded-md p-6 border border-slate-200">
+            <h3 className="text-lg font-semibold text-slate-800 mb-4">Observações do Recrutador</h3>
             <textarea
               placeholder="Adicione suas observações sobre esta candidatura..."
               defaultValue={application.recruiter_notes || ''}
@@ -527,7 +528,7 @@ export default function ApplicationDetailPage() {
                   handleStatusUpdate(application.status, e.target.value);
                 }
               }}
-              className="w-full h-32 bg-zinc-700 border border-zinc-600 rounded-md px-3 py-2 text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+              className="w-full h-32 bg-slate-50 border border-slate-300 rounded-md px-3 py-2 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent resize-none"
             />
           </div>
         </div>

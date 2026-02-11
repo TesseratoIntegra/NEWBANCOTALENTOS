@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { CandidateExperience } from '@/types';
 import candidateService from '@/services/candidateService';
 import { toast } from 'react-hot-toast';
+import { confirmDialog } from '@/lib/confirmDialog';
 import { Edit, Trash2, Plus, Save, X } from 'lucide-react';
 import DateInput from '@/components/ui/DateInput';
 
@@ -111,7 +112,7 @@ export default function ExperienceSection({ experiences: initialExperiences, onU
   };
 
   const handleDelete = async (id: number) => {
-    if (confirm('Tem certeza que deseja excluir esta experiência?')) {
+    if (await confirmDialog('Tem certeza que deseja excluir esta experiência?')) {
       try {
         await candidateService.deleteCandidateExperience(id);
   setExperiences(experiences.filter(exp => exp.id !== id));

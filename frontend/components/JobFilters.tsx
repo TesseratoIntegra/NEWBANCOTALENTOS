@@ -109,11 +109,11 @@ export default function JobFiltersComponent({ jobs, onFiltersChange }: JobFilter
   };
 
   return (
-    <div className="bg-gradient-to-r from-zinc-800 to-zinc-800 rounded-md p-4 space-y-4">
+    <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-4 space-y-4">
       <div className="flex items-center justify-between">
         <button
           onClick={clearFilters}
-          className="text-sm text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
+          className="text-sm text-slate-500 hover:text-slate-700 transition-colors cursor-pointer"
         >
           Limpar Filtros
         </button>
@@ -122,13 +122,13 @@ export default function JobFiltersComponent({ jobs, onFiltersChange }: JobFilter
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Filtro por Data */}
         <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-2">
+          <label className="block text-sm font-medium text-slate-600 mb-2">
             Período
           </label>
           <select
             value={filters.dateRange}
             onChange={(e) => handleFilterChange('dateRange', e.target.value)}
-            className="w-full bg-zinc-700 border border-zinc-600 rounded-md px-3 py-2 text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full bg-slate-100 border border-slate-300 rounded-md px-3 py-2 text-slate-800 focus:ring-2 focus:ring-sky-500 focus:border-sky-400"
           >
             <option value="">Todos os períodos</option>
             <option value="7">Últimos 7 dias</option>
@@ -140,13 +140,13 @@ export default function JobFiltersComponent({ jobs, onFiltersChange }: JobFilter
 
         {/* Filtro por Tipo de Contrato */}
         <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-2">
+          <label className="block text-sm font-medium text-slate-600 mb-2">
             Tipo de Contrato
           </label>
           <select
             value={filters.jobType}
             onChange={(e) => handleFilterChange('jobType', e.target.value)}
-            className="w-full bg-zinc-700 border border-zinc-600 rounded-md px-3 py-2 text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full bg-slate-100 border border-slate-300 rounded-md px-3 py-2 text-slate-800 focus:ring-2 focus:ring-sky-500 focus:border-sky-400"
           >
             <option value="">Todos os tipos</option>
             {uniqueJobTypes.map(type => (
@@ -159,13 +159,13 @@ export default function JobFiltersComponent({ jobs, onFiltersChange }: JobFilter
 
         {/* Filtro por Modalidade */}
         <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-2">
+          <label className="block text-sm font-medium text-slate-600 mb-2">
             Modalidade
           </label>
           <select
             value={filters.typeModels}
             onChange={(e) => handleFilterChange('typeModels', e.target.value)}
-            className="w-full bg-zinc-700 border border-zinc-600 rounded-md px-3 py-2 text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full bg-slate-100 border border-slate-300 rounded-md px-3 py-2 text-slate-800 focus:ring-2 focus:ring-sky-500 focus:border-sky-400"
           >
             <option value="">Todas as modalidades</option>
             {uniqueTypeModels.map(type => (
@@ -178,13 +178,13 @@ export default function JobFiltersComponent({ jobs, onFiltersChange }: JobFilter
 
         {/* Filtro por Status */}
         <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-2">
+          <label className="block text-sm font-medium text-slate-600 mb-2">
             Status
           </label>
           <select
             value={filters.isActive}
             onChange={(e) => handleFilterChange('isActive', e.target.value)}
-            className="w-full bg-zinc-700 border border-zinc-600 rounded-md px-3 py-2 text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full bg-slate-100 border border-slate-300 rounded-md px-3 py-2 text-slate-800 focus:ring-2 focus:ring-sky-500 focus:border-sky-400"
           >
             <option value="">Todos os status</option>
             <option value="true">Ativas</option>
@@ -194,13 +194,13 @@ export default function JobFiltersComponent({ jobs, onFiltersChange }: JobFilter
 
         {/* Filtro por Localização */}
         <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-2">
+          <label className="block text-sm font-medium text-slate-600 mb-2">
             Localização
           </label>
           <select
             value={filters.location}
             onChange={(e) => handleFilterChange('location', e.target.value)}
-            className="w-full bg-zinc-700 border border-zinc-600 rounded-md px-3 py-2 text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full bg-slate-100 border border-slate-300 rounded-md px-3 py-2 text-slate-800 focus:ring-2 focus:ring-sky-500 focus:border-sky-400"
           >
             <option value="">Todas as localizações</option>
             {uniqueLocations.map(location => (

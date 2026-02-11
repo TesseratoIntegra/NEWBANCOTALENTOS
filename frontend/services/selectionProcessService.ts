@@ -127,11 +127,14 @@ class SelectionProcessService {
     }
   }
 
-  async getAvailableCandidates(processId: number, search?: string): Promise<AvailableCandidate[]> {
+  async getAvailableCandidates(processId: number, search?: string, appliedToJob?: number): Promise<AvailableCandidate[]> {
     try {
-      const queryParams = search ? `?search=${encodeURIComponent(search)}` : '';
+      const params = new URLSearchParams();
+      if (search) params.set('search', search);
+      if (appliedToJob) params.set('applied_to_job', String(appliedToJob));
+      const qs = params.toString() ? `?${params.toString()}` : '';
       const response = await axios.get(
-        `${this.baseUrl}/selection-processes/${processId}/available-candidates/${queryParams}`,
+        `${this.baseUrl}/selection-processes/${processId}/available-candidates/${qs}`,
         this.getAxiosConfig()
       );
       return response.data;
@@ -582,9 +585,9 @@ class SelectionProcessService {
 
   getEvaluationLabel(evaluation: string): { label: string; bgColor: string; textColor: string } {
     const statusMap: Record<string, { label: string; bgColor: string; textColor: string }> = {
-      pending: { label: 'Pendente', bgColor: 'bg-zinc-700', textColor: 'text-zinc-300' },
-      approved: { label: 'Aprovado', bgColor: 'bg-green-900/50', textColor: 'text-green-300' },
-      rejected: { label: 'Reprovado', bgColor: 'bg-red-900/50', textColor: 'text-red-300' },
+      pending: { label: 'Pendente', bgColor: 'bg-gray-100', textColor: 'text-gray-700' },
+      approved: { label: 'Aprovado', bgColor: 'bg-green-100', textColor: 'text-green-700' },
+      rejected: { label: 'Reprovado', bgColor: 'bg-red-100', textColor: 'text-red-700' },
     };
     return statusMap[evaluation] || statusMap.pending;
   }

@@ -2,10 +2,12 @@
 
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { ArrowLeft, Plus, Search, X, Eye, UserPlus, ChevronLeft, ChevronRight } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { confirmDialog } from '@/lib/confirmDialog';
+import { ArrowLeft, Plus, Search, X, ClipboardList, UserPlus, ChevronLeft, ChevronRight, Briefcase, MapPin, CheckSquare } from 'lucide-react';
 import selectionProcessService from '@/services/selectionProcessService';
-import { SelectionProcess, CandidateInProcess, AvailableCandidate, ProcessStage, PaginatedResponse } from '@/types';
+import jobService from '@/services/jobService';
+import { SelectionProcess, CandidateInProcess, AvailableCandidate, ProcessStage, PaginatedResponse, Job } from '@/types';
 
 export default function CandidatosPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -33,11 +35,15 @@ export default function CandidatosPage({ params }: { params: Promise<{ id: strin
   const [searchAvailable, setSearchAvailable] = useState('');
   const [loadingAvailable, setLoadingAvailable] = useState(false);
   const [addingCandidate, setAddingCandidate] = useState(false);
+  const [selectedCandidates, setSelectedCandidates] = useState<Set<number>>(new Set());
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [filterJobId, setFilterJobId] = useState('');
 
   const statusOptions = selectionProcessService.getCandidateStatusOptions();
 
   useEffect(() => {
     fetchProcessAndStages();
+    fetchJobs();
   }, [processId]);
 
   useEffect(() => {
@@ -54,6 +60,15 @@ export default function CandidatosPage({ params }: { params: Promise<{ id: strin
       setStages(stagesData);
     } catch (err) {
       console.error('Erro ao buscar processo:', err);
+    }
+  };
+
+  const fetchJobs = async () => {
+    try {
+      const response = await jobService.getJobs({ page: 1 });
+      setJobs(response.results || []);
+    } catch (err) {
+      console.error('Erro ao buscar vagas:', err);
     }
   };
 
@@ -89,7 +104,11 @@ export default function CandidatosPage({ params }: { params: Promise<{ id: strin
   const handleSearchAvailable = async () => {
     setLoadingAvailable(true);
     try {
-      const data = await selectionProcessService.getAvailableCandidates(processId, searchAvailable);
+      const data = await selectionProcessService.getAvailableCandidates(
+        processId,
+        searchAvailable,
+        filterJobId ? parseInt(filterJobId) : undefined
+      );
       setAvailableCandidates(data);
     } catch (err) {
       console.error('Erro ao buscar candidatos disponíveis:', err);
@@ -102,7 +121,7 @@ export default function CandidatosPage({ params }: { params: Promise<{ id: strin
     if (showAddModal) {
       handleSearchAvailable();
     }
-  }, [showAddModal, searchAvailable]);
+  }, [showAddModal, searchAvailable, filterJobId]);
 
   const handleAddCandidate = async (candidateId: number) => {
     setAddingCandidate(true);
@@ -110,35 +129,85 @@ export default function CandidatosPage({ params }: { params: Promise<{ id: strin
       await selectionProcessService.addCandidateToProcess(processId, candidateId);
       setShowAddModal(false);
       setSearchAvailable('');
+      setSelectedCandidates(new Set());
+      setFilterJobId('');
       fetchCandidates();
     } catch (err: unknown) {
       console.error('Erro ao adicionar candidato:', err);
-      alert('Erro ao adicionar candidato ao processo.');
+      toast.error('Erro ao adicionar candidato ao processo.');
     } finally {
       setAddingCandidate(false);
     }
   };
 
+  const handleAddSelected = async () => {
+    if (selectedCandidates.size === 0) return;
+    setAddingCandidate(true);
+    try {
+      const ids = Array.from(selectedCandidates);
+      for (const id of ids) {
+        await selectionProcessService.addCandidateToProcess(processId, id);
+      }
+      setShowAddModal(false);
+      setSearchAvailable('');
+      setSelectedCandidates(new Set());
+      setFilterJobId('');
+      fetchCandidates();
+    } catch (err: unknown) {
+      console.error('Erro ao adicionar candidatos:', err);
+      toast.error('Erro ao adicionar candidatos ao processo.');
+    } finally {
+      setAddingCandidate(false);
+    }
+  };
+
+  const toggleSelectCandidate = (id: number) => {
+    setSelectedCandidates(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedCandidates.size === availableCandidates.length) {
+      setSelectedCandidates(new Set());
+    } else {
+      setSelectedCandidates(new Set(availableCandidates.map(c => c.id)));
+    }
+  };
+
   const handleRemoveCandidate = async (id: number) => {
-    if (!confirm('Tem certeza que deseja remover este candidato do processo?')) return;
+    if (!(await confirmDialog('Tem certeza que deseja remover este candidato do processo?'))) return;
 
     try {
       await selectionProcessService.removeCandidateFromProcess(id);
       fetchCandidates();
     } catch (err) {
       console.error('Erro ao remover candidato:', err);
-      alert('Erro ao remover candidato.');
+      toast.error('Erro ao remover candidato.');
     }
   };
 
   const getStatusInfo = (status: string) => {
-    return selectionProcessService.getCandidateStatusLabel(status);
+    return selectionProcessService.getCandidateStatusLabelLight(status);
+  };
+
+  const closeModal = () => {
+    setShowAddModal(false);
+    setSearchAvailable('');
+    setSelectedCandidates(new Set());
+    setFilterJobId('');
   };
 
   if (!process) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-400"></div>
       </div>
     );
   }
@@ -150,22 +219,22 @@ export default function CandidatosPage({ params }: { params: Promise<{ id: strin
         <div className="flex items-center gap-4">
           <Link
             href={`/admin-panel/processos-seletivos/${processId}`}
-            className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-700 rounded-lg transition-colors"
+            className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-white">Candidatos</h1>
-            <p className="text-zinc-400">{process.title}</p>
+            <h1 className="text-2xl font-bold text-slate-900">Candidatos</h1>
+            <p className="text-slate-500">{process.title}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-zinc-300">
-            Total: <span className="font-semibold text-white">{totalCount}</span>
+          <span className="text-slate-600">
+            Total: <span className="font-semibold text-slate-900">{totalCount}</span>
           </span>
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg transition-colors"
           >
             <Plus className="h-5 w-5" />
             Adicionar Candidato
@@ -174,18 +243,18 @@ export default function CandidatosPage({ params }: { params: Promise<{ id: strin
       </div>
 
       {/* Filters */}
-      <div className="bg-zinc-800 rounded-lg p-4">
+      <div className="bg-white rounded-lg p-4">
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Search */}
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-zinc-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-500" />
               <input
                 type="text"
                 placeholder="Buscar por nome ou email..."
                 value={searchTerm}
                 onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-                className="w-full pl-10 pr-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full pl-10 pr-4 py-2 bg-slate-100 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
             </div>
           </div>
@@ -195,7 +264,7 @@ export default function CandidatosPage({ params }: { params: Promise<{ id: strin
             <select
               value={statusFilter}
               onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-              className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 bg-slate-100 border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
             >
               <option value="">Todos os status</option>
               {statusOptions.map(opt => (
@@ -209,7 +278,7 @@ export default function CandidatosPage({ params }: { params: Promise<{ id: strin
             <select
               value={stageFilter}
               onChange={(e) => { setStageFilter(e.target.value); setCurrentPage(1); }}
-              className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 bg-slate-100 border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
             >
               <option value="">Todas as etapas</option>
               {stages.map(stage => (
@@ -221,7 +290,7 @@ export default function CandidatosPage({ params }: { params: Promise<{ id: strin
           {(statusFilter || stageFilter || searchTerm) && (
             <button
               onClick={() => { setStatusFilter(''); setStageFilter(''); setSearchTerm(''); setCurrentPage(1); }}
-              className="px-3 py-2 text-zinc-300 hover:text-white hover:bg-zinc-700 rounded-lg transition-colors"
+              className="px-3 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
@@ -231,7 +300,7 @@ export default function CandidatosPage({ params }: { params: Promise<{ id: strin
 
       {/* Error */}
       {error && (
-        <div className="bg-red-900/50 border border-red-500 rounded-lg p-4 text-red-200">
+        <div className="bg-red-50 border border-red-500 rounded-lg p-4 text-red-600">
           {error}
         </div>
       )}
@@ -239,14 +308,14 @@ export default function CandidatosPage({ params }: { params: Promise<{ id: strin
       {/* Candidates List */}
       {loading ? (
         <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-400"></div>
         </div>
       ) : candidates.length === 0 ? (
-        <div className="bg-zinc-800 rounded-lg p-12 text-center">
-          <p className="text-zinc-400 mb-4">Nenhum candidato no processo.</p>
+        <div className="bg-white rounded-lg p-12 text-center">
+          <p className="text-slate-500 mb-4">Nenhum candidato no processo.</p>
           <button
             onClick={() => setShowAddModal(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg transition-colors"
           >
             <Plus className="h-5 w-5" />
             Adicionar Candidato
@@ -254,53 +323,49 @@ export default function CandidatosPage({ params }: { params: Promise<{ id: strin
         </div>
       ) : (
         <>
-          <div className="bg-zinc-800 rounded-lg overflow-hidden">
-            <table className="min-w-full divide-y divide-zinc-700">
-              <thead className="bg-zinc-900">
+          <div className="bg-white rounded-lg overflow-hidden">
+            <table className="min-w-full divide-y divide-slate-200">
+              <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase">Candidato</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-zinc-400 uppercase">Etapa Atual</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-zinc-400 uppercase">Progresso</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-zinc-400 uppercase">Status</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-zinc-400 uppercase">Nota Média</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-zinc-400 uppercase">Ações</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Candidato</th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase">Etapa Atual</th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase">Progresso</th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase">Status</th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase">Nota Média</th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase">Ações</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-700">
+              <tbody className="divide-y divide-slate-200">
                 {candidates.map((candidate) => {
                   const statusInfo = getStatusInfo(candidate.status);
                   return (
-                    <tr key={candidate.id} className="hover:bg-zinc-700/50 transition-colors">
+                    <tr key={candidate.id} className="hover:bg-slate-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          {candidate.candidate_image ? (
-                            <Image
-                              src={candidate.candidate_image}
-                              alt={candidate.candidate_name || ''}
-                              width={40}
-                              height={40}
-                              className="rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 bg-zinc-600 rounded-full flex items-center justify-center">
-                              <span className="text-white text-sm font-medium">
-                                {candidate.candidate_name?.charAt(0).toUpperCase()}
-                              </span>
-                            </div>
-                          )}
+                          <div className="w-10 h-10 rounded-full bg-sky-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 overflow-hidden">
+                            {candidate.candidate_image ? (
+                              <img
+                                src={candidate.candidate_image}
+                                alt={candidate.candidate_name || ''}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              (candidate.candidate_name || '?').charAt(0).toUpperCase()
+                            )}
+                          </div>
                           <div>
-                            <p className="text-white font-medium">{candidate.candidate_name}</p>
-                            <p className="text-zinc-400 text-sm">{candidate.candidate_email}</p>
+                            <p className="text-slate-900 font-medium">{candidate.candidate_name}</p>
+                            <p className="text-slate-500 text-sm">{candidate.candidate_email}</p>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <span className="text-zinc-300">
+                        <span className="text-slate-600">
                           {candidate.current_stage_name || '-'}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <span className="text-zinc-400">
+                        <span className="text-slate-500">
                           {candidate.completed_stages || 0}/{candidate.total_stages || 0}
                         </span>
                       </td>
@@ -311,23 +376,23 @@ export default function CandidatosPage({ params }: { params: Promise<{ id: strin
                       </td>
                       <td className="px-6 py-4 text-center">
                         {candidate.average_rating ? (
-                          <span className="text-zinc-300">{candidate.average_rating.toFixed(1)}</span>
+                          <span className="text-slate-600">{candidate.average_rating.toFixed(1)}</span>
                         ) : (
-                          <span className="text-zinc-500">-</span>
+                          <span className="text-slate-400">-</span>
                         )}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-center gap-2">
                           <Link
                             href={`/admin-panel/processos-seletivos/${processId}/candidatos/${candidate.id}`}
-                            className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-600 rounded-lg transition-colors"
+                            className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-200 rounded-lg transition-colors"
                             title="Avaliar"
                           >
-                            <Eye className="h-4 w-4" />
+                            <ClipboardList className="h-4 w-4" />
                           </Link>
                           <button
                             onClick={() => handleRemoveCandidate(candidate.id)}
-                            className="p-2 text-zinc-400 hover:text-red-400 hover:bg-zinc-600 rounded-lg transition-colors"
+                            className="p-2 text-slate-500 hover:text-red-600 hover:bg-slate-200 rounded-lg transition-colors"
                             title="Remover"
                           >
                             <X className="h-4 w-4" />
@@ -344,24 +409,24 @@ export default function CandidatosPage({ params }: { params: Promise<{ id: strin
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between">
-              <p className="text-sm text-zinc-400">
+              <p className="text-sm text-slate-500">
                 Mostrando {((currentPage - 1) * 10) + 1} - {Math.min(currentPage * 10, totalCount)} de {totalCount}
               </p>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
-                  className="p-2 rounded-lg border border-zinc-600 text-zinc-300 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="p-2 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   <ChevronLeft className="h-5 w-5" />
                 </button>
-                <span className="text-zinc-300">
+                <span className="text-slate-600">
                   Página {currentPage} de {totalPages}
                 </span>
                 <button
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
-                  className="p-2 rounded-lg border border-zinc-600 text-zinc-300 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="p-2 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   <ChevronRight className="h-5 w-5" />
                 </button>
@@ -373,80 +438,175 @@ export default function CandidatosPage({ params }: { params: Promise<{ id: strin
 
       {/* Add Candidate Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="bg-zinc-800 rounded-lg shadow-xl w-full max-w-lg max-h-[80vh] flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b border-zinc-700">
-              <h2 className="text-lg font-semibold text-white">Adicionar Candidato</h2>
-              <button onClick={() => setShowAddModal(false)} className="p-1 text-zinc-400 hover:text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[85vh] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">Adicionar Candidatos</h2>
+                <p className="text-slate-400 text-sm mt-0.5">
+                  Apenas candidatos com perfil aprovado podem ser adicionados.
+                </p>
+              </div>
+              <button onClick={closeModal} className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors">
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="p-4 border-b border-zinc-700">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-zinc-400" />
+            {/* Filters */}
+            <div className="px-6 py-3 border-b border-slate-200 flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Buscar candidatos aprovados..."
+                  placeholder="Buscar por nome ou email..."
                   value={searchAvailable}
                   onChange={(e) => setSearchAvailable(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                 />
               </div>
-              <p className="text-zinc-500 text-sm mt-2">
-                Apenas candidatos com perfil aprovado podem ser adicionados.
-              </p>
+              <select
+                value={filterJobId}
+                onChange={(e) => setFilterJobId(e.target.value)}
+                className="w-full sm:w-56 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
+              >
+                <option value="">Todas as vagas</option>
+                {jobs.map(job => (
+                  <option key={job.id} value={job.id}>{job.title}</option>
+                ))}
+              </select>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4">
+            {/* Select all bar */}
+            {availableCandidates.length > 0 && (
+              <div className="px-6 py-2 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-600">
+                  <input
+                    type="checkbox"
+                    checked={selectedCandidates.size === availableCandidates.length && availableCandidates.length > 0}
+                    onChange={toggleSelectAll}
+                    className="w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                  />
+                  Selecionar todos ({availableCandidates.length})
+                </label>
+                {selectedCandidates.size > 0 && (
+                  <span className="text-xs text-sky-600 font-medium">
+                    {selectedCandidates.size} selecionado(s)
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Candidate List */}
+            <div className="flex-1 overflow-y-auto px-6 py-3">
               {loadingAvailable ? (
-                <div className="flex justify-center py-8">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-500"></div>
+                <div className="flex justify-center py-12">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-sky-400"></div>
                 </div>
               ) : availableCandidates.length === 0 ? (
-                <p className="text-zinc-400 text-center py-8">
+                <p className="text-slate-500 text-center py-12">
                   Nenhum candidato disponível encontrado.
                 </p>
               ) : (
                 <div className="space-y-2">
-                  {availableCandidates.map((candidate) => (
-                    <div
-                      key={candidate.id}
-                      className="flex items-center justify-between p-3 bg-zinc-700/50 rounded-lg hover:bg-zinc-700 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        {candidate.image_profile ? (
-                          <Image
-                            src={candidate.image_profile}
-                            alt={candidate.name}
-                            width={40}
-                            height={40}
-                            className="rounded-full object-cover"
+                  {availableCandidates.map((candidate) => {
+                    const isSelected = selectedCandidates.has(candidate.id);
+                    const location = [candidate.city, candidate.state].filter(Boolean).join(', ');
+                    return (
+                      <div
+                        key={candidate.id}
+                        onClick={() => toggleSelectCandidate(candidate.id)}
+                        className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                          isSelected
+                            ? 'bg-sky-50 border border-sky-200'
+                            : 'bg-slate-50 border border-transparent hover:bg-slate-100'
+                        }`}
+                      >
+                        {/* Checkbox */}
+                        <div className="pt-0.5">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleSelectCandidate(candidate.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
                           />
-                        ) : (
-                          <div className="w-10 h-10 bg-zinc-600 rounded-full flex items-center justify-center">
-                            <span className="text-white text-sm font-medium">
-                              {candidate.name.charAt(0).toUpperCase()}
-                            </span>
+                        </div>
+
+                        {/* Photo */}
+                        <div className="w-11 h-11 rounded-full bg-sky-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 overflow-hidden">
+                          {candidate.image_profile ? (
+                            <img
+                              src={candidate.image_profile}
+                              alt={candidate.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            candidate.name.charAt(0).toUpperCase()
+                          )}
+                        </div>
+
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-slate-900 truncate">{candidate.name}</p>
+                              <p className="text-xs text-slate-500 truncate">{candidate.email}</p>
+                            </div>
+                            <div className="text-right flex-shrink-0">
+                              {candidate.current_position && (
+                                <p className="text-xs text-slate-600 font-medium">{candidate.current_position}</p>
+                              )}
+                              {location && (
+                                <p className="text-xs text-slate-400 flex items-center gap-1 justify-end">
+                                  <MapPin className="h-3 w-3" />
+                                  {location}
+                                </p>
+                              )}
+                            </div>
                           </div>
-                        )}
-                        <div>
-                          <p className="text-white font-medium">{candidate.name}</p>
-                          <p className="text-zinc-400 text-sm">{candidate.email}</p>
+
+                          {/* Applications badges */}
+                          {candidate.applications_summary && candidate.applications_summary.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              {candidate.applications_summary.map((app) => (
+                                <span
+                                  key={app.job_id}
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-violet-50 text-violet-700 border border-violet-200"
+                                >
+                                  <Briefcase className="h-3 w-3" />
+                                  {app.job_title}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <button
-                        onClick={() => handleAddCandidate(candidate.id)}
-                        disabled={addingCandidate}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
-                      >
-                        <UserPlus className="h-4 w-4" />
-                        Adicionar
-                      </button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-slate-200 flex items-center justify-between gap-3">
+              <button
+                onClick={closeModal}
+                className="px-4 py-2 text-sm text-slate-600 hover:text-slate-900 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleAddSelected}
+                disabled={selectedCandidates.size === 0 || addingCandidate}
+                className="flex items-center gap-2 px-5 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <CheckSquare className="h-4 w-4" />
+                {addingCandidate
+                  ? 'Adicionando...'
+                  : `Adicionar Selecionados (${selectedCandidates.size})`
+                }
+              </button>
             </div>
           </div>
         </div>

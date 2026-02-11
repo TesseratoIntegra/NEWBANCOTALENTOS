@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { CandidateSkill } from '@/types';
 import candidateService from '@/services/candidateService';
 import { toast } from 'react-hot-toast';
+import { confirmDialog } from '@/lib/confirmDialog';
 import { Edit, Trash2, Plus, Save, X } from 'lucide-react';
 
 
@@ -79,7 +80,7 @@ export default function SkillsSection({ skills, onUpdate }: SkillsSectionProps) 
   };
 
   const handleDelete = async (id: number) => {
-    if (confirm('Tem certeza que deseja excluir esta habilidade?')) {
+    if (await confirmDialog('Tem certeza que deseja excluir esta habilidade?')) {
       try {
     await candidateService.deleteCandidateSkill(id);
     onUpdate(skills.filter(skill => skill.id !== id));

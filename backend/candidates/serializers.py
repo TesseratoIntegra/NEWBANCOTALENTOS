@@ -129,10 +129,16 @@ class CandidateProfileSerializer(serializers.ModelSerializer):
     # Dados da revisão do perfil
     reviewed_by_name = serializers.CharField(source='profile_reviewed_by.name', read_only=True, default=None)
 
+    # Status computado do pipeline
+    pipeline_status = serializers.SerializerMethodField()
+
     class Meta:
         model = CandidateProfile
         fields = '__all__'
         read_only_fields = ['user', 'created_at', 'updated_at', 'profile_reviewed_by', 'profile_reviewed_at']
+
+    def get_pipeline_status(self, obj):
+        return _compute_pipeline_status(obj)
 
     def validate_date_of_birth(self, value):
         """Valida data de nascimento"""
@@ -269,6 +275,37 @@ class CandidateProfileCreateUpdateSerializer(serializers.ModelSerializer):
         return value
 
 
+def _compute_pipeline_status(profile):
+    """Computa o status do pipeline completo do candidato."""
+    base = profile.profile_status
+    if base != 'approved':
+        return base
+
+    from admission.models import CandidateDocument, DocumentType
+    required_types = DocumentType.objects.filter(is_active=True, is_required=True)
+    total_required = required_types.count()
+
+    if total_required > 0:
+        approved_docs = CandidateDocument.objects.filter(
+            candidate=profile, document_type__in=required_types,
+            is_active=True, status='approved'
+        ).count()
+        if approved_docs < total_required:
+            return 'documents_pending'
+
+    # Docs completos — verificar admissão
+    try:
+        admission = profile.admission_data
+        if admission.status == 'confirmed':
+            return 'admitted'
+        if admission.status in ('draft', 'completed', 'sent'):
+            return 'admission_in_progress'
+    except Exception:
+        pass
+
+    return 'documents_complete'
+
+
 class CandidateProfileListSerializer(serializers.ModelSerializer):
     """Serializer simplificado para listagem de candidatos"""
 
@@ -281,6 +318,7 @@ class CandidateProfileListSerializer(serializers.ModelSerializer):
     education_summary = serializers.SerializerMethodField()
     applications_count = serializers.SerializerMethodField()
     cpf = serializers.CharField(read_only=True)
+    pipeline_status = serializers.SerializerMethodField()
 
     class Meta:
         model = CandidateProfile
@@ -292,8 +330,11 @@ class CandidateProfileListSerializer(serializers.ModelSerializer):
             'accepts_relocation', 'can_travel',
             'experience_summary', 'education_summary', 'applications_count', 'applications_summary',
             'selection_processes_summary',
-            'profile_status', 'profile_observations', 'profile_reviewed_at', 'created_at'
+            'profile_status', 'pipeline_status', 'profile_observations', 'profile_reviewed_at', 'created_at'
         ]
+
+    def get_pipeline_status(self, obj):
+        return _compute_pipeline_status(obj)
 
     def get_experience_summary(self, obj):
         """Resumo das experiências"""

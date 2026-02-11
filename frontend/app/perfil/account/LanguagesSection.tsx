@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { CandidateLanguage } from '@/types';
 import candidateService from '@/services/candidateService';
 import { toast } from 'react-hot-toast';
+import { confirmDialog } from '@/lib/confirmDialog';
 import { Edit, Trash2, Plus, Save, X } from 'lucide-react';
 
 
@@ -102,7 +103,7 @@ export default function LanguagesSection({ languages: initialLanguages, onUpdate
   };
 
   const handleDelete = async (id: number) => {
-    if (confirm('Tem certeza que deseja excluir este idioma?')) {
+    if (await confirmDialog('Tem certeza que deseja excluir este idioma?')) {
       try {
         await candidateService.deleteCandidateLanguage(id);
   const newLangs = userLanguages.filter(lang => lang.id !== id);

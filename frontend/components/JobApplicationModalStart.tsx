@@ -195,7 +195,7 @@ useEffect(() => {
 		setLoadingCities(true);
 		try {
 			// Buscar id do estado pelo sigla
-			const states = await locationService.getStates();
+			const states = locationService.getStates();
 			const selectedState = states.find(s => s.sigla === form.state);
 			if (!selectedState) {
 				setCities([]);

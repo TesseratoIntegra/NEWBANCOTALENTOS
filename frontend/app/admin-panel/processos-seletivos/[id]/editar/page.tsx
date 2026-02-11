@@ -91,14 +91,14 @@ export default function EditarProcessoPage({ params }: { params: Promise<{ id: s
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-400"></div>
       </div>
     );
   }
 
   if (!process) {
     return (
-      <div className="bg-red-900/50 border border-red-500 rounded-lg p-4 text-red-200">
+      <div className="bg-red-50 border border-red-500 rounded-lg p-4 text-red-600">
         Processo não encontrado.
       </div>
     );
@@ -112,29 +112,29 @@ export default function EditarProcessoPage({ params }: { params: Promise<{ id: s
       <div className="flex items-center gap-4">
         <Link
           href={`/admin-panel/processos-seletivos/${processId}`}
-          className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-700 rounded-lg transition-colors"
+          className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-white">Editar Processo Seletivo</h1>
-          <p className="text-zinc-400 mt-1">{process.title}</p>
+          <h1 className="text-2xl font-bold text-slate-900">Editar Processo Seletivo</h1>
+          <p className="text-slate-500 mt-1">{process.title}</p>
         </div>
       </div>
 
       {/* Error */}
       {error && (
-        <div className="bg-red-900/50 border border-red-500 rounded-lg p-4 text-red-200">
+        <div className="bg-red-50 border border-red-500 rounded-lg p-4 text-red-600">
           {error}
         </div>
       )}
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="bg-zinc-800 rounded-lg p-6 space-y-6">
+      <form onSubmit={handleSubmit} className="bg-white rounded-lg p-6 space-y-6">
         {/* Título */}
         <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-2">
-            Título do Processo <span className="text-red-400">*</span>
+          <label className="block text-sm font-medium text-slate-600 mb-2">
+            Título do Processo <span className="text-red-600">*</span>
           </label>
           <input
             type="text"
@@ -142,13 +142,13 @@ export default function EditarProcessoPage({ params }: { params: Promise<{ id: s
             value={formData.title}
             onChange={handleChange}
             required
-            className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-4 py-2 bg-slate-100 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
           />
         </div>
 
         {/* Descrição */}
         <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-2">
+          <label className="block text-sm font-medium text-slate-600 mb-2">
             Descrição
           </label>
           <textarea
@@ -156,20 +156,20 @@ export default function EditarProcessoPage({ params }: { params: Promise<{ id: s
             value={formData.description}
             onChange={handleChange}
             rows={3}
-            className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+            className="w-full px-4 py-2 bg-slate-100 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 resize-none"
           />
         </div>
 
         {/* Status */}
         <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-2">
+          <label className="block text-sm font-medium text-slate-600 mb-2">
             Status
           </label>
           <select
             name="status"
             value={formData.status}
             onChange={handleChange}
-            className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-4 py-2 bg-slate-100 border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
           >
             {statusOptions.map(opt => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -179,14 +179,14 @@ export default function EditarProcessoPage({ params }: { params: Promise<{ id: s
 
         {/* Vaga Vinculada */}
         <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-2">
+          <label className="block text-sm font-medium text-slate-600 mb-2">
             Vaga Vinculada (Opcional)
           </label>
           <select
             name="job"
             value={formData.job || ''}
             onChange={handleChange}
-            className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-4 py-2 bg-slate-100 border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
           >
             <option value="">Nenhuma vaga vinculada</option>
             {jobs.map(job => (
@@ -198,41 +198,41 @@ export default function EditarProcessoPage({ params }: { params: Promise<{ id: s
         {/* Datas */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-2">
+            <label className="block text-sm font-medium text-slate-600 mb-2">
               Data de Início
             </label>
             <DateInput
               name="start_date"
               value={formData.start_date}
               onChange={(iso) => setFormData(prev => ({ ...prev, start_date: iso }))}
-              className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-4 py-2 bg-slate-100 border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-2">
+            <label className="block text-sm font-medium text-slate-600 mb-2">
               Data de Término
             </label>
             <DateInput
               name="end_date"
               value={formData.end_date}
               onChange={(iso) => setFormData(prev => ({ ...prev, end_date: iso }))}
-              className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-4 py-2 bg-slate-100 border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
             />
           </div>
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3 pt-4 border-t border-zinc-700">
+        <div className="flex gap-3 pt-4 border-t border-slate-200">
           <Link
             href={`/admin-panel/processos-seletivos/${processId}`}
-            className="px-4 py-2 bg-zinc-600 hover:bg-zinc-500 text-white rounded-lg transition-colors"
+            className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-900 rounded-lg transition-colors"
           >
             Cancelar
           </Link>
           <button
             type="submit"
             disabled={saving || !formData.title}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Save className="h-5 w-5" />
             {saving ? 'Salvando...' : 'Salvar Alterações'}

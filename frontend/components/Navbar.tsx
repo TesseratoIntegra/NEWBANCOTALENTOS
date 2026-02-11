@@ -1,13 +1,15 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, Bell, FileText, CheckCircle, XCircle } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import LogoutBtn from './LogoutBtn'
 import Image from 'next/image'
 import * as Icon from 'react-bootstrap-icons'
-import { useState, useEffect, useCallback, useMemo, memo } from 'react'
+import { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react'
 import JobApplicationModalStart from './JobApplicationModalStart'
+import candidateService from '@/services/candidateService'
+import { CandidateNotification } from '@/types'
 
 // Hook customizado para gerenciar a lógica do timer
 const useJobStartTimer = (isAuthenticated: boolean, userType: string | undefined, pathname: string) => {
@@ -132,9 +134,34 @@ function Navbar() {
     const { user, isAuthenticated } = useAuth()
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const [jobStart, setJobStart] = useState(false);
-    
+    const [notifications, setNotifications] = useState<CandidateNotification[]>([]);
+    const [showNotifDropdown, setShowNotifDropdown] = useState(false);
+    const notifRef = useRef<HTMLDivElement>(null);
+
     // Usar o hook customizado para gerenciar o timer
     const canClickJobStart = useJobStartTimer(isAuthenticated, user?.user_type, pathname);
+
+    // Buscar notificações do candidato
+    useEffect(() => {
+        if (isAuthenticated && user?.user_type === 'candidate') {
+            candidateService.getMyNotifications()
+                .then(data => {
+                    setNotifications(data.notifications || []);
+                })
+                .catch(() => {});
+        }
+    }, [isAuthenticated, user?.user_type]);
+
+    // Fechar dropdown ao clicar fora
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+                setShowNotifDropdown(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     // Memoizar os links para evitar recriação desnecessária
     const links = useMemo(() => [
@@ -164,11 +191,11 @@ function Navbar() {
 
 
     return (
-        <header className="bg-gradient-to-r from-blue-800 to-blue-950 fixed top-0 left-0 z-50 w-full">
-            <div className="xl:max-w-[92%] mx-auto px-4 sm:px-6 py-2">
+        <header className="bg-blue-950/80 backdrop-blur-xl border-b border-white/10 fixed top-0 left-0 z-50 w-full">
+            <div className="xl:max-w-[92%] mx-auto px-4 sm:px-6 py-3">
                 <div className="flex items-center justify-between">
                     <Link href='/' className="flex items-center space-x-3 cursor-pointer">
-                        <Image src='https://raw.githubusercontent.com/Chiaperini-TI/Chiaperini-TI/main/chiaperini.png' width={300} height={300} alt='' className='animate-fade w-auto h-12 sm:h-10 -ml-4'></Image>
+                        <Image src='https://raw.githubusercontent.com/Chiaperini-TI/Chiaperini-TI/main/chiaperini.png' width={300} height={300} alt='Chiaperini' className='animate-fade w-auto h-12 sm:h-10 -ml-4'></Image>
                     </Link>
                     
                     {/* Desktop Navigation */}
@@ -204,6 +231,60 @@ function Navbar() {
                         {isAuthenticated ? (
                             user?.user_type === 'candidate' ? (
                                 <div className="flex items-center space-x-2 ml-5">
+                                    {notifications.length > 0 && (
+                                        <div className="relative" ref={notifRef}>
+                                            <button
+                                                onClick={() => setShowNotifDropdown(!showNotifDropdown)}
+                                                className="relative animate-fade p-2 text-yellow-300 hover:text-yellow-400 transition-colors"
+                                            >
+                                                <Bell className="w-5 h-5" />
+                                                <span className="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-500 rounded-full animate-pulse">
+                                                    {notifications.length}
+                                                </span>
+                                            </button>
+                                            {showNotifDropdown && (
+                                                <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-zinc-200 z-50 overflow-hidden">
+                                                    <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100 bg-zinc-50">
+                                                        <span className="text-sm font-semibold text-zinc-900">Notificações</span>
+                                                        <button onClick={() => setShowNotifDropdown(false)} className="text-zinc-400 hover:text-zinc-600">
+                                                            <X className="h-4 w-4" />
+                                                        </button>
+                                                    </div>
+                                                    <div className="divide-y divide-zinc-100 max-h-80 overflow-y-auto">
+                                                        {notifications.map((notif, idx) => {
+                                                            const iconMap: Record<string, { icon: React.ReactNode; bg: string }> = {
+                                                                profile: { icon: <Bell className="h-4 w-4 text-amber-600" />, bg: 'bg-amber-50' },
+                                                                document: { icon: <FileText className="h-4 w-4 text-red-600" />, bg: 'bg-red-50' },
+                                                                process_approved: { icon: <CheckCircle className="h-4 w-4 text-green-600" />, bg: 'bg-green-50' },
+                                                                process_rejected: { icon: <XCircle className="h-4 w-4 text-red-600" />, bg: 'bg-red-50' },
+                                                            };
+                                                            const style = iconMap[notif.icon] || iconMap.profile;
+                                                            return (
+                                                                <div key={idx} className="p-3">
+                                                                    <div className="flex items-start gap-3">
+                                                                        <div className={`p-1.5 ${style.bg} rounded-lg flex-shrink-0`}>
+                                                                            {style.icon}
+                                                                        </div>
+                                                                        <div className="flex-1 min-w-0">
+                                                                            <p className="text-sm font-medium text-zinc-900">{notif.title}</p>
+                                                                            <p className="text-xs text-zinc-500 mt-0.5">{notif.message}</p>
+                                                                            <Link
+                                                                                href={notif.link}
+                                                                                onClick={() => setShowNotifDropdown(false)}
+                                                                                className="inline-flex items-center gap-1 mt-1.5 text-xs font-medium text-sky-600 hover:text-sky-700"
+                                                                            >
+                                                                                Ver detalhes →
+                                                                            </Link>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                     <Link href='/perfil' className="animate-fade text-zinc-200 hover:text-zinc-800 border border-zinc-100/40 px-4 py-2 rounded-md cursor-pointer text-sm duration-300 flex justify-center place-items-center gap-2 hover:bg-yellow-300">
                                         <Icon.Person className="w-4 h-4" /> Meu Perfil
                                     </Link>
@@ -276,8 +357,17 @@ function Navbar() {
                         {isAuthenticated ? (
                             user?.user_type === 'candidate' ? (
                                 <div className="animate-fade flex flex-col space-y-3">
-                                    <Link 
-                                        href='/perfil' 
+                                    {notifications.length > 0 && (
+                                        <Link
+                                            href={notifications[0].link}
+                                            onClick={handleMobileMenuClose}
+                                            className="bg-red-500/10 text-red-400 px-4 py-2 rounded-md cursor-pointer text-sm duration-300 flex justify-center place-items-center gap-2 border border-red-500/30"
+                                        >
+                                            <Bell className="w-4 h-4" /> {notifications.length} notificação(ões) pendente(s)
+                                        </Link>
+                                    )}
+                                    <Link
+                                        href='/perfil'
                                         onClick={handleMobileMenuClose}
                                         className="bg-blue-700 text-yellow-400 px-4 py-2 rounded-md cursor-pointer text-sm duration-300 flex justify-center place-items-center gap-2 hover:bg-blue-800"
                                     >

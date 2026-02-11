@@ -45,7 +45,7 @@ from companies.models import Company
     ),
 )
 class JobViewSet(viewsets.ModelViewSet):
-    queryset = Job.objects.all()
+    queryset = Job.objects.select_related('company', 'company__group').all()
     serializer_class = JobSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 

@@ -13,6 +13,7 @@ import companyService from '@/services/companyService';
 import locationService, { State, City } from '@/services/locationService';
 import { Company } from '@/types';
 import DateInput from '@/components/ui/DateInput';
+import toast from 'react-hot-toast';
 
 type CreateCompanyModalProps = {
   isOpen: boolean;
@@ -44,11 +45,11 @@ function CreateCompanyModal({ isOpen, onClose, onCreated }: CreateCompanyModalPr
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      alert('Informe o nome da empresa');
+      toast.error('Informe o nome da empresa');
       return;
     }
     if (!cnpj || cnpj.replace(/\D/g, '').length !== 14) {
-      alert('Informe um CNPJ válido');
+      toast.error('Informe um CNPJ válido');
       return;
     }
     setLoading(true);
@@ -60,7 +61,7 @@ function CreateCompanyModal({ isOpen, onClose, onCreated }: CreateCompanyModalPr
       onClose();
     } catch (error) {
       console.log(error);
-      alert('Erro ao criar empresa.');
+      toast.error('Erro ao criar empresa.');
     } finally {
       setLoading(false);
     }
@@ -68,30 +69,30 @@ function CreateCompanyModal({ isOpen, onClose, onCreated }: CreateCompanyModalPr
 
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-zinc-900 p-6 rounded-md shadow-lg w-full max-w-md">
-        <h2 className="text-lg font-semibold text-zinc-100 mb-4">Criar Empresa</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="bg-white p-6 rounded-md shadow-lg w-full max-w-md">
+        <h2 className="text-lg font-semibold text-slate-800 mb-4">Criar Empresa</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="companyName" className="block text-sm text-zinc-300 mb-2">Nome da Empresa *</label>
+            <label htmlFor="companyName" className="block text-sm text-slate-600 mb-2">Nome da Empresa *</label>
             <input
               id="companyName"
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
-              className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100 focus:outline-none"
+              className="w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-slate-800 focus:outline-none"
               required
               placeholder="Ex: Tesserato Ltda"
             />
           </div>
           <div>
-            <label htmlFor="companyCnpj" className="block text-sm text-zinc-300 mb-2">CNPJ *</label>
+            <label htmlFor="companyCnpj" className="block text-sm text-slate-600 mb-2">CNPJ *</label>
             <input
               id="companyCnpj"
               type="text"
               value={cnpj}
               onChange={handleCnpjChange}
-              className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100 focus:outline-none"
+              className="w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-slate-800 focus:outline-none"
               required
               placeholder="00.000.000/0000-00"
               maxLength={18}
@@ -99,8 +100,8 @@ function CreateCompanyModal({ isOpen, onClose, onCreated }: CreateCompanyModalPr
             />
           </div>
           <div className="flex justify-end space-x-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 border border-zinc-600 text-zinc-300 rounded-md hover:bg-zinc-700">Cancelar</button>
-            <button type="submit" disabled={loading} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md font-medium">{loading ? 'Salvando...' : 'Criar'}</button>
+            <button type="button" onClick={onClose} className="px-4 py-2 border border-slate-300 text-slate-600 rounded-md hover:bg-white">Cancelar</button>
+            <button type="submit" disabled={loading} className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-md font-medium">{loading ? 'Salvando...' : 'Criar'}</button>
           </div>
         </form>
       </div>
@@ -123,11 +124,10 @@ export default function CreateJobPage() {
   const [loading, setLoading] = useState(false);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loadingCompanies, setLoadingCompanies] = useState(true);
-  const [states, setStates] = useState<State[]>([]);
+  const [states] = useState<State[]>(locationService.getStates());
   const [cities, setCities] = useState<City[]>([]);
   const [selectedState, setSelectedState] = useState<{ value: number; label: string } | null>(null);
   const [selectedCity, setSelectedCity] = useState<{ value: string; label: string } | null>(null);
-  const [loadingStates, setLoadingStates] = useState(true);
   const [loadingCities, setLoadingCities] = useState(false);
 
   // Zod schema
@@ -194,7 +194,6 @@ export default function CreateJobPage() {
 
   useEffect(() => {
     loadCompanies();
-    loadStates();
   }, []);
 
   const loadCompanies = async () => {
@@ -204,7 +203,7 @@ export default function CreateJobPage() {
       setCompanies(companiesData);
     } catch (error) {
       console.error('Erro ao carregar empresas:', error);
-      alert('Erro ao carregar lista de empresas');
+      toast.error('Erro ao carregar lista de empresas');
     } finally {
       setLoadingCompanies(false);
     }
@@ -215,19 +214,6 @@ export default function CreateJobPage() {
     setValue('company', newCompany.id);
   };
 
-  const loadStates = async () => {
-    try {
-      setLoadingStates(true);
-      const statesData = await locationService.getStates();
-      setStates(statesData);
-    } catch (error) {
-      console.error('Erro ao carregar estados:', error);
-      alert('Erro ao carregar lista de estados');
-    } finally {
-      setLoadingStates(false);
-    }
-  };
-
   const loadCities = async (stateId: number) => {
     try {
       setLoadingCities(true);
@@ -235,7 +221,7 @@ export default function CreateJobPage() {
       setCities(citiesData);
     } catch (error) {
       console.error('Erro ao carregar cidades:', error);
-      alert('Erro ao carregar lista de cidades');
+      toast.error('Erro ao carregar lista de cidades');
     } finally {
       setLoadingCities(false);
     }
@@ -282,13 +268,13 @@ export default function CreateJobPage() {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       if (closureDate < today) {
-        alert('A data de encerramento deve ser hoje ou uma data futura');
+        toast.error('A data de encerramento deve ser hoje ou uma data futura');
         return;
       }
     }
     // Validação dos salários
     if (data.salary_min && data.salary_max && parseInt(data.salary_min.replace(/\D/g, '')) > parseInt(data.salary_max.replace(/\D/g, ''))) {
-      alert('O salário mínimo não pode ser maior que o máximo');
+      toast.error('O salário mínimo não pode ser maior que o máximo');
       return;
     }
     // Monta o salary_range no formato "min - max"
@@ -303,12 +289,12 @@ export default function CreateJobPage() {
     // Junta requisitos
     const requirementsString = requirementsList.join(', ');
     if (!requirementsString) {
-      alert('Adicione pelo menos um requisito');
+      toast.error('Adicione pelo menos um requisito');
       return;
     }
     // Validação de responsabilidades
     if (!data.responsibilities || !data.responsibilities.trim()) {
-      alert('Preencha o campo de responsabilidades.');
+      toast.error('Preencha o campo de responsabilidades.');
       return;
     }
     setLoading(true);
@@ -322,7 +308,7 @@ export default function CreateJobPage() {
       });
       router.push('/admin-panel/jobs');
     } catch (error) {
-      alert('Erro ao criar vaga. Verifique os dados e tente novamente.');
+      toast.error('Erro ao criar vaga. Verifique os dados e tente novamente.');
       console.error(error);
     } finally {
       setLoading(false);
@@ -335,25 +321,25 @@ export default function CreateJobPage() {
         <div className="flex items-center space-x-4 mb-4">
           <Link
             href="/admin-panel/jobs"
-            className="text-indigo-400 hover:text-indigo-300"
+            className="text-sky-600 hover:text-sky-500"
           >
             ← Voltar para lista
           </Link>
         </div>
-        <h1 className="text-2xl font-bold text-zinc-100">Nova Vaga</h1>
-        <p className="text-zinc-400 mt-1">
+        <h1 className="text-2xl font-bold text-slate-800">Nova Vaga</h1>
+        <p className="text-slate-500 mt-1">
           Preencha os dados para criar uma nova vaga de emprego
         </p>
       </div>
 
   <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-md p-6 border border-zinc-700">
-          <h2 className="text-lg font-semibold text-zinc-100 mb-4">
+        <div className="bg-white border border-slate-200 shadow-sm rounded-md p-6 border border-slate-200">
+          <h2 className="text-lg font-semibold text-slate-800 mb-4">
             Informações Básicas
           </h2>
             <div className="space-y-6">
             <div>
-              <label htmlFor="title" className="block text-sm font-medium text-zinc-300 mb-2">
+              <label htmlFor="title" className="block text-sm font-medium text-slate-600 mb-2">
                 Título da Vaga *
               </label>
               <input
@@ -361,7 +347,7 @@ export default function CreateJobPage() {
                 id="title"
                 {...register('title')}
                 required
-                className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
                 placeholder="Ex: Desenvolvedor Frontend"
               />
               {errors.title && <span className="text-red-500 text-xs">{errors.title.message}</span>}
@@ -369,38 +355,32 @@ export default function CreateJobPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="state" className="block text-sm font-medium text-zinc-300 mb-2">
+                <label htmlFor="state" className="block text-sm font-medium text-slate-600 mb-2">
                   Estado *
                 </label>
-                {loadingStates ? (
-                  <div className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-400">
-                    Carregando estados...
-                  </div>
-                ) : (
-                  <Select
-                    id="state"
-                    options={states.map(state => ({ value: state.id, label: `${state.nome} (${state.sigla})` }))}
-                    value={selectedState}
-                    onChange={handleStateChange}
-                    placeholder="Selecione ou busque um estado"
-                    isClearable
-                    classNamePrefix="react-select"
-                    styles={{
-                      control: (base) => ({ ...base, backgroundColor: '#3f3f46', borderColor: '#52525b', color: '#f4f4f5' }),
-                      singleValue: (base) => ({ ...base, color: '#f4f4f5' }),
-                      menu: (base) => ({ ...base, backgroundColor: '#27272a', color: '#f4f4f5' }),
-                      option: (base, state) => ({ ...base, backgroundColor: state.isFocused ? '#6366f1' : '#27272a', color: '#f4f4f5' }),
-                    }}
-                  />
-                )}
+                <Select
+                  id="state"
+                  options={states.map(state => ({ value: state.id, label: `${state.nome} (${state.sigla})` }))}
+                  value={selectedState}
+                  onChange={handleStateChange}
+                  placeholder="Selecione ou busque um estado"
+                  isClearable
+                  classNamePrefix="react-select"
+                  styles={{
+                    control: (base) => ({ ...base, backgroundColor: '#ffffff', borderColor: '#cbd5e1', color: '#0f172a' }),
+                    singleValue: (base) => ({ ...base, color: '#0f172a' }),
+                    menu: (base) => ({ ...base, backgroundColor: '#ffffff', color: '#0f172a' }),
+                    option: (base, state) => ({ ...base, backgroundColor: state.isFocused ? '#e0f2fe' : '#ffffff', color: '#0f172a' }),
+                  }}
+                />
               </div>
 
               <div>
-                <label htmlFor="city" className="block text-sm font-medium text-zinc-300 mb-2">
+                <label htmlFor="city" className="block text-sm font-medium text-slate-600 mb-2">
                   Cidade *
                 </label>
                 {loadingCities ? (
-                  <div className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-400">
+                  <div className="w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-slate-500">
                     Carregando cidades...
                   </div>
                 ) : (
@@ -414,10 +394,10 @@ export default function CreateJobPage() {
                     isDisabled={!selectedState}
                     classNamePrefix="react-select"
                     styles={{
-                      control: (base) => ({ ...base, backgroundColor: '#3f3f46', borderColor: '#52525b', color: '#f4f4f5', opacity: selectedState ? 1 : 0.5 }),
-                      singleValue: (base) => ({ ...base, color: '#f4f4f5' }),
-                      menu: (base) => ({ ...base, backgroundColor: '#27272a', color: '#f4f4f5' }),
-                      option: (base, state) => ({ ...base, backgroundColor: state.isFocused ? '#6366f1' : '#27272a', color: '#f4f4f5' }),
+                      control: (base) => ({ ...base, backgroundColor: '#ffffff', borderColor: '#cbd5e1', color: '#0f172a', opacity: selectedState ? 1 : 0.5 }),
+                      singleValue: (base) => ({ ...base, color: '#0f172a' }),
+                      menu: (base) => ({ ...base, backgroundColor: '#ffffff', color: '#0f172a' }),
+                      option: (base, state) => ({ ...base, backgroundColor: state.isFocused ? '#e0f2fe' : '#ffffff', color: '#0f172a' }),
                     }}
                   />
                 )}
@@ -426,14 +406,14 @@ export default function CreateJobPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="job_type" className="block text-sm font-medium text-zinc-300 mb-2">
+                <label htmlFor="job_type" className="block text-sm font-medium text-slate-600 mb-2">
                   Tipo de Contrato *
                 </label>
                 <select
                   id="job_type"
                   {...register('job_type')}
                   required
-                  className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
                 >
                   <option value="full_time">Tempo Integral</option>
                   <option value="part_time">Meio Período</option>
@@ -444,14 +424,14 @@ export default function CreateJobPage() {
               </div>
 
               <div>
-                <label htmlFor="type_models" className="block text-sm font-medium text-zinc-300 mb-2">
+                <label htmlFor="type_models" className="block text-sm font-medium text-slate-600 mb-2">
                   Modelo de Trabalho *
                 </label>
                 <select
                   id="type_models"
                   {...register('type_models')}
                   required
-                  className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
                 >
                   <option value="in_person">Presencial</option>
                   <option value="home_office">Home Office</option>
@@ -461,7 +441,7 @@ export default function CreateJobPage() {
           </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-2">Faixa Salarial</label>
+              <label className="block text-sm font-medium text-slate-600 mb-2">Faixa Salarial</label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Controller
                   name="salary_min"
@@ -472,7 +452,7 @@ export default function CreateJobPage() {
                       id="salary_min"
                       value={field.value}
                       onChange={e => handleSalaryMinChange(e.target.value)}
-                      className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
                       placeholder="Mínimo (ex: R$ 1400,00)"
                       inputMode="numeric"
                     />
@@ -487,7 +467,7 @@ export default function CreateJobPage() {
                       id="salary_max"
                       value={field.value}
                       onChange={e => handleSalaryMaxChange(e.target.value)}
-                      className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
                       placeholder="Máximo (ex: R$ 3000,00)"
                       inputMode="numeric"
                     />
@@ -497,7 +477,7 @@ export default function CreateJobPage() {
             </div>
 
             <div>
-              <label htmlFor="closure" className="block text-sm font-medium text-zinc-300 mb-2">
+              <label htmlFor="closure" className="block text-sm font-medium text-slate-600 mb-2">
                 Data de Encerramento *
               </label>
               <Controller
@@ -509,24 +489,24 @@ export default function CreateJobPage() {
                     name="closure"
                     value={field.value || ''}
                     onChange={(iso) => field.onChange(iso)}
-                    className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
                   />
                 )}
               />
               {errors.closure && <span className="text-red-500 text-xs">{errors.closure.message}</span>}
-              <p className="text-xs text-zinc-400 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 A data deve ser amanhã ou uma data futura
               </p>
             </div>
 
             <div>
-              <label htmlFor="company" className="block text-sm font-medium text-zinc-300 mb-2">
+              <label htmlFor="company" className="block text-sm font-medium text-slate-600 mb-2">
                 Empresa *
               </label>
               <div className="flex gap-2">
                 <div className="flex-1">
                   {loadingCompanies ? (
-                    <div className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-400">
+                    <div className="w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-slate-500">
                       Carregando empresas...
                     </div>
                   ) : (
@@ -534,7 +514,7 @@ export default function CreateJobPage() {
                       id="company"
                       {...register('company')}
                       required
-                      className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
                     >
                       <option value="">Selecione uma empresa</option>
                       {companies.map((company) => (
@@ -548,7 +528,7 @@ export default function CreateJobPage() {
                 <button
                   type="button"
                   onClick={() => setShowCompanyModal(true)}
-                  className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md font-medium"
+                  className="px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-md font-medium"
                 >
                   Criar nova empresa
                 </button>
@@ -557,14 +537,14 @@ export default function CreateJobPage() {
           </div>
         </div>
 
-        <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-md p-6 border border-zinc-700">
-          <h2 className="text-lg font-semibold text-zinc-100 mb-4">
+        <div className="bg-white border border-slate-200 shadow-sm rounded-md p-6 border border-slate-200">
+          <h2 className="text-lg font-semibold text-slate-800 mb-4">
             Descrição e Detalhes
           </h2>
           
           <div className="space-y-6">
             <div>
-              <label htmlFor="description" className="block text-sm font-medium text-zinc-300 mb-2">
+              <label htmlFor="description" className="block text-sm font-medium text-slate-600 mb-2">
                 Descrição da Vaga *
               </label>
               <textarea
@@ -572,21 +552,21 @@ export default function CreateJobPage() {
                 {...register('description')}
                 required
                 rows={4}
-                className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
                 placeholder="Descreva a vaga, o que a empresa faz, o ambiente de trabalho..."
               />
               {errors.description && <span className="text-red-500 text-xs">{errors.description.message}</span>}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-2">Requisitos *</label>
+              <label className="block text-sm font-medium text-slate-600 mb-2">Requisitos *</label>
               <div className="flex gap-2 mb-2">
                 <input
                   type="text"
                   value={requirementInput}
                   onChange={e => setRequirementInput(e.target.value)}
                   onKeyDown={handleRequirementKeyDown}
-                  className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100 focus:outline-none"
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-slate-800 focus:outline-none"
                   placeholder="Digite o requisito e pressione Enter"
                 />
                 <button
@@ -597,42 +577,42 @@ export default function CreateJobPage() {
                       setRequirementInput('');
                     }
                   }}
-                  className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md font-medium"
+                  className="px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-md font-medium"
                 >Adicionar</button>
               </div>
               <ul className="mb-2">
                 {requirementsList.map((req, idx) => (
-                  <li key={idx} className="flex items-center justify-between bg-zinc-800 px-3 py-2 rounded mb-1">
-                    <span className="text-zinc-100 text-sm">{req}</span>
+                  <li key={idx} className="flex items-center justify-between bg-slate-50 px-3 py-2 rounded mb-1">
+                    <span className="text-slate-800 text-sm">{req}</span>
                     <button
                       type="button"
                       onClick={() => handleRemoveRequirement(idx)}
-                      className="text-red-400 hover:text-red-600 text-xs ml-2"
+                      className="text-red-600 hover:text-red-700 text-xs ml-2"
                     >Remover</button>
                   </li>
                 ))}
               </ul>
               {errors.requirements && <span className="text-red-500 text-xs">{errors.requirements.message}</span>}
-              <p className="text-xs text-zinc-400">Pressione Enter ou clique em Adicionar para cada requisito.</p>
+              <p className="text-xs text-slate-500">Pressione Enter ou clique em Adicionar para cada requisito.</p>
             </div>
 
             <div>
-              <label htmlFor="responsibilities" className="block text-sm font-medium text-zinc-300 mb-2">
+              <label htmlFor="responsibilities" className="block text-sm font-medium text-slate-600 mb-2">
                 Responsabilidades *
               </label>
               <textarea
                 id="responsibilities"
                 {...register('responsibilities')}
                 rows={4}
-                className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-md text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
                 placeholder="Descreva as principais responsabilidades do cargo..."
               />
             </div>
           </div>
         </div>
 
-        <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-md p-6 border border-zinc-700">
-          <h2 className="text-lg font-semibold text-zinc-100 mb-4">
+        <div className="bg-white border border-slate-200 shadow-sm rounded-md p-6 border border-slate-200">
+          <h2 className="text-lg font-semibold text-slate-800 mb-4">
             Configurações
           </h2>
           
@@ -641,9 +621,9 @@ export default function CreateJobPage() {
               type="checkbox"
               id="is_active"
               {...register('is_active')}
-              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-zinc-600 rounded bg-zinc-700"
+              className="h-4 w-4 text-sky-600 focus:ring-sky-500 border-slate-300 rounded bg-white"
             />
-            <label htmlFor="is_active" className="ml-2 block text-sm text-zinc-300">
+            <label htmlFor="is_active" className="ml-2 block text-sm text-slate-600">
               Vaga ativa (visível para candidatos)
             </label>
           </div>
@@ -652,14 +632,14 @@ export default function CreateJobPage() {
         <div className="flex items-center justify-end space-x-4">
           <Link
             href="/admin-panel/jobs"
-            className="px-6 py-2 border border-zinc-600 text-zinc-300 rounded-md hover:bg-zinc-700 transition-colors"
+            className="px-6 py-2 border border-slate-300 text-slate-600 rounded-md hover:bg-white transition-colors"
           >
             Cancelar
           </Link>
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-800 text-white rounded-md font-medium transition-colors"
+            className="px-6 py-2 bg-sky-600 hover:bg-sky-700 disabled:bg-sky-400 text-white rounded-md font-medium transition-colors"
           >
             {loading ? 'Salvando...' : 'Criar Vaga'}
           </button>

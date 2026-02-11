@@ -34,14 +34,14 @@ export default function AdminApplicationsPage() {
 
   const getStatusColor = (status: string) => {
     const colors = {
-      submitted: 'bg-blue-900 text-blue-300',
-      in_process: 'bg-yellow-900 text-yellow-300',
-      interview_scheduled: 'bg-purple-900 text-purple-300',
-      approved: 'bg-green-900 text-green-300',
-      rejected: 'bg-red-900 text-red-300',
-      withdrawn: 'bg-gray-800 text-gray-400'
+      submitted: 'bg-sky-50 text-sky-700 border border-sky-200',
+      in_process: 'bg-amber-50 text-amber-700 border border-amber-200',
+      interview_scheduled: 'bg-violet-50 text-violet-700 border border-violet-200',
+      approved: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+      rejected: 'bg-red-50 text-red-700 border border-red-200',
+      withdrawn: 'bg-slate-100 text-slate-500 border border-slate-200'
     };
-    return colors[status as keyof typeof colors] || 'bg-gray-800 text-gray-400';
+    return colors[status as keyof typeof colors] || 'bg-slate-100 text-slate-500 border border-slate-200';
   };
 
   const getStatusLabel = (status: string) => {
@@ -99,7 +99,7 @@ export default function AdminApplicationsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-64">
-        <div className="text-zinc-300">Carregando candidaturas...</div>
+        <div className="text-slate-600">Carregando candidaturas...</div>
       </div>
     );
   }
@@ -115,10 +115,10 @@ export default function AdminApplicationsPage() {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-zinc-100 mb-2">
+        <h1 className="text-3xl font-bold text-slate-800 mb-2">
           Candidaturas Recebidas
         </h1>
-        <p className="text-zinc-400">
+        <p className="text-slate-500">
           Gerencie as candidaturas enviadas pelos candidatos
         </p>
       </div>
@@ -130,38 +130,38 @@ export default function AdminApplicationsPage() {
           value={searchTerm}
           onChange={handleSearchInput}
           placeholder="Buscar por nome ou vaga..."
-          className="w-full max-w-md px-4 py-2 rounded-md border border-zinc-700 bg-zinc-900 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-600"
+          className="w-full max-w-md px-4 py-2 rounded-md border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
         />
       </div>
 
       {/* Estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-md p-4 border border-zinc-700">
-          <h3 className="text-sm font-medium text-zinc-300 mb-1">Total</h3>
-          <p className="text-2xl font-bold text-blue-300">{totalCount}</p>
+        <div className="bg-white border border-slate-200 shadow-sm rounded-md p-4 border border-slate-200">
+          <h3 className="text-sm font-medium text-slate-600 mb-1">Total</h3>
+          <p className="text-2xl font-bold text-sky-600">{totalCount}</p>
         </div>
-        <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-md p-4 border border-zinc-700">
-          <h3 className="text-sm font-medium text-zinc-300 mb-1">Em Análise</h3>
-          <p className="text-2xl font-bold text-yellow-300">
+        <div className="bg-white border border-slate-200 shadow-sm rounded-md p-4 border border-slate-200">
+          <h3 className="text-sm font-medium text-slate-600 mb-1">Em Análise</h3>
+          <p className="text-2xl font-bold text-amber-600">
             {applications.filter(app => app.status === 'submitted').length}
           </p>
         </div>
-        <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-md p-4 border border-zinc-700">
-          <h3 className="text-sm font-medium text-zinc-300 mb-1">Entrevistas</h3>
-          <p className="text-2xl font-bold text-purple-300">
+        <div className="bg-white border border-slate-200 shadow-sm rounded-md p-4 border border-slate-200">
+          <h3 className="text-sm font-medium text-slate-600 mb-1">Entrevistas</h3>
+          <p className="text-2xl font-bold text-violet-600">
             {applications.filter(app => app.status === 'interview_scheduled').length}
           </p>
         </div>
-        <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-md p-4 border border-zinc-700">
-          <h3 className="text-sm font-medium text-zinc-300 mb-1">Aprovados</h3>
-          <p className="text-2xl font-bold text-green-300">
+        <div className="bg-white border border-slate-200 shadow-sm rounded-md p-4 border border-slate-200">
+          <h3 className="text-sm font-medium text-slate-600 mb-1">Aprovados</h3>
+          <p className="text-2xl font-bold text-emerald-600">
             {applications.filter(app => app.status === 'approved').length}
           </p>
         </div>
       </div>
 
       {/* Filtros */}
-      <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-md p-4 border border-zinc-700">
+      <div className="bg-white border border-slate-200 shadow-sm rounded-md p-4 border border-slate-200">
         <div className="flex flex-wrap gap-2">
           {statusOptions.map(option => (
             <button
@@ -169,8 +169,8 @@ export default function AdminApplicationsPage() {
               onClick={() => handleStatusFilter(option.value)}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 filters.status === option.value || (!filters.status && !option.value)
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
+                  ? 'bg-sky-600 text-white'
+                  : 'bg-white text-slate-600 hover:bg-slate-200'
               }`}
             >
               {option.label}
@@ -196,17 +196,17 @@ export default function AdminApplicationsPage() {
                 <Link
                   href={`/admin-panel/candidaturas/${application.id}`}
                   key={application.id}
-                  className="block bg-gradient-to-r from-zinc-900 to-zinc-800 hover:opacity-60 rounded-md p-6 border border-zinc-700 duration-300"
+                  className="block bg-white border border-slate-200 shadow-sm hover:bg-slate-50 rounded-md p-6 border border-slate-200 duration-300"
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h3 className="text-xl font-semibold text-zinc-100 mb-1">
+                      <h3 className="text-xl font-semibold text-slate-800 mb-1">
                         {application.candidate_name || application.name || 'Nome não informado'}
                       </h3>
-                      <p className="text-indigo-400 font-medium">
+                      <p className="text-sky-600 font-medium">
                         {application.job_title || 'Vaga não informada'}
                       </p>
-                      <p className="text-zinc-400 text-sm">
+                      <p className="text-slate-500 text-sm">
                         {application.company_name || 'Empresa não informada'}
                       </p>
                     </div>
@@ -215,7 +215,7 @@ export default function AdminApplicationsPage() {
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-zinc-400">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-slate-500">
                     <div>
                       <span className="font-medium">Telefone:</span> {application.phone || 'Não informado'}
                     </div>
@@ -228,14 +228,14 @@ export default function AdminApplicationsPage() {
                   </div>
 
                   {application.salary_expectation && (
-                    <div className="mt-2 text-sm text-zinc-400">
+                    <div className="mt-2 text-sm text-slate-500">
                       <span className="font-medium">Pretensão Salarial:</span> R$ {application.salary_expectation.toLocaleString('pt-BR')}
                     </div>
                   )}
 
                   {application.linkedin && (
                     <div className="mt-2">
-                      <span className="text-xs bg-blue-900 text-blue-300 px-2 py-1 rounded">
+                      <span className="text-xs bg-sky-50 text-sky-600 px-2 py-1 rounded">
                         LinkedIn disponível
                       </span>
                     </div>
@@ -247,13 +247,13 @@ export default function AdminApplicationsPage() {
         } else {
           return (
             <div className="text-center py-12">
-              <div className="text-zinc-400 mb-4">
+              <div className="text-slate-500 mb-4">
                 <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-zinc-300 mb-2">Nenhuma candidatura encontrada</h3>
-              <p className="text-zinc-500">
+              <h3 className="text-lg font-medium text-slate-600 mb-2">Nenhuma candidatura encontrada</h3>
+              <p className="text-slate-400">
                 {searchTerm
                   ? 'Nenhuma candidatura encontrada para a busca.'
                   : (filters.status 

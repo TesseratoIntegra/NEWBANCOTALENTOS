@@ -5,6 +5,7 @@ import { Application } from '@/types';
 import { Building2, MapPin, Calendar, Clock, Eye, Trash2, Briefcase } from 'lucide-react';
 import Link from 'next/link';
 import applicationService from '@/services/applicationService';
+import { confirmDialog } from '@/lib/confirmDialog';
 
 const STATUS_CONFIG: Record<string, { color: string; bgColor: string; label: string }> = {
   submitted: { color: 'text-amber-700', bgColor: 'bg-amber-100', label: 'Em análise' },
@@ -60,7 +61,7 @@ export default function ApplicationsSection() {
   }, [loadApplications]);
 
   const handleWithdraw = async (id: number) => {
-    if (!confirm('Tem certeza que deseja retirar esta candidatura?')) return;
+    if (!(await confirmDialog('Tem certeza que deseja retirar esta candidatura?'))) return;
     try {
       await applicationService.deleteApplication(id);
       loadApplications(currentPage);

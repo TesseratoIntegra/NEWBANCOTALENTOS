@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { CandidateExperience } from '@/types';
 import { X, Save } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import DateInput from '@/components/ui/DateInput';
 
 interface EditExperienceModalProps {
@@ -37,12 +38,12 @@ export default function EditExperienceModal({ experience, onClose, onSave }: Edi
     e.preventDefault();
 
     if (!formData.is_current && !formData.end_date) {
-      alert('Data de término é obrigatória se não for trabalho atual.');
+      toast.error('Data de término é obrigatória se não for trabalho atual.');
       return;
     }
 
     if (!formData.description.trim()) {
-      alert('Descrição das atividades é obrigatória.');
+      toast.error('Descrição das atividades é obrigatória.');
       return;
     }
 

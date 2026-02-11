@@ -195,19 +195,19 @@ export default function ProfileStatusModal({
   const showFeedbackAreas = status !== 'approved';
 
   return (
-    <div className="fixed inset-0 w-full h-screen z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="bg-zinc-800 rounded-lg shadow-xl w-full max-w-4xl border border-zinc-700 max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 w-full h-screen z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl border border-slate-200 max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-zinc-700 flex-shrink-0">
+        <div className="flex items-center justify-between p-4 border-b border-slate-200 flex-shrink-0">
           <div>
-            <h2 className="text-lg font-semibold text-white">Revisão de Perfil</h2>
-            <p className="text-sm text-zinc-400 mt-0.5">
+            <h2 className="text-lg font-semibold text-slate-900">Revisão de Perfil</h2>
+            <p className="text-sm text-slate-500 mt-0.5">
               {candidateName} {currentStatus && <span>— {currentStatus}</span>}
             </p>
           </div>
           <button
             onClick={handleClose}
-            className="p-1 text-zinc-400 hover:text-white transition-colors"
+            className="p-1 text-slate-500 hover:text-slate-900 transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
@@ -222,13 +222,13 @@ export default function ProfileStatusModal({
               <label
                 className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-colors ${
                   status === 'approved'
-                    ? 'border-green-500 bg-green-900/20'
-                    : 'border-zinc-600 hover:border-zinc-500'
+                    ? 'border-green-500 bg-emerald-50/20'
+                    : 'border-slate-300 hover:border-slate-300'
                 }`}
               >
                 <input type="radio" name="status" value="approved" checked={status === 'approved'} onChange={() => setStatus('approved')} className="sr-only" />
-                <CheckCircle className={`h-5 w-5 flex-shrink-0 ${status === 'approved' ? 'text-green-400' : 'text-zinc-500'}`} />
-                <span className={`font-medium text-sm ${status === 'approved' ? 'text-green-400' : 'text-zinc-300'}`}>
+                <CheckCircle className={`h-5 w-5 flex-shrink-0 ${status === 'approved' ? 'text-emerald-600' : 'text-slate-400'}`} />
+                <span className={`font-medium text-sm ${status === 'approved' ? 'text-emerald-600' : 'text-slate-600'}`}>
                   Aprovar
                 </span>
               </label>
@@ -237,12 +237,12 @@ export default function ProfileStatusModal({
                 className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-colors ${
                   status === 'changes_requested'
                     ? 'border-orange-500 bg-orange-900/20'
-                    : 'border-zinc-600 hover:border-zinc-500'
+                    : 'border-slate-300 hover:border-slate-300'
                 }`}
               >
                 <input type="radio" name="status" value="changes_requested" checked={status === 'changes_requested'} onChange={() => setStatus('changes_requested')} className="sr-only" />
-                <AlertCircle className={`h-5 w-5 flex-shrink-0 ${status === 'changes_requested' ? 'text-orange-400' : 'text-zinc-500'}`} />
-                <span className={`font-medium text-sm ${status === 'changes_requested' ? 'text-orange-400' : 'text-zinc-300'}`}>
+                <AlertCircle className={`h-5 w-5 flex-shrink-0 ${status === 'changes_requested' ? 'text-orange-600' : 'text-slate-400'}`} />
+                <span className={`font-medium text-sm ${status === 'changes_requested' ? 'text-orange-600' : 'text-slate-600'}`}>
                   Solicitar Alterações
                 </span>
               </label>
@@ -250,20 +250,20 @@ export default function ProfileStatusModal({
               <label
                 className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-colors ${
                   status === 'rejected'
-                    ? 'border-red-500 bg-red-900/20'
-                    : 'border-zinc-600 hover:border-zinc-500'
+                    ? 'border-red-500 bg-red-50/20'
+                    : 'border-slate-300 hover:border-slate-300'
                 }`}
               >
                 <input type="radio" name="status" value="rejected" checked={status === 'rejected'} onChange={() => setStatus('rejected')} className="sr-only" />
-                <XCircle className={`h-5 w-5 flex-shrink-0 ${status === 'rejected' ? 'text-red-400' : 'text-zinc-500'}`} />
-                <span className={`font-medium text-sm ${status === 'rejected' ? 'text-red-400' : 'text-zinc-300'}`}>
+                <XCircle className={`h-5 w-5 flex-shrink-0 ${status === 'rejected' ? 'text-red-600' : 'text-slate-400'}`} />
+                <span className={`font-medium text-sm ${status === 'rejected' ? 'text-red-600' : 'text-slate-600'}`}>
                   Reprovar
                 </span>
               </label>
             </div>
 
             {showFeedbackAreas && (
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs text-slate-400">
                 Informe ao candidato quais seções do perfil precisam de melhorias. Clique em cada seção para expandir e escrever um feedback específico.
               </p>
             )}
@@ -310,7 +310,7 @@ export default function ProfileStatusModal({
                 <InfoRow label="Escolaridade" value={profile.education_level} />
               </div>
               {profile.professional_summary && (
-                <p className="text-xs text-zinc-400 mt-2 line-clamp-3">{profile.professional_summary}</p>
+                <p className="text-xs text-slate-500 mt-2 line-clamp-3">{profile.professional_summary}</p>
               )}
             </ProfileSection>
 
@@ -326,13 +326,13 @@ export default function ProfileStatusModal({
               showFeedback={showFeedbackAreas}
             >
               {educations.length === 0 ? (
-                <p className="text-xs text-zinc-500 italic">Nenhuma formação cadastrada</p>
+                <p className="text-xs text-slate-400 italic">Nenhuma formação cadastrada</p>
               ) : (
                 <div className="space-y-2">
                   {educations.map(edu => (
                     <div key={edu.id} className="text-sm">
-                      <p className="text-zinc-200 font-medium">{edu.course}</p>
-                      <p className="text-zinc-400 text-xs">{edu.institution} — {formatDate(edu.start_date)} - {edu.is_current ? 'Cursando' : formatDate(edu.end_date)}</p>
+                      <p className="text-slate-700 font-medium">{edu.course}</p>
+                      <p className="text-slate-500 text-xs">{edu.institution} — {formatDate(edu.start_date)} - {edu.is_current ? 'Cursando' : formatDate(edu.end_date)}</p>
                     </div>
                   ))}
                 </div>
@@ -351,13 +351,13 @@ export default function ProfileStatusModal({
               showFeedback={showFeedbackAreas}
             >
               {experiences.length === 0 ? (
-                <p className="text-xs text-zinc-500 italic">Nenhuma experiência cadastrada</p>
+                <p className="text-xs text-slate-400 italic">Nenhuma experiência cadastrada</p>
               ) : (
                 <div className="space-y-2">
                   {experiences.map(exp => (
                     <div key={exp.id} className="text-sm">
-                      <p className="text-zinc-200 font-medium">{exp.position}</p>
-                      <p className="text-zinc-400 text-xs">{exp.company} — {formatDate(exp.start_date)} - {exp.is_current ? 'Atual' : formatDate(exp.end_date)}</p>
+                      <p className="text-slate-700 font-medium">{exp.position}</p>
+                      <p className="text-slate-500 text-xs">{exp.company} — {formatDate(exp.start_date)} - {exp.is_current ? 'Atual' : formatDate(exp.end_date)}</p>
                     </div>
                   ))}
                 </div>
@@ -376,11 +376,11 @@ export default function ProfileStatusModal({
               showFeedback={showFeedbackAreas}
             >
               {skills.length === 0 ? (
-                <p className="text-xs text-zinc-500 italic">Nenhuma habilidade cadastrada</p>
+                <p className="text-xs text-slate-400 italic">Nenhuma habilidade cadastrada</p>
               ) : (
                 <div className="flex flex-wrap gap-1.5">
                   {skills.map(skill => (
-                    <span key={skill.id} className="px-2 py-0.5 bg-indigo-900/50 text-indigo-300 rounded text-xs">
+                    <span key={skill.id} className="px-2 py-0.5 bg-sky-50 text-sky-500 rounded text-xs">
                       {skill.skill_name}
                     </span>
                   ))}
@@ -400,13 +400,13 @@ export default function ProfileStatusModal({
               showFeedback={showFeedbackAreas}
             >
               {languages.length === 0 ? (
-                <p className="text-xs text-zinc-500 italic">Nenhum idioma cadastrado</p>
+                <p className="text-xs text-slate-400 italic">Nenhum idioma cadastrado</p>
               ) : (
                 <div className="space-y-1">
                   {languages.map(lang => (
                     <div key={lang.id} className="flex justify-between text-sm">
-                      <span className="text-zinc-300">{lang.language}</span>
-                      <span className="text-zinc-400 text-xs">{lang.proficiency}</span>
+                      <span className="text-slate-600">{lang.language}</span>
+                      <span className="text-slate-500 text-xs">{lang.proficiency}</span>
                     </div>
                   ))}
                 </div>
@@ -415,8 +415,8 @@ export default function ProfileStatusModal({
 
             {/* General Notes */}
             {showFeedbackAreas && (
-              <div className="space-y-2 pt-2 border-t border-zinc-700">
-                <label className="block text-sm font-medium text-zinc-300">
+              <div className="space-y-2 pt-2 border-t border-slate-200">
+                <label className="block text-sm font-medium text-slate-600">
                   Observações Gerais
                 </label>
                 <textarea
@@ -424,26 +424,26 @@ export default function ProfileStatusModal({
                   onChange={(e) => setGeneralNotes(e.target.value)}
                   placeholder="Observações adicionais que não se encaixam em nenhuma seção específica..."
                   rows={2}
-                  className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white text-sm placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                  className="w-full px-3 py-2 bg-slate-100 border border-slate-300 rounded-lg text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 resize-none"
                 />
               </div>
             )}
 
             {/* Error */}
             {error && (
-              <div className="p-3 bg-red-900/30 border border-red-500/50 rounded-lg text-red-300 text-sm">
+              <div className="p-3 bg-red-50/30 border border-red-200 rounded-lg text-red-700 text-sm">
                 {error}
               </div>
             )}
           </div>
 
           {/* Actions - Fixed at bottom */}
-          <div className="flex justify-end gap-3 p-4 border-t border-zinc-700 flex-shrink-0 bg-zinc-800">
+          <div className="flex justify-end gap-3 p-4 border-t border-slate-200 flex-shrink-0 bg-white">
             <button
               type="button"
               onClick={handleClose}
               disabled={loading}
-              className="px-4 py-2 text-zinc-300 hover:text-white hover:bg-zinc-700 rounded-lg transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
             >
               Cancelar
             </button>
@@ -452,10 +452,10 @@ export default function ProfileStatusModal({
               disabled={loading}
               className={`px-5 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 ${
                 status === 'approved'
-                  ? 'bg-green-600 hover:bg-green-700 text-white'
+                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
                   : status === 'changes_requested'
-                  ? 'bg-orange-600 hover:bg-orange-700 text-white'
-                  : 'bg-red-600 hover:bg-red-700 text-white'
+                  ? 'bg-orange-500 hover:bg-orange-600 text-white'
+                  : 'bg-red-500 hover:bg-red-600 text-white'
               }`}
             >
               {loading ? 'Salvando...' : status === 'approved' ? 'Aprovar Perfil' : status === 'changes_requested' ? 'Enviar Observações' : 'Reprovar Perfil'}
@@ -474,8 +474,8 @@ export default function ProfileStatusModal({
 function InfoRow({ label, value }: { label: string; value?: string }) {
   return (
     <div className="flex gap-2 py-0.5">
-      <span className="text-zinc-500 flex-shrink-0">{label}:</span>
-      <span className={value ? 'text-zinc-300' : 'text-zinc-600 italic'}>{value || 'Não informado'}</span>
+      <span className="text-slate-400 flex-shrink-0">{label}:</span>
+      <span className={value ? 'text-slate-600' : 'text-slate-400 italic'}>{value || 'Não informado'}</span>
     </div>
   );
 }
@@ -504,28 +504,28 @@ function ProfileSection({
   const hasFeedback = feedback.trim().length > 0;
 
   return (
-    <div className={`rounded-lg border transition-colors ${hasFeedback && showFeedback ? 'border-orange-500/50 bg-orange-900/10' : 'border-zinc-700 bg-zinc-800/50'}`}>
+    <div className={`rounded-lg border transition-colors ${hasFeedback && showFeedback ? 'border-orange-200 bg-orange-900/10' : 'border-slate-200 bg-white/50'}`}>
       <button
         type="button"
         onClick={onToggle}
         className="flex items-center justify-between w-full px-4 py-3 text-left"
       >
         <div className="flex items-center gap-2">
-          <span className="text-indigo-400">{icon}</span>
-          <span className="text-sm font-medium text-zinc-200">{label}</span>
+          <span className="text-sky-600">{icon}</span>
+          <span className="text-sm font-medium text-slate-700">{label}</span>
           {hasFeedback && showFeedback && (
-            <span className="ml-2 px-1.5 py-0.5 bg-orange-900/50 text-orange-300 rounded text-[10px] font-medium">
+            <span className="ml-2 px-1.5 py-0.5 bg-orange-50 text-orange-700 rounded text-[10px] font-medium">
               Com feedback
             </span>
           )}
         </div>
-        {expanded ? <ChevronUp className="h-4 w-4 text-zinc-400" /> : <ChevronDown className="h-4 w-4 text-zinc-400" />}
+        {expanded ? <ChevronUp className="h-4 w-4 text-slate-500" /> : <ChevronDown className="h-4 w-4 text-slate-500" />}
       </button>
 
       {expanded && (
         <div className="px-4 pb-4 space-y-3">
           {/* Data summary */}
-          <div className="bg-zinc-900/50 rounded-lg p-3">
+          <div className="bg-slate-50 rounded-lg p-3">
             {children}
           </div>
 
@@ -536,7 +536,7 @@ function ProfileSection({
               onChange={(e) => onFeedbackChange(e.target.value)}
               placeholder={`O que precisa ser melhorado nesta seção?`}
               rows={2}
-              className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white text-sm placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
+              className="w-full px-3 py-2 bg-slate-100 border border-slate-300 rounded-lg text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
             />
           )}
         </div>

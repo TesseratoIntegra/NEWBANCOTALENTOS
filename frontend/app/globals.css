@@ -109,6 +109,46 @@ body {
   display: none;  /* Chrome, Safari and Opera */
 }
 
+/* Glassmorphism utilities */
+.glass {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+/* Admin Panel Utilities */
+.admin-card {
+  background: white;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.admin-input {
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  color: #0f172a;
+}
+
+.admin-input::placeholder {
+  color: #94a3b8;
+}
+
+.admin-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #0ea5e9;
+  border-color: #0ea5e9;
+}
+
 /* Detectar autofill do navegador */
 @keyframes onAutoFillStart {
   from { /* vazio */ }
@@ -117,4 +157,111 @@ body {
 
 input:-webkit-autofill {
   animation-name: onAutoFillStart;
+}
+
+/* ==========================================
+   ADMIN DARK MODE — CSS Variable Overrides
+   Escopo: [data-theme="dark"] .admin-panel
+   Não afeta a landing page ou outras áreas.
+   ========================================== */
+
+/* Override bg-white para cards no admin dark mode */
+[data-theme="dark"] .admin-panel :where(.bg-white) {
+  background-color: var(--color-zinc-800);
+}
+[data-theme="dark"] .admin-panel :where(.bg-white\/20) {
+  background-color: color-mix(in oklch, var(--color-zinc-800) 20%, transparent);
+}
+[data-theme="dark"] .admin-panel :where(.bg-white\/50) {
+  background-color: color-mix(in oklch, var(--color-zinc-800) 50%, transparent);
+}
+[data-theme="dark"] .admin-panel :where(.hover\:bg-white:hover) {
+  background-color: var(--color-zinc-700);
+}
+
+/* Slate scale → Zinc scale (backgrounds, borders, text) */
+[data-theme="dark"] .admin-panel {
+  /* Backgrounds */
+  --color-slate-50: var(--color-zinc-900);
+  --color-slate-100: var(--color-zinc-800);
+
+  /* Borders */
+  --color-slate-200: var(--color-zinc-700);
+  --color-slate-300: var(--color-zinc-600);
+
+  /* Text (inverted scale) */
+  --color-slate-400: var(--color-zinc-500);
+  --color-slate-500: var(--color-zinc-400);
+  --color-slate-600: var(--color-zinc-300);
+  --color-slate-800: var(--color-zinc-100);
+  --color-slate-900: var(--color-white);
+
+  /* Primary: sky → indigo */
+  --color-sky-50: var(--color-indigo-950);
+  --color-sky-200: var(--color-indigo-800);
+  --color-sky-400: var(--color-indigo-400);
+  --color-sky-500: var(--color-indigo-500);
+  --color-sky-600: var(--color-indigo-600);
+  --color-sky-700: var(--color-indigo-700);
+
+  /* Badge: emerald */
+  --color-emerald-50: var(--color-emerald-950);
+  --color-emerald-200: var(--color-emerald-800);
+  --color-emerald-600: var(--color-emerald-400);
+  --color-emerald-700: var(--color-emerald-300);
+
+  /* Badge: red */
+  --color-red-50: var(--color-red-950);
+  --color-red-200: var(--color-red-800);
+  --color-red-500: var(--color-red-600);
+  --color-red-600: var(--color-red-500);
+  --color-red-700: var(--color-red-300);
+
+  /* Badge: amber */
+  --color-amber-50: var(--color-amber-950);
+  --color-amber-200: var(--color-amber-800);
+  --color-amber-600: var(--color-amber-500);
+  --color-amber-700: var(--color-amber-300);
+
+  /* Badge: violet */
+  --color-violet-50: var(--color-violet-950);
+  --color-violet-200: var(--color-violet-800);
+  --color-violet-600: var(--color-violet-400);
+  --color-violet-700: var(--color-violet-300);
+
+  /* Badge: orange */
+  --color-orange-50: var(--color-orange-950);
+  --color-orange-200: var(--color-orange-800);
+  --color-orange-500: var(--color-orange-400);
+  --color-orange-600: var(--color-orange-400);
+  --color-orange-700: var(--color-orange-300);
+
+  /* Progress bars, accents */
+  --color-green-500: var(--color-green-400);
+  --color-green-700: var(--color-green-300);
+}
+
+/* Dark mode scrollbar */
+[data-theme="dark"] .admin-panel ::-webkit-scrollbar-track {
+  background: #27272a;
+}
+[data-theme="dark"] .admin-panel ::-webkit-scrollbar-thumb {
+  background: #52525b;
+}
+[data-theme="dark"] .admin-panel ::-webkit-scrollbar-thumb:hover {
+  background: #71717a;
+}
+
+/* Dark mode admin utilities */
+[data-theme="dark"] .admin-card {
+  background: var(--color-zinc-800);
+  border-color: var(--color-zinc-700);
+}
+[data-theme="dark"] .admin-input {
+  background: var(--color-zinc-700);
+  border-color: var(--color-zinc-600);
+  color: #f4f4f5;
+}
+[data-theme="dark"] .admin-input::placeholder {
+  color: #71717a;
 }

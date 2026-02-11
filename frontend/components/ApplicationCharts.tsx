@@ -135,10 +135,10 @@ export default function ApplicationCharts({ applications }: ApplicationChartsPro
   const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-zinc-800 border border-zinc-600 rounded-md p-3 shadow-lg">
-          <p className="text-zinc-200 font-medium">{label}</p>
+        <div className="bg-white border border-slate-300 rounded-md p-3 shadow-lg">
+          <p className="text-slate-700 font-medium">{label}</p>
           {payload.map((entry, index: number) => (
-            <p key={index} className="text-zinc-300" style={{ color: entry.color }}>
+            <p key={index} className="text-slate-600" style={{ color: entry.color }}>
               {entry.name}: {entry.value}
             </p>
           ))}
@@ -150,13 +150,13 @@ export default function ApplicationCharts({ applications }: ApplicationChartsPro
 
   return (
     <div className="space-y-8">
-      <h2 className="text-2xl font-bold text-zinc-100 mb-6">Análise de Candidaturas</h2>
+      <h2 className="text-2xl font-bold text-slate-800 mb-6">Análise de Candidaturas</h2>
       
       {/* Gráficos principais */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Gráfico de Pizza - Status das Candidaturas */}
-        <div className="bg-zinc-800 rounded-md p-6 border border-zinc-700">
-          <h3 className="text-lg font-semibold text-zinc-100 mb-4">
+        <div className="bg-white rounded-md p-6 border border-slate-200">
+          <h3 className="text-lg font-semibold text-slate-800 mb-4">
             Distribuição por Status
           </h3>
           <ResponsiveContainer width="100%" height={300}>
@@ -181,8 +181,8 @@ export default function ApplicationCharts({ applications }: ApplicationChartsPro
         </div>
 
         {/* Gráfico de Linha - Evolução temporal das candidaturas */}
-        <div className="bg-zinc-800 rounded-md p-6 border border-zinc-700">
-          <h3 className="text-lg font-semibold text-zinc-100 mb-4">
+        <div className="bg-white rounded-md p-6 border border-slate-200">
+          <h3 className="text-lg font-semibold text-slate-800 mb-4">
             Evolução das Candidaturas por Mês
           </h3>
           <ResponsiveContainer width="100%" height={300}>
@@ -234,9 +234,9 @@ export default function ApplicationCharts({ applications }: ApplicationChartsPro
 
       {/* Estatísticas resumidas */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-zinc-800 rounded-md p-4 border border-zinc-700 text-center">
-          <h4 className="text-sm font-medium text-zinc-400">Taxa de Aprovação</h4>
-          <p className="text-2xl font-bold text-zinc-100">
+        <div className="bg-white rounded-md p-4 border border-slate-200 text-center">
+          <h4 className="text-sm font-medium text-slate-500">Taxa de Aprovação</h4>
+          <p className="text-2xl font-bold text-slate-800">
             {applications.length > 0 
               ? ((applications.filter(app => app.status === 'approved').length / applications.length) * 100).toFixed(1)
               : '0'
@@ -244,9 +244,9 @@ export default function ApplicationCharts({ applications }: ApplicationChartsPro
           </p>
         </div>
         
-        <div className="bg-zinc-800 rounded-md p-4 border border-zinc-700 text-center">
-          <h4 className="text-sm font-medium text-zinc-400">Status Mais Comum</h4>
-          <p className="text-lg font-bold text-zinc-100">
+        <div className="bg-white rounded-md p-4 border border-slate-200 text-center">
+          <h4 className="text-sm font-medium text-slate-500">Status Mais Comum</h4>
+          <p className="text-lg font-bold text-slate-800">
             {statusData.length > 0 
               ? statusData.reduce((prev, current) => 
                   prev.count > current.count ? prev : current
@@ -256,9 +256,9 @@ export default function ApplicationCharts({ applications }: ApplicationChartsPro
           </p>
         </div>
         
-        <div className="bg-zinc-800 rounded-md p-4 border border-zinc-700 text-center">
-          <h4 className="text-sm font-medium text-zinc-400">Tipo Mais Procurado</h4>
-          <p className="text-lg font-bold text-zinc-100">
+        <div className="bg-white rounded-md p-4 border border-slate-200 text-center">
+          <h4 className="text-sm font-medium text-slate-500">Tipo Mais Procurado</h4>
+          <p className="text-lg font-bold text-slate-800">
             {jobTypeData.length > 0 
               ? jobTypeData.reduce((prev, current) => 
                   prev.count > current.count ? prev : current
@@ -268,9 +268,9 @@ export default function ApplicationCharts({ applications }: ApplicationChartsPro
           </p>
         </div>
         
-        <div className="bg-zinc-800 rounded-md p-4 border border-zinc-700 text-center">
-          <h4 className="text-sm font-medium text-zinc-400">Candidaturas em Processo</h4>
-          <p className="text-2xl font-bold text-zinc-100">
+        <div className="bg-white rounded-md p-4 border border-slate-200 text-center">
+          <h4 className="text-sm font-medium text-slate-500">Candidaturas em Processo</h4>
+          <p className="text-2xl font-bold text-slate-800">
             {applications.filter(app => 
               ['in_process', 'interview_scheduled'].includes(app.status)
             ).length}

@@ -199,38 +199,38 @@ const Home = () => {
       <Hero/>
 
       {/* How it Works Section */}
-      <section className="pt-16 pb-10 mt-20 px-4 border-t border-blue-900/50" id="avaliable">
+      <section className="pt-16 pb-10 mt-20 px-4" id="avaliable">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-6">
+          <div className="text-center mb-10">
             <SplitText
               text="Como funciona"
-              className="text-2xl lg:text-4xl font-bold text-blue-900 mb-2 quicksand"
+              className="text-2xl lg:text-4xl font-bold text-blue-900 mb-3 quicksand"
               delay={30}
               duration={0.6}
             />
             <ScrollReveal>
-            <p className="text-lg text-slate-600 max-w-7xl mx-auto">
+            <p className="text-lg text-slate-500 max-w-2xl mx-auto">
               Um processo simples e eficiente para conectar você às melhores oportunidades do mercado.
             </p>
             </ScrollReveal>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {howItWorksData.map((item, index) => (
-              <ScrollReveal delay={400 * index} key={index}>
-              <div className={`relative ${index === howItWorksData.length - 1 ? '' : ''}`}>
-                <div className="p-8 text-center">
-                  <div className="w-16 h-16 bg-gradient-to-r from-blue-800 to-blue-900 rounded-full flex items-center justify-center mx-auto mb-6 text-blue-100 font-bold text-2xl">
+              <ScrollReveal delay={300 * index} key={index}>
+              <div className="relative group">
+                <div className="glass-card rounded-2xl p-7 text-center shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                  <div className="w-14 h-14 bg-gradient-to-br from-blue-800 to-blue-950 rounded-2xl flex items-center justify-center mx-auto mb-5 text-white font-bold text-xl shadow-md shadow-blue-900/20 group-hover:scale-110 transition-transform duration-300">
                     {item.step}
                   </div>
-                  <h3 className="text-2xl font-bold text-blue-900 mb-1 quicksand">{item.title}</h3>
-                  <p className="text-slate-600">
+                  <h3 className="text-xl font-bold text-blue-900 mb-2 quicksand">{item.title}</h3>
+                  <p className="text-slate-500 text-sm leading-relaxed">
                     {item.description}
                   </p>
                 </div>
                 {index < howItWorksData.length - 1 && (
-                  <div className="hidden md:block absolute top-1/2 -right-[1.9rem] transform -translate-y-1/2 text-blue-500">
-                    <ChevronRight className="w-8 h-8" />
+                  <div className="hidden lg:block absolute top-1/2 -right-[1.1rem] transform -translate-y-1/2 text-blue-300">
+                    <ChevronRight className="w-6 h-6" />
                   </div>
                 )}
               </div>

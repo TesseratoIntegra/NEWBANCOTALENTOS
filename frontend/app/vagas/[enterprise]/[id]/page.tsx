@@ -13,7 +13,7 @@ import SplitText from '@/components/SliptText';
 import LoadChiap from '@/components/LoadChiap';
 import { toast } from 'react-hot-toast';
 
-// Types for job data
+// Types for job data (agora inclui company e group direto)
 type JobData = {
   title: string;
   description: string;
@@ -25,29 +25,16 @@ type JobData = {
   created_at: string;
   updated_at: string;
   closure: string;
-  company: number; // Company ID
-};
-
-type CompanyData = {
-  id: number;
-  name: string;
-  cnpj: string;
-  slug: string;
-  group: number | null;
-  logo?: string;
-};
-
-type CompanyGroupData = {
-  id: number;
-  name: string;
-  description: string;
+  company: number;
+  company_name: string | null;
+  company_slug: string | null;
+  company_group_name: string | null;
+  company_group_description: string | null;
 };
 
 const JobListingPage: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
   const [jobData, setJobData] = useState<JobData | null>(null);
-  const [companyData, setCompanyData] = useState<CompanyData | null>(null);
-  const [companyGroupData, setCompanyGroupData] = useState<CompanyGroupData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [showApplicationModal, setShowApplicationModal] = useState(false);
@@ -58,42 +45,48 @@ const JobListingPage: React.FC = () => {
   const params = useParams();
   const id = (params as { id: string }).id;
 
+  // Buscar job + perfil + candidaturas em PARALELO
   useEffect(() => {
-    const fetchJobData = async () => {
+    const fetchAll = async () => {
+      setLoading(true);
+
+      // Buscar job (obrigatório)
+      const jobPromise = fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/${process.env.NEXT_PUBLIC_API_VERSION}/jobs/${id}/`)
+        .then(res => {
+          if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+          return res.json();
+        });
+
+      // Buscar perfil e candidaturas em paralelo (se autenticado como candidato)
+      const isCandidate = isAuthenticated && user?.user_type === 'candidate';
+
+      const profilePromise = isCandidate
+        ? CandidateService.getCandidateProfile().catch(() => null)
+        : Promise.resolve(null);
+
+      const applicationsPromise = isCandidate
+        ? ApplicationService.getMyApplications().catch(() => [])
+        : Promise.resolve([]);
+
       try {
-        setLoading(true);
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/${process.env.NEXT_PUBLIC_API_VERSION}/jobs/${id}/`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data: JobData = await response.json();
+        setProfileLoading(isCandidate);
+        setCheckingApplication(isCandidate);
+
+        const [data, profile, applications] = await Promise.all([
+          jobPromise,
+          profilePromise,
+          applicationsPromise,
+        ]);
+
         setJobData(data);
+        setCandidateProfile(profile);
 
-        // Buscar dados da empresa
-        if (data.company) {
-          try {
-            const companyResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/${process.env.NEXT_PUBLIC_API_VERSION}/companies/${data.company}/`);
-            if (companyResponse.ok) {
-              const companyInfo: CompanyData = await companyResponse.json();
-              setCompanyData(companyInfo);
-
-              // Buscar dados do grupo empresarial se existir
-              if (companyInfo.group) {
-                try {
-                  const groupResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/${process.env.NEXT_PUBLIC_API_VERSION}/company-groups/${companyInfo.group}/`);
-                  if (groupResponse.ok) {
-                    const groupInfo: CompanyGroupData = await groupResponse.json();
-                    setCompanyGroupData(groupInfo);
-                  }
-                } catch (err) {
-                  console.error('Erro ao buscar dados do grupo empresarial:', err);
-                }
-              }
-            }
-          } catch (err) {
-            console.error('Erro ao buscar dados da empresa:', err);
-          }
-        }
+        // Verificar candidatura existente
+        const applicationsList = Array.isArray(applications)
+          ? applications
+          : applications.results || [];
+        const existingApplication = applicationsList.find((app: Application) => app.job === parseInt(id));
+        setHasApplied(!!existingApplication);
       } catch (err) {
         if (err instanceof Error) {
           setError(err.message);
@@ -102,58 +95,13 @@ const JobListingPage: React.FC = () => {
         }
       } finally {
         setLoading(false);
+        setProfileLoading(false);
+        setCheckingApplication(false);
       }
     };
 
-    fetchJobData();
-  }, [id]);
-
-  useEffect(() => {
-    const fetchCandidateProfile = async () => {
-      if (isAuthenticated && user?.user_type === 'candidate') {
-        try {
-          setProfileLoading(true);
-          const profile = await CandidateService.getCandidateProfile();
-          setCandidateProfile(profile);
-        } catch (err) {
-          console.error('Erro ao buscar perfil do candidato:', err);
-          // Se não conseguir buscar o perfil, assume que não existe
-          setCandidateProfile(null);
-        } finally {
-          setProfileLoading(false);
-        }
-      }
-    };
-
-    fetchCandidateProfile();
-  }, [isAuthenticated, user]);
-
-  useEffect(() => {
-    const checkExistingApplication = async () => {
-      if (isAuthenticated && user?.user_type === 'candidate' && id) {
-        try {
-          setCheckingApplication(true);
-          const applications = await ApplicationService.getMyApplications();
-          
-          // Verificar se é um array direto ou resposta paginada
-          const applicationsList = Array.isArray(applications) 
-            ? applications 
-            : applications.results || [];
-          
-          // Verificar se existe candidatura para esta vaga específica
-          const existingApplication = applicationsList.find((app: Application) => app.job === parseInt(id));
-          setHasApplied(!!existingApplication);
-        } catch (err) {
-          console.error('Erro ao verificar candidatura existente:', err);
-          setHasApplied(false);
-        } finally {
-          setCheckingApplication(false);
-        }
-      }
-    };
-
-    checkExistingApplication();
-  }, [isAuthenticated, user, id]);
+    fetchAll();
+  }, [id, isAuthenticated, user]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
@@ -175,8 +123,7 @@ const JobListingPage: React.FC = () => {
 
   const isProfileComplete = (profile: CandidateProfile | null): boolean => {
     if (!profile) return false;
-    
-    // Verificar se os campos essenciais estão preenchidos
+
     const requiredFields = [
       profile.cpf,
       profile.date_of_birth,
@@ -187,7 +134,7 @@ const JobListingPage: React.FC = () => {
       profile.neighborhood,
       profile.education_level
     ];
-    
+
     return requiredFields.every(field => field && field.toString().trim() !== '');
   };
 
@@ -196,16 +143,11 @@ const JobListingPage: React.FC = () => {
   };
 
   const handleOpenApplicationModal = () => {
-    // Prevenir abertura múltipla do modal
-    if (showApplicationModal) {
-      return;
-    }
-
+    if (showApplicationModal) return;
     if (hasApplied) {
       toast.error('Você já se candidatou a esta vaga.', { duration: 4000 });
       return;
     }
-
     setShowApplicationModal(true);
   };
 
@@ -243,6 +185,7 @@ const JobListingPage: React.FC = () => {
   }
 
   const requirements = jobData.requirements ? jobData.requirements.split(', ') : [];
+  const displayCompanyName = jobData.company_group_name || jobData.company_name || 'Empresa';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-zinc-200 to-white pt-16">
@@ -264,7 +207,7 @@ const JobListingPage: React.FC = () => {
                   {jobData.description}
                 </p>
               </div>
-              
+
               <div className="flex flex-wrap gap-4 mb-6">
                 <div className="flex items-center space-x-2 bg-blue-900 pl-4 pr-6 py-2 rounded-full w-full lg:w-auto">
                   <MapPin className="w-4 h-4 text-yellow-300" />
@@ -325,7 +268,7 @@ const JobListingPage: React.FC = () => {
                     duration={1}
                   />
                   <p className="text-slate-200 mb-6 text-sm animate-fade animate-delay-[300ms]">
-                    Envie seu currículo e faça parte da equipe {companyGroupData?.name || companyData?.name || 'da empresa'}
+                    Envie seu currículo e faça parte da equipe {displayCompanyName}
                   </p>
                 </>
               )}
@@ -336,7 +279,7 @@ const JobListingPage: React.FC = () => {
                     {profileLoading ? 'Verificando perfil...' : 'Verificando candidatura...'}
                   </div>
                 ) : hasApplied ? (
-                  <button 
+                  <button
                     disabled
                     className="w-full bg-green-600 text-white font-bold py-3 px-6 rounded-md cursor-not-allowed shadow-lg flex items-center justify-center"
                   >
@@ -352,7 +295,7 @@ const JobListingPage: React.FC = () => {
                     Candidatar-se Agora
                   </button>
                 ) : (
-                  <button 
+                  <button
                     onClick={() => window.location.href = '/perfil'}
                     className="w-full bg-yellow-300 text-blue-950 font-bold py-3 px-6 rounded-md hover:opacity-80 transition-colors duration-200 shadow-lg cursor-pointer"
                   >
@@ -360,7 +303,7 @@ const JobListingPage: React.FC = () => {
                   </button>
                 )
               ) : !isAuthenticated ? (
-                <button 
+                <button
                   onClick={() => window.location.href = '/login'}
                   className="w-full bg-yellow-300 text-blue-950 font-bold py-3 px-6 rounded-md hover:opacity-80 transition-colors duration-200 shadow-lg cursor-pointer"
                 >
@@ -405,19 +348,19 @@ const JobListingPage: React.FC = () => {
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                   <span className="text-slate-700 text-sm">
-                    {companyGroupData?.name || companyData?.name || 'Carregando...'}
+                    {displayCompanyName}
                   </span>
                 </div>
-                {companyGroupData && companyData && (
+                {jobData.company_group_name && jobData.company_name && (
                   <div className="flex items-center space-x-3">
                     <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span className="text-slate-700 text-sm">{companyData.name}</span>
+                    <span className="text-slate-700 text-sm">{jobData.company_name}</span>
                   </div>
                 )}
-                {companyGroupData?.description && (
+                {jobData.company_group_description && (
                   <div className="flex items-center space-x-3">
                     <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span className="text-slate-700 text-sm">{companyGroupData.description}</span>
+                    <span className="text-slate-700 text-sm">{jobData.company_group_description}</span>
                   </div>
                 )}
                 <div className="flex items-center space-x-3">
@@ -437,7 +380,7 @@ const JobListingPage: React.FC = () => {
           onClose={() => setShowApplicationModal(false)}
           jobId={parseInt(id)}
           jobTitle={jobData.title}
-          companyName={companyGroupData?.name || companyData?.name || 'Empresa'}
+          companyName={displayCompanyName}
           hasApplied={hasApplied}
           onApplicationSuccess={handleApplicationSuccess}
         />
@@ -447,4 +390,3 @@ const JobListingPage: React.FC = () => {
 };
 
 export default JobListingPage;
-
