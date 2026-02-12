@@ -5,7 +5,7 @@ import { Menu, X, Bell, FileText, CheckCircle, XCircle } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import LogoutBtn from './LogoutBtn'
 import Image from 'next/image'
-import * as Icon from 'react-bootstrap-icons'
+import { FileEarmarkPerson, House, Person as BsPerson } from 'react-bootstrap-icons'
 import { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react'
 import JobApplicationModalStart from './JobApplicationModalStart'
 import candidateService from '@/services/candidateService'
@@ -121,7 +121,7 @@ const SpontaneousApplicationButton = memo(({ canClickJobStart, onClick }: {
         aria-disabled={!canClickJobStart}
     >
         <div className='animate-fade flex items-center space-x-1 transition group'>
-            <Icon.FileEarmarkPerson className="w-4 h-4" />
+            <FileEarmarkPerson className="w-4 h-4" />
             <span>Candidatura Espontânea</span>
         </div>
     </div>
@@ -165,9 +165,9 @@ function Navbar() {
 
     // Memoizar os links para evitar recriação desnecessária
     const links = useMemo(() => [
-        { href: '/vagas', target: '', label: 'Início', icon: Icon.House },
+        { href: '/vagas', target: '', label: 'Início', icon: House },
         ...(isAuthenticated && user?.user_type === 'recruiter' ? [
-            { href: '/admin-panel', target: '', label: 'Painel Colaboradores', icon: Icon.Person },
+            { href: '/admin-panel', target: '', label: 'Painel Colaboradores', icon: BsPerson },
         ] : []),
     ], [isAuthenticated, user?.user_type]);
 
@@ -254,6 +254,7 @@ function Navbar() {
                                                         {notifications.map((notif, idx) => {
                                                             const iconMap: Record<string, { icon: React.ReactNode; bg: string }> = {
                                                                 profile: { icon: <Bell className="h-4 w-4 text-amber-600" />, bg: 'bg-amber-50' },
+                                                                profile_approved: { icon: <CheckCircle className="h-4 w-4 text-emerald-600" />, bg: 'bg-emerald-50' },
                                                                 document: { icon: <FileText className="h-4 w-4 text-red-600" />, bg: 'bg-red-50' },
                                                                 process_approved: { icon: <CheckCircle className="h-4 w-4 text-green-600" />, bg: 'bg-green-50' },
                                                                 process_rejected: { icon: <XCircle className="h-4 w-4 text-red-600" />, bg: 'bg-red-50' },
@@ -286,14 +287,14 @@ function Navbar() {
                                         </div>
                                     )}
                                     <Link href='/perfil' className="animate-fade text-zinc-200 hover:text-zinc-800 border border-zinc-100/40 px-4 py-2 rounded-md cursor-pointer text-sm duration-300 flex justify-center place-items-center gap-2 hover:bg-yellow-300">
-                                        <Icon.Person className="w-4 h-4" /> Meu Perfil
+                                        <BsPerson className="w-4 h-4" /> Meu Perfil
                                     </Link>
                                     <LogoutBtn />
                                 </div>
                             ) : user?.user_type === 'admin' ? (
                                 <div className="flex items-center space-x-2 ml-5">
                                     <Link href='/admin-panel' className="animate-fade text-zinc-100 hover:text-zinc-800 border border-zinc-900/40 px-4 py-2 rounded-md cursor-pointer text-sm duration-300 flex justify-center place-items-center gap-2 hover:bg-zinc-100">
-                                        <Icon.Person className="w-4 h-4" /> Admin Panel
+                                        <BsPerson className="w-4 h-4" /> Admin Panel
                                     </Link>
                                     <LogoutBtn />
                                 </div>
@@ -303,7 +304,7 @@ function Navbar() {
                                 href="/login"
                                 className="ml-10 animate-fade bg-yellow-300 hover:bg-yellow-300/80 text-zinc-900 px-4 py-2 rounded-md transition font-semibold flex justify-center place-items-center gap-2"
                             >
-                              <Icon.Person className='w-4 h-4'/>  Faça seu Login
+                              <BsPerson className='w-4 h-4'/>  Faça seu Login
                             </Link>
                         )}
                     </div>
@@ -371,18 +372,18 @@ function Navbar() {
                                         onClick={handleMobileMenuClose}
                                         className="bg-blue-700 text-yellow-400 px-4 py-2 rounded-md cursor-pointer text-sm duration-300 flex justify-center place-items-center gap-2 hover:bg-blue-800"
                                     >
-                                        <Icon.Person className="w-4 h-4" /> Meu Perfil
+                                        <BsPerson className="w-4 h-4" /> Meu Perfil
                                     </Link>
                                     <LogoutBtn />
                                 </div>
                             ) : user?.user_type === 'recruiter' ? (
                                 <div className="animate-fade flex flex-col space-y-3">
-                                    <Link 
-                                        href='/admin-panel' 
+                                    <Link
+                                        href='/admin-panel'
                                         onClick={handleMobileMenuClose}
                                         className="bg-zinc-900 hover:bg-zinc-800 text-white px-4 py-2 rounded-md cursor-pointer text-sm duration-300 flex justify-center place-items-center gap-2"
                                     >
-                                        <Icon.Person className="w-4 h-4" /> Admin Panel
+                                        <BsPerson className="w-4 h-4" /> Admin Panel
                                     </Link>
                                     <LogoutBtn />
                                 </div>
@@ -393,7 +394,7 @@ function Navbar() {
                                 onClick={handleMobileMenuClose}
                                 className="animate-fade bg-gradient-to-r from-yellow-400 to-yellow-300 hover:opacity-70 text-zinc-900 px-4 py-2 rounded-md transition font-semibold flex justify-center place-items-center gap-2 w-full -mt-5"
                             >
-                              <Icon.Person className='w-4 h-4'/>  Faça seu Login
+                              <BsPerson className='w-4 h-4'/>  Faça seu Login
                             </Link>
                             )}
                     </div>

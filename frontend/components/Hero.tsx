@@ -1,8 +1,9 @@
 'use client'
+import dynamic from 'next/dynamic';
 import Link from "next/link";
 import { ArrowRight, UserPlus, Users, Briefcase, TrendingUp, Award } from "lucide-react";
 import React from "react";
-import SplitTextOrig from "./SliptText";
+const SplitTextOrig = dynamic(() => import('./SliptText'), { ssr: false });
 import { useAuth } from "@/contexts/AuthContext";
 
 const SplitText = React.memo(SplitTextOrig);

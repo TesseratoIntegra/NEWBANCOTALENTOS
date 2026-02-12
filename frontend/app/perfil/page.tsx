@@ -5,14 +5,15 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import candidateService from '@/services/candidateService';
-import { CandidateProfile, CandidateEducation, CandidateExperience, CandidateSkill, CandidateLanguage, CandidateInProcess } from '@/types';
+import { CandidateProfile, CandidateEducation, CandidateExperience, CandidateSkill, CandidateLanguage, CandidateInProcess, DocumentsSummary } from '@/types';
 import selectionProcessService from '@/services/selectionProcessService';
+import admissionService from '@/services/admissionService';
 import { toast } from 'react-hot-toast';
 import { confirmDialog } from '@/lib/confirmDialog';
 import Navbar from '@/components/Navbar';
 import LoadChiap from '@/components/LoadChiap';
-import * as Icon from 'react-bootstrap-icons';
-import { MapPin, Mail, Phone, Linkedin, Github, Globe, Briefcase, GraduationCap, Award, Languages, Settings, Edit2, Plus, Trash2, X, AlertCircle, CheckCircle, ClipboardList } from 'lucide-react';
+import { PersonFill, PersonVcard } from 'react-bootstrap-icons';
+import { MapPin, Mail, Phone, Linkedin, Github, Globe, Briefcase, GraduationCap, Award, Languages, Settings, Edit2, Plus, Trash2, X, AlertCircle, CheckCircle, ClipboardList, FileText, Clock } from 'lucide-react';
 
 // Componentes de Modal
 import EditPersonalInfoModal from '@/components/profile/modals/EditPersonalInfoModal';
@@ -25,7 +26,6 @@ import EditPreferencesModal from '@/components/profile/modals/EditPreferencesMod
 import ApplicationsSection from '@/components/profile/ApplicationsSection';
 import SelectionProcessesSection from '@/components/profile/SelectionProcessesSection';
 import Link from 'next/link';
-import { FileText } from 'lucide-react';
 
 const SECTION_KEY_TO_LABEL: Record<string, string> = {
   dadosPessoais: 'Dados Pessoais',
@@ -151,6 +151,7 @@ export default function ProfileViewPage() {
   const [skills, setSkills] = useState<CandidateSkill[]>([]);
   const [languages, setLanguages] = useState<CandidateLanguage[]>([]);
   const [myProcesses, setMyProcesses] = useState<CandidateInProcess[]>([]);
+  const [docSummary, setDocSummary] = useState<DocumentsSummary | null>(null);
 
   // Estados dos modais
   const [editPersonalModal, setEditPersonalModal] = useState(false);
@@ -171,13 +172,14 @@ export default function ProfileViewPage() {
   const loadProfile = async () => {
     try {
       setLoading(true);
-      const [profileData, educationsData, experiencesData, skillsData, languagesData, processesData] = await Promise.all([
+      const [profileData, educationsData, experiencesData, skillsData, languagesData, processesData, docsData] = await Promise.all([
         candidateService.getCandidateProfile().catch(() => null),
         candidateService.getCandidateEducations().catch(() => []),
         candidateService.getCandidateExperiences().catch(() => []),
         candidateService.getCandidateSkills().catch(() => []),
         candidateService.getCandidateLanguages().catch(() => []),
-        selectionProcessService.getMyProcesses().catch(() => [])
+        selectionProcessService.getMyProcesses().catch(() => []),
+        admissionService.getMyDocuments().catch(() => null)
       ]);
 
       // Se não tem perfil, redirecionar para o wizard de criação
@@ -192,6 +194,7 @@ export default function ProfileViewPage() {
       setSkills(Array.isArray(skillsData) ? skillsData : skillsData.results || []);
       setLanguages(Array.isArray(languagesData) ? languagesData : languagesData.results || []);
       setMyProcesses(Array.isArray(processesData) ? processesData : []);
+      if (docsData) setDocSummary(docsData.summary);
 
       // Mostrar banner de aprovação apenas na primeira vez
       if (profileData.profile_status === 'approved') {
@@ -474,27 +477,110 @@ export default function ProfileViewPage() {
           </div>
         )}
 
-        {/* Documents Banner (only after approved in selection process) */}
-        {myProcesses.some(p => p.status === 'approved') && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <FileText className="h-5 w-5 text-blue-600" />
-                <div>
-                  <h3 className="font-semibold text-blue-800">Envio de Documentos</h3>
-                  <p className="text-blue-700 text-sm">Você foi aprovado no processo seletivo! Envie os documentos solicitados para continuar o processo de admissão.</p>
+        {/* Documents / Admission Pipeline Banner */}
+        {profile?.profile_status === 'approved' && myProcesses.some(p => p.status === 'approved') && (() => {
+          const ps = profile.pipeline_status;
+
+          // Admissão confirmada (sent/confirmed)
+          if (ps === 'admitted') {
+            return (
+              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="h-5 w-5 text-emerald-600" />
+                  <div>
+                    <h3 className="font-semibold text-emerald-800">Admissão Confirmada!</h3>
+                    <p className="text-emerald-700 text-sm">
+                      Parabéns! Sua admissão foi confirmada.
+                      {profile.admission_start_date && (
+                        <> Início previsto: <strong>{new Date(profile.admission_start_date + 'T00:00:00').toLocaleDateString('pt-BR')}</strong>.</>
+                      )}
+                    </p>
+                  </div>
                 </div>
               </div>
-              <Link
-                href="/perfil/documentos"
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors flex-shrink-0"
-              >
-                <FileText className="h-4 w-4" />
-                Ver Documentos
-              </Link>
+            );
+          }
+
+          // Admissão em andamento (draft/completed)
+          if (ps === 'admission_in_progress') {
+            return (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+                <div className="flex items-center gap-3">
+                  <Clock className="h-5 w-5 text-amber-600" />
+                  <div>
+                    <h3 className="font-semibold text-amber-800">Admissão em Andamento</h3>
+                    <p className="text-amber-700 text-sm">
+                      Seus dados de admissão estão sendo processados. Você será notificado sobre os próximos passos.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          // Documentos aprovados
+          if (ps === 'documents_complete') {
+            return (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    <div>
+                      <h3 className="font-semibold text-green-800">Documentos Aprovados!</h3>
+                      <p className="text-green-700 text-sm">
+                        Todos os seus documentos obrigatórios foram aprovados. Você seguirá para o processo de admissão.
+                      </p>
+                    </div>
+                  </div>
+                  <Link
+                    href="/perfil/documentos"
+                    className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors flex-shrink-0"
+                  >
+                    <FileText className="h-4 w-4" />
+                    Ver Documentos
+                  </Link>
+                </div>
+              </div>
+            );
+          }
+
+          // Documentos pendentes (default)
+          return (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <FileText className="h-5 w-5 text-blue-600" />
+                  <div>
+                    <h3 className="font-semibold text-blue-800">Envio de Documentos</h3>
+                    <p className="text-blue-700 text-sm">
+                      Você foi aprovado no processo seletivo! Envie os documentos solicitados para continuar o processo de admissão.
+                    </p>
+                    {docSummary && docSummary.required_types > 0 && (
+                      <div className="mt-2">
+                        <span className="text-xs text-blue-600">
+                          {docSummary.approved} de {docSummary.required_types} documentos obrigatórios aprovados
+                        </span>
+                        <div className="w-full bg-blue-200 rounded-full h-1.5 mt-1 max-w-xs">
+                          <div
+                            className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
+                            style={{ width: `${(docSummary.approved / docSummary.required_types) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <Link
+                  href="/perfil/documentos"
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors flex-shrink-0"
+                >
+                  <FileText className="h-4 w-4" />
+                  Ver Documentos
+                </Link>
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Profile Status Badge (if awaiting review) */}
         {profile?.profile_status === 'awaiting_review' && (
@@ -546,7 +632,7 @@ export default function ProfileViewPage() {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <Icon.PersonFill className="w-16 h-16 text-slate-400" />
+                    <PersonFill className="w-16 h-16 text-slate-400" />
                   </div>
                 )}
               </div>
@@ -629,7 +715,7 @@ export default function ProfileViewPage() {
           {profile && <SectionAlert sectionKey="profissional" profile={profile} />}
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-blue-900 flex items-center gap-2">
-              <Icon.PersonVcard className="w-5 h-5" />
+              <PersonVcard className="w-5 h-5" />
               Sobre Mim
             </h2>
             <button

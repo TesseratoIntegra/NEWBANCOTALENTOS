@@ -131,6 +131,7 @@ class CandidateProfileSerializer(serializers.ModelSerializer):
 
     # Status computado do pipeline
     pipeline_status = serializers.SerializerMethodField()
+    admission_start_date = serializers.SerializerMethodField()
 
     class Meta:
         model = CandidateProfile
@@ -139,6 +140,15 @@ class CandidateProfileSerializer(serializers.ModelSerializer):
 
     def get_pipeline_status(self, obj):
         return _compute_pipeline_status(obj)
+
+    def get_admission_start_date(self, obj):
+        try:
+            admission = obj.admission_data
+            if admission.status in ('completed', 'sent', 'confirmed') and admission.data_inicio_trabalho:
+                return admission.data_inicio_trabalho.isoformat()
+        except Exception:
+            pass
+        return None
 
     def validate_date_of_birth(self, value):
         """Valida data de nascimento"""
@@ -276,32 +286,56 @@ class CandidateProfileCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 def _compute_pipeline_status(profile):
-    """Computa o status do pipeline completo do candidato."""
+    """Computa o status do pipeline completo do candidato.
+    Otimizado para usar dados prefetched quando disponíveis."""
     base = profile.profile_status
     if base != 'approved':
         return base
 
+    # 1. Admissão (maior prioridade) — usa select_related('admission_data')
+    try:
+        admission = profile.admission_data
+        if admission.status in ('completed', 'sent', 'confirmed'):
+            return 'admitted'
+        if admission.status == 'draft':
+            return 'admission_in_progress'
+    except Exception:
+        pass
+
+    # 2. Processo seletivo — usa dados prefetched do queryset (sem query extra)
+    processes = list(profile.selection_processes.all())
+    has_active_process = any(
+        p.is_active and p.status in ('pending', 'in_progress')
+        for p in processes
+    )
+    if has_active_process:
+        return 'in_selection_process'
+
+    # 3. Só verifica documentos se foi APROVADO em algum processo seletivo
+    was_approved_in_process = any(p.status == 'approved' for p in processes)
+    if not was_approved_in_process:
+        return 'approved'
+
+    # 4. Documentos — cachear required_types para evitar query repetida no loop
     from admission.models import CandidateDocument, DocumentType
-    required_types = DocumentType.objects.filter(is_active=True, is_required=True)
-    total_required = required_types.count()
+    from django.core.cache import cache
+
+    total_required = cache.get('total_required_doc_types')
+    required_ids = cache.get('required_doc_type_ids')
+    if total_required is None:
+        required_types = DocumentType.objects.filter(is_active=True, is_required=True)
+        total_required = required_types.count()
+        required_ids = list(required_types.values_list('id', flat=True))
+        cache.set('total_required_doc_types', total_required, 300)
+        cache.set('required_doc_type_ids', required_ids, 300)
 
     if total_required > 0:
         approved_docs = CandidateDocument.objects.filter(
-            candidate=profile, document_type__in=required_types,
+            candidate=profile, document_type_id__in=required_ids,
             is_active=True, status='approved'
         ).count()
         if approved_docs < total_required:
             return 'documents_pending'
-
-    # Docs completos — verificar admissão
-    try:
-        admission = profile.admission_data
-        if admission.status == 'confirmed':
-            return 'admitted'
-        if admission.status in ('draft', 'completed', 'sent'):
-            return 'admission_in_progress'
-    except Exception:
-        pass
 
     return 'documents_complete'
 
@@ -319,6 +353,7 @@ class CandidateProfileListSerializer(serializers.ModelSerializer):
     applications_count = serializers.SerializerMethodField()
     cpf = serializers.CharField(read_only=True)
     pipeline_status = serializers.SerializerMethodField()
+    admission_start_date = serializers.SerializerMethodField()
 
     class Meta:
         model = CandidateProfile
@@ -330,11 +365,20 @@ class CandidateProfileListSerializer(serializers.ModelSerializer):
             'accepts_relocation', 'can_travel',
             'experience_summary', 'education_summary', 'applications_count', 'applications_summary',
             'selection_processes_summary',
-            'profile_status', 'pipeline_status', 'profile_observations', 'profile_reviewed_at', 'created_at'
+            'profile_status', 'pipeline_status', 'admission_start_date', 'profile_observations', 'profile_reviewed_at', 'created_at'
         ]
 
     def get_pipeline_status(self, obj):
         return _compute_pipeline_status(obj)
+
+    def get_admission_start_date(self, obj):
+        try:
+            admission = obj.admission_data
+            if admission.status in ('completed', 'sent', 'confirmed') and admission.data_inicio_trabalho:
+                return admission.data_inicio_trabalho.isoformat()
+        except Exception:
+            pass
+        return None
 
     def get_experience_summary(self, obj):
         """Resumo das experiências"""

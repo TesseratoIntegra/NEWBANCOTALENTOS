@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { CandidateProfile, User } from '@/types';
 import { X, Save, Upload } from 'lucide-react';
-import * as Icon from 'react-bootstrap-icons';
+import { PersonFill } from 'react-bootstrap-icons';
 import candidateService from '@/services/candidateService';
 import { toast } from 'react-hot-toast';
 import DateInput from '@/components/ui/DateInput';
@@ -121,7 +121,7 @@ export default function EditPersonalInfoModal({ profile, user, onClose, onSave, 
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <Icon.PersonFill className="w-16 h-16 text-slate-400" />
+                  <PersonFill className="w-16 h-16 text-slate-400" />
                 </div>
               )}
             </div>

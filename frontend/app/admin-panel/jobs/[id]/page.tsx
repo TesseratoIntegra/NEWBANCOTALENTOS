@@ -8,7 +8,7 @@ import companyService from '@/services/companyService';
 import { Job, Company } from '@/types/index';
 import { PencilIcon, TrashIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import AuthService from '@/services/auth';
-import * as XLSX from 'xlsx';
+
 import toast from 'react-hot-toast';
 import { confirmDialog } from '@/lib/confirmDialog';
 
@@ -103,11 +103,13 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
     }
   };
 
-  const handleDownloadExcel = () => {
+  const handleDownloadExcel = async () => {
     if (applications.length === 0) {
       toast.error('Não há candidaturas para exportar');
       return;
     }
+
+    const XLSX = await import('xlsx');
 
     // Preparar os dados para o Excel
     const excelData = applications.map(app => ({

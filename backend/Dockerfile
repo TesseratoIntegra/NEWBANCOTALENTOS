@@ -30,4 +30,4 @@ EXPOSE 8000
 ENTRYPOINT ["/bin/sh", "/app/entrypoint.sh"]
 
 # Rodar Gunicorn otimizadamente
-CMD ["gunicorn", "app.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "2", "--threads", "2", "--timeout", "300"]
+CMD ["gunicorn", "app.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4", "--threads", "4", "--timeout", "120"]

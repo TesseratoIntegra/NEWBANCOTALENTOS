@@ -398,9 +398,11 @@ class CandidateDocumentViewSet(viewsets.ModelViewSet):
         if total_required == 0:
             return Response([])
 
-        # Candidatos aprovados com seus documentos pré-carregados
+        # Candidatos aprovados (excluindo já admitidos) com seus documentos pré-carregados
         approved_candidates = CandidateProfile.objects.filter(
             profile_status='approved'
+        ).exclude(
+            admission_data__status__in=['completed', 'sent', 'confirmed']
         ).select_related('user').prefetch_related(
             Prefetch(
                 'documents',
@@ -466,6 +468,8 @@ class CandidateDocumentViewSet(viewsets.ModelViewSet):
 
         approved_candidates = CandidateProfile.objects.filter(
             profile_status='approved'
+        ).exclude(
+            admission_data__status__in=['completed', 'sent', 'confirmed']
         ).select_related('user').prefetch_related(
             Prefetch(
                 'documents',
@@ -560,7 +564,7 @@ class AdmissionDataViewSet(viewsets.ModelViewSet):
         candidate_id = request.data.get('candidate')
         if candidate_id:
             existing = AdmissionData.objects.filter(
-                candidate_id=candidate_id, is_active=True
+                candidate_id=candidate_id
             ).first()
             if existing:
                 serializer = self.get_serializer(existing, data=request.data, partial=True)

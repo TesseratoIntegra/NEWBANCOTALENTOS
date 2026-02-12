@@ -117,6 +117,7 @@ export default function TalentosPage() {
       awaiting_review: { label: 'Aguardando Revisão', bgColor: 'bg-sky-50 border border-sky-200', textColor: 'text-sky-700' },
       approved: { label: 'Aprovado', bgColor: 'bg-emerald-50 border border-emerald-200', textColor: 'text-emerald-700' },
       documents_pending: { label: 'Docs. Pendentes', bgColor: 'bg-violet-50 border border-violet-200', textColor: 'text-violet-700' },
+      in_selection_process: { label: 'Em Proc. Seletivo', bgColor: 'bg-cyan-50 border border-cyan-200', textColor: 'text-cyan-700' },
       documents_complete: { label: 'Docs. Completos', bgColor: 'bg-teal-50 border border-teal-200', textColor: 'text-teal-700' },
       admission_in_progress: { label: 'Em Admissão', bgColor: 'bg-indigo-50 border border-indigo-200', textColor: 'text-indigo-700' },
       admitted: { label: 'Admitido', bgColor: 'bg-emerald-100 border border-emerald-300', textColor: 'text-emerald-800' },
@@ -406,9 +407,16 @@ export default function TalentosPage() {
                   {(() => {
                     const statusInfo = getProfileStatusInfo(candidate.pipeline_status || candidate.profile_status);
                     return (
-                      <span className={`inline-block mt-1 px-2 py-0.5 rounded text-xs font-medium ${statusInfo.bgColor} ${statusInfo.textColor}`}>
-                        {statusInfo.label}
-                      </span>
+                      <>
+                        <span className={`inline-block mt-1 px-2 py-0.5 rounded text-xs font-medium ${statusInfo.bgColor} ${statusInfo.textColor}`}>
+                          {statusInfo.label}
+                        </span>
+                        {candidate.pipeline_status === 'admitted' && candidate.admission_start_date && (
+                          <span className="text-[11px] text-emerald-600 mt-0.5 block">
+                            Início: {new Date(candidate.admission_start_date + 'T00:00:00').toLocaleDateString('pt-BR')}
+                          </span>
+                        )}
+                      </>
                     );
                   })()}
                 </div>
@@ -614,6 +622,11 @@ export default function TalentosPage() {
                         <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${statusInfo.bgColor} ${statusInfo.textColor}`}>
                           {statusInfo.label}
                         </span>
+                        {candidate.pipeline_status === 'admitted' && candidate.admission_start_date && (
+                          <span className="text-[11px] text-emerald-600 mt-0.5 block">
+                            Início: {new Date(candidate.admission_start_date + 'T00:00:00').toLocaleDateString('pt-BR')}
+                          </span>
+                        )}
                       </td>
                       {/* Disponível / Remoto */}
                       <td className="px-4 py-3">

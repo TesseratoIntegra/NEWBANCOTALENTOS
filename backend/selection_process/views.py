@@ -262,11 +262,13 @@ class SelectionProcessViewSet(viewsets.ModelViewSet):
             is_active=True
         ).values_list('candidate_profile_id', flat=True)
 
-        # Candidatos aprovados não no processo
+        # Candidatos aprovados não no processo e não admitidos
         candidates = CandidateProfile.objects.filter(
             profile_status='approved',
             is_active=True
-        ).exclude(id__in=existing_ids)
+        ).exclude(id__in=existing_ids).exclude(
+            admission_data__status__in=['completed', 'sent', 'confirmed']
+        )
 
         # Busca opcional
         search = request.query_params.get('search', '')

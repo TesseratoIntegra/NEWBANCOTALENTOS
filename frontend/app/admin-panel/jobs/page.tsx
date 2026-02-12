@@ -6,7 +6,7 @@ import { adminJobService } from '@/services/adminJobService';
 import companyService from '@/services/companyService';
 import { Job, Company } from '@/types/index';
 import { TrashIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
-import * as XLSX from 'xlsx';
+
 import toast from 'react-hot-toast';
 import { confirmDialog } from '@/lib/confirmDialog';
 
@@ -88,11 +88,13 @@ export default function JobsListPage() {
     return company ? company.name : `ID: ${companyId}`;
   };
 
-  const handleDownloadExcel = () => {
+  const handleDownloadExcel = async () => {
     if (filteredJobs.length === 0) {
       toast.error('Não há vagas para exportar');
       return;
     }
+
+    const XLSX = await import('xlsx');
 
     // Preparar os dados para o Excel
     const excelData = filteredJobs.map(job => ({

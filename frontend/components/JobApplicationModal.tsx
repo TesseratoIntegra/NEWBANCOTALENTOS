@@ -1,10 +1,11 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import React, { useState } from 'react';
 import { X, Loader, Send, AlertTriangle } from 'lucide-react';
 import applicationService from '@/services/applicationService';
 import { toast } from 'react-hot-toast';
-import SplitText from './SliptText';
+const SplitText = dynamic(() => import('./SliptText'), { ssr: false });
 
 interface JobApplicationModalProps {
   isOpen: boolean;

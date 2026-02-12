@@ -147,6 +147,7 @@ export interface CandidateProfile {
   // Campos do processo seletivo de perfil
   profile_status?: 'pending' | 'awaiting_review' | 'approved' | 'rejected' | 'changes_requested';
   pipeline_status?: string;
+  admission_start_date?: string;
   profile_observations?: string;
   pending_observation_sections?: string[];
   profile_reviewed_at?: string;
@@ -610,6 +611,35 @@ export interface DocumentsCompletedCandidate {
   candidate_email: string;
   total_required: number;
   approved_count: number;
+}
+
+// ============================================
+// AI INSIGHTS
+// ============================================
+
+export interface AIInsight {
+  title: string;
+  description: string;
+  type: 'positive' | 'warning' | 'critical';
+}
+
+export interface AIInsightsResponse {
+  summary: string;
+  highlights: AIInsight[];
+  bottleneck: string;
+  recommendations: string[];
+  data: {
+    distribution: Record<string, number>;
+    total: number;
+    conversion: {
+      cadastro_to_aprovado: number;
+      aprovado_to_docs_ok: number;
+      docs_ok_to_admitido: number;
+    };
+    applications: Record<string, number>;
+  };
+  generated_at: string;
+  error?: string;
 }
 
 // ============================================

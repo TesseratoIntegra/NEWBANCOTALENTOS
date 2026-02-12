@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { UserRound, ArrowRight, Plus, Lock, Eye, EyeOff } from 'lucide-react'
 import Swal from 'sweetalert2'
-import * as Icon from 'react-bootstrap-icons';
+import { PersonFill } from 'react-bootstrap-icons';
 import Image from "next/image";
 import ResetPassword from './components/ResetPassword';
 import { useRouter } from "next/navigation";
@@ -347,7 +347,7 @@ export default function LoginPage() {
 
                         {/* Icone e titulo */}
                         <div className="flex justify-center place-items-center">
-                            <Icon.PersonFill className={`text-center w-14 h-14 ${startLogin ? 'ml-[-2rem]' : 'ml-0'} text-blue-950 duration-300`}/>
+                            <PersonFill className={`text-center w-14 h-14 ${startLogin ? 'ml-[-2rem]' : 'ml-0'} text-blue-950 duration-300`}/>
                             <ArrowRight className={`${sign && startLogin ? 'opacity-100' : 'opacity-0'} absolute text-center w-8 h-8 ml-[3rem] duration-300 text-zinc-600`}/>
                             <Plus className={`${sign ? 'opacity-0' : 'opacity-100 delay-700'} absolute text-center w-10 h-10 ml-[3rem] duration-300 text-zinc-600`}/>
                         </div>

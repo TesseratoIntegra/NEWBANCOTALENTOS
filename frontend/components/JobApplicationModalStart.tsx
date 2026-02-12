@@ -1,10 +1,11 @@
+import dynamic from 'next/dynamic';
 import React, { useState, useEffect } from 'react';
 import Select, { SingleValue } from 'react-select';
 import { X, Loader } from 'lucide-react';
 import AuthService from '@/services/auth';
 import { toast } from 'react-hot-toast';
-import * as Icon from 'react-bootstrap-icons'
-import SplitText from './SliptText';
+import { Download } from 'react-bootstrap-icons'
+const SplitText = dynamic(() => import('./SliptText'), { ssr: false });
 import LoadChiap from './LoadChiap';
 import formatCPF from '@/functions/FormatCPF';
 import { formatTEL } from '@/functions/FormatTEL';
@@ -501,7 +502,7 @@ useEffect(() => {
 												rel="noopener noreferrer"
 												className="text-blue-600 underline mt-2 flex place-items-center gap-2 cursor-pointer"
 												>
-												<Icon.Download/> Baixar currículo enviado
+												<Download/> Baixar currículo enviado
 												</a>
 											)}
 										</div>

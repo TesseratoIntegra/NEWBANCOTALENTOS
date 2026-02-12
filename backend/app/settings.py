@@ -27,6 +27,9 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*', cast=lambda v: [s.strip() for s in v.split(',')])
 
+# OpenAI
+OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
+
 # Application definition
 DJANGO_APPS = [
     'django.contrib.admin',
@@ -253,6 +256,7 @@ if POSTGRES_HOST:
             'PASSWORD': config('POSTGRES_PASSWORD', 'postgres'),
             'HOST': POSTGRES_HOST,
             'PORT': config('POSTGRES_PORT', '5432'),
+            'CONN_MAX_AGE': 600,
         }
     }
 else:

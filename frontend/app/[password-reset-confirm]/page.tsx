@@ -6,7 +6,7 @@ import Swal from 'sweetalert2'
 import { Eye, EyeOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import * as Icon from 'react-bootstrap-icons'
+import { PersonFillLock } from 'react-bootstrap-icons'
 import Link from 'next/link';
 
 type PasswordField = 'new_password1' | 'new_password2';
@@ -143,7 +143,7 @@ export default function ResetPass() {
                         <label className="text-2xl animate-fade-down font-bold text-blue-950 quicksand">Banco de Talentos </label>
                     </div>
                     <div className="flex justify-center place-items-center">
-                        <Icon.PersonFillLock className={`text-center w-14 h-14 text-blue-950 duration-300`}/>
+                        <PersonFillLock className={`text-center w-14 h-14 text-blue-950 duration-300`}/>
                     </div>
                     <div className="flex justify-center">
                         <h1 className={`text-zinc-600 font-bold text-center text-lg mb-2 mt-1 animate-fade-down animate-duration-[400ms] ml-[-1.7rem] duration-300`}>

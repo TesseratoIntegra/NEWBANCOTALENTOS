@@ -35,6 +35,15 @@ def add_candidate_to_process(process, candidate_profile, added_by, recruiter_not
             'candidate_profile': 'Apenas candidatos com perfil aprovado podem participar do processo seletivo.'
         })
 
+    # Validar que o candidato não foi admitido
+    try:
+        if candidate_profile.admission_data.status in ('completed', 'sent', 'confirmed'):
+            raise ValidationError({
+                'candidate_profile': 'Candidato já foi admitido e não pode ser adicionado a processos seletivos.'
+            })
+    except candidate_profile.__class__.admission_data.RelatedObjectDoesNotExist:
+        pass
+
     # Validar que não está duplicado
     if CandidateInProcess.objects.filter(
         process=process,

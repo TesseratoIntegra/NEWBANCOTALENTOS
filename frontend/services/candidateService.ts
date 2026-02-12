@@ -357,6 +357,34 @@ class CandidateService {
     }
   }
 
+  // === DASHBOARD ===
+
+  async getDashboardStats(): Promise<{ total: number; distribution: Record<string, number> }> {
+    try {
+      const response = await axios.get(
+        `${this.baseUrl}/candidates/profiles/dashboard-stats/`,
+        this.getAxiosConfig()
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar estatísticas do dashboard:', error);
+      throw error;
+    }
+  }
+
+  async getAIInsights(): Promise<import('@/types').AIInsightsResponse> {
+    try {
+      const response = await axios.get(
+        `${this.baseUrl}/candidates/profiles/ai-insights/`,
+        this.getAxiosConfig()
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar insights da IA:', error);
+      throw error;
+    }
+  }
+
   // === UTILITY METHODS ===
 
   /* Obter opções de nível de escolaridade */
@@ -418,7 +446,9 @@ class CandidateService {
     return [
       { value: 'pending', label: 'Em análise' },
       { value: 'awaiting_review', label: 'Aguardando Revisão' },
+      { value: 'approved', label: 'Aprovado' },
       { value: 'documents_pending', label: 'Docs. Pendentes' },
+      { value: 'in_selection_process', label: 'Em Proc. Seletivo' },
       { value: 'documents_complete', label: 'Docs. Completos' },
       { value: 'admission_in_progress', label: 'Em Admissão' },
       { value: 'admitted', label: 'Admitido' },
@@ -434,6 +464,7 @@ class CandidateService {
       awaiting_review: { label: 'Aguardando Revisão', color: 'text-blue-700', bgColor: 'bg-blue-100' },
       approved: { label: 'Aprovado', color: 'text-green-700', bgColor: 'bg-green-100' },
       documents_pending: { label: 'Docs. Pendentes', color: 'text-violet-700', bgColor: 'bg-violet-100' },
+      in_selection_process: { label: 'Em Proc. Seletivo', color: 'text-cyan-700', bgColor: 'bg-cyan-100' },
       documents_complete: { label: 'Docs. Completos', color: 'text-teal-700', bgColor: 'bg-teal-100' },
       admission_in_progress: { label: 'Em Admissão', color: 'text-indigo-700', bgColor: 'bg-indigo-100' },
       admitted: { label: 'Admitido', color: 'text-emerald-800', bgColor: 'bg-emerald-200' },

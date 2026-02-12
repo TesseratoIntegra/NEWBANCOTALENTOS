@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { CandidateProfile } from '@/types';
 import candidateService from '@/services/candidateService';
 import { Save } from 'lucide-react';
-import * as Icon from 'react-bootstrap-icons';
+import { ArrowLeft as BsArrowLeft } from 'react-bootstrap-icons';
 import { useAuth } from '@/contexts/AuthContext';
 
 export interface PreferencesSectionProps {
@@ -190,7 +190,7 @@ export default function PreferencesSection({ profile, onUpdate, saving, onComple
             onClick={() => setCurrentStep(5)}
             className="mr-auto bg-blue-900 hover:bg-blue-800 disabled:bg-slate-700 disabled:opacity-50 text-slate-100 px-6 py-2 rounded-md font-medium transition-colors flex items-center cursor-pointer"
           >
-            <Icon.ArrowLeft className="h-4 w-4 mr-2" /> Voltar
+            <BsArrowLeft className="h-4 w-4 mr-2" /> Voltar
           </div>
           <button
             type="submit"

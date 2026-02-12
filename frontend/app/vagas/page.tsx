@@ -1,4 +1,5 @@
 'use client'
+import dynamic from 'next/dynamic';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ChevronRight, Building2, Search, MapPin, Clock, Monitor, Calendar, Filter, X } from 'lucide-react';
@@ -10,7 +11,7 @@ import companyService from '@/services/companyService';
 import { Job, Company } from '@/types';
 import JobApplicationModalStart from '@/components/JobApplicationModalStart';
 import { useAuth } from '@/contexts/AuthContext';
-import SplitText from '@/components/SliptText';
+const SplitText = dynamic(() => import('@/components/SliptText'), { ssr: false });
 import ScrollReveal from '@/components/ScrollReveal';
 import LoadChiap from '@/components/LoadChiap';
 

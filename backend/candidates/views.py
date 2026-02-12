@@ -139,38 +139,70 @@ class CandidateProfileFilter(FilterSet):
 
         # Todos os computados partem de profile_status='approved'
         approved = queryset.filter(profile_status='approved')
+
+        # Candidatos aprovados em algum processo seletivo (gate para documentos)
+        approved_in_process = approved.filter(
+            selection_processes__status='approved'
+        ).distinct()
+
+        # Candidatos aprovados SEM processo seletivo aprovado (e sem proc ativo, sem admissão)
+        just_approved = approved.exclude(
+            selection_processes__status='approved'
+        ).exclude(
+            selection_processes__is_active=True,
+            selection_processes__status__in=['pending', 'in_progress']
+        ).exclude(
+            admission_data__status__in=['draft', 'completed', 'sent', 'confirmed']
+        ).distinct()
+
+        if value == 'approved':
+            return just_approved
+
+        # --- Documentos (só entre quem foi aprovado em proc. seletivo) ---
         required_types = DocumentType.objects.filter(is_active=True, is_required=True)
         total_required = required_types.count()
 
         if total_required > 0:
-            annotated = approved.annotate(
+            annotated = approved_in_process.annotate(
                 _approved_req=Count(
-                    'candidate_documents',
+                    'documents',
                     filter=Q(
-                        candidate_documents__is_active=True,
-                        candidate_documents__status='approved',
-                        candidate_documents__document_type__in=required_types,
+                        documents__is_active=True,
+                        documents__status='approved',
+                        documents__document_type__in=required_types,
                     )
                 )
             )
             docs_complete = annotated.filter(_approved_req__gte=total_required)
             docs_incomplete = annotated.filter(_approved_req__lt=total_required)
         else:
-            docs_complete = approved
-            docs_incomplete = approved.none()
+            docs_complete = approved_in_process
+            docs_incomplete = approved_in_process.none()
 
-        if value == 'documents_pending':
-            return docs_incomplete
+        # Candidatos em processo seletivo ativo
+        in_process = approved.filter(
+            selection_processes__is_active=True,
+            selection_processes__status__in=['pending', 'in_progress']
+        ).exclude(
+            admission_data__status__in=['draft', 'completed', 'sent', 'confirmed']
+        ).distinct()
+
+        if value == 'in_selection_process':
+            return in_process
+        elif value == 'documents_pending':
+            return docs_incomplete.exclude(pk__in=in_process)
         elif value == 'documents_complete':
             return docs_complete.exclude(
                 admission_data__status__in=['draft', 'completed', 'sent', 'confirmed']
-            )
+            ).exclude(pk__in=in_process)
         elif value == 'admission_in_progress':
             return docs_complete.filter(
-                admission_data__status__in=['draft', 'completed', 'sent']
+                admission_data__status='draft'
             )
         elif value == 'admitted':
-            return docs_complete.filter(admission_data__status='confirmed')
+            return docs_complete.filter(
+                admission_data__status__in=['completed', 'sent', 'confirmed']
+            )
 
         return queryset
 
@@ -217,24 +249,31 @@ class CandidateProfileViewSet(viewsets.ModelViewSet):
     ordering = ['-created_at']
 
     def get_queryset(self):
-        """Filtra perfis baseado no tipo de usuário"""
+        """Filtra perfis baseado no tipo de usuário (otimizado com prefetch)"""
         user = self.request.user
+
+        # Queryset otimizado para listagem (evita N+1)
+        full_qs = CandidateProfile.objects.all().select_related(
+            'user', 'admission_data'
+        ).prefetch_related(
+            'educations', 'experiences', 'languages', 'detailed_skills',
+            'selection_processes', 'selection_processes__process',
+            'selection_processes__current_stage',
+        )
 
         # Staff/Superuser sempre vê tudo (independente de user_type)
         if user.is_staff or user.is_superuser:
-            return CandidateProfile.objects.all().select_related('user').prefetch_related(
-                'educations', 'experiences', 'languages', 'detailed_skills'
-            )
+            return full_qs
 
         # Recrutadores também veem todos os perfis
         if user.user_type == 'recruiter':
-            return CandidateProfile.objects.all().select_related('user').prefetch_related(
-                'educations', 'experiences', 'languages', 'detailed_skills'
-            )
+            return full_qs
 
         # Candidatos veem apenas seu próprio perfil
         if user.user_type == 'candidate':
-            return CandidateProfile.objects.filter(user=user).select_related('user')
+            return CandidateProfile.objects.filter(user=user).select_related(
+                'user', 'admission_data'
+            ).prefetch_related('selection_processes')
 
         return CandidateProfile.objects.none()
 
@@ -459,7 +498,17 @@ class CandidateProfileViewSet(viewsets.ModelViewSet):
                 'icon': 'profile'
             })
 
-        # 2. Documentos rejeitados (só se perfil aprovado)
+        # 2. Perfil aprovado
+        if profile.profile_status == 'approved':
+            notifications.append({
+                'type': 'profile_approved',
+                'title': 'Perfil aprovado!',
+                'message': 'Parabéns! Seu perfil foi aprovado pelo recrutador.',
+                'link': '/perfil',
+                'icon': 'profile_approved'
+            })
+
+        # 3. Documentos rejeitados (só se perfil aprovado)
         if profile.profile_status == 'approved':
             from admission.models import CandidateDocument
             rejected_count = CandidateDocument.objects.filter(
@@ -503,6 +552,261 @@ class CandidateProfileViewSet(viewsets.ModelViewSet):
         return Response({
             'count': len(notifications),
             'notifications': notifications
+        })
+
+    @action(detail=False, methods=['get'], url_path='dashboard-stats')
+    def dashboard_stats(self, request):
+        """Retorna contagens de cada status do pipeline para o dashboard (otimizado com queries agregadas)."""
+        user = request.user
+        if not (user.is_staff or user.is_superuser or user.user_type == 'recruiter'):
+            return Response(
+                {'error': 'Acesso não autorizado.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        from django.core.cache import cache
+        cached = cache.get('dashboard_stats_result')
+        if cached:
+            return Response(cached)
+
+        result = self._compute_pipeline_distribution()
+        cache.set('dashboard_stats_result', result, 30)
+        return Response(result)
+
+    @staticmethod
+    def _compute_pipeline_distribution():
+        """Calcula distribuição do pipeline com queries agregadas (sem N+1)."""
+        from django.db.models import Count
+        from admission.models import AdmissionData, CandidateDocument, DocumentType
+        from selection_process.models import CandidateInProcess
+
+        # 1. Contagem base por profile_status (1 query)
+        base_counts = dict(
+            CandidateProfile.objects.values_list('profile_status')
+            .annotate(count=Count('id'))
+            .values_list('profile_status', 'count')
+        )
+
+        # 2. IDs dos aprovados que precisam de sub-classificação (1 query)
+        approved_ids = set(
+            CandidateProfile.objects.filter(profile_status='approved').values_list('id', flat=True)
+        )
+
+        if not approved_ids:
+            distribution = {
+                'pending': base_counts.get('pending', 0),
+                'awaiting_review': base_counts.get('awaiting_review', 0),
+                'changes_requested': base_counts.get('changes_requested', 0),
+                'rejected': base_counts.get('rejected', 0),
+                'approved': 0,
+                'in_selection_process': 0,
+                'documents_pending': 0,
+                'documents_complete': 0,
+                'admission_in_progress': 0,
+                'admitted': 0,
+            }
+            return {'total': sum(distribution.values()), 'distribution': distribution}
+
+        # 3. Admissão (1 query)
+        admitted_set = set(
+            AdmissionData.objects.filter(
+                candidate_id__in=approved_ids,
+                status__in=['completed', 'sent', 'confirmed']
+            ).values_list('candidate_id', flat=True)
+        )
+        admission_set = set(
+            AdmissionData.objects.filter(
+                candidate_id__in=approved_ids,
+                status='draft'
+            ).values_list('candidate_id', flat=True)
+        ) - admitted_set
+
+        # 4. Processos seletivos (2 queries)
+        selection_set = set(
+            CandidateInProcess.objects.filter(
+                candidate_id__in=approved_ids,
+                is_active=True,
+                status__in=['pending', 'in_progress']
+            ).values_list('candidate_id', flat=True)
+        )
+        approved_proc_set = set(
+            CandidateInProcess.objects.filter(
+                candidate_id__in=approved_ids,
+                status='approved'
+            ).values_list('candidate_id', flat=True)
+        )
+
+        # 5. Documentos (2 queries)
+        required_types = DocumentType.objects.filter(is_active=True, is_required=True)
+        total_required = required_types.count()
+
+        docs_candidates = [
+            cid for cid in approved_ids
+            if cid not in admitted_set
+            and cid not in admission_set
+            and cid not in selection_set
+            and cid in approved_proc_set
+        ]
+
+        docs_complete_count = 0
+        docs_pending_count = 0
+        if total_required > 0 and docs_candidates:
+            doc_counts = dict(
+                CandidateDocument.objects.filter(
+                    candidate_id__in=docs_candidates,
+                    document_type__in=required_types,
+                    is_active=True, status='approved'
+                ).values('candidate_id').annotate(c=Count('id')).values_list('candidate_id', 'c')
+            )
+            for cid in docs_candidates:
+                if doc_counts.get(cid, 0) >= total_required:
+                    docs_complete_count += 1
+                else:
+                    docs_pending_count += 1
+        else:
+            docs_complete_count = len(docs_candidates)
+
+        just_approved = len([
+            cid for cid in approved_ids
+            if cid not in admitted_set
+            and cid not in admission_set
+            and cid not in selection_set
+            and cid not in approved_proc_set
+        ])
+
+        distribution = {
+            'pending': base_counts.get('pending', 0),
+            'awaiting_review': base_counts.get('awaiting_review', 0),
+            'changes_requested': base_counts.get('changes_requested', 0),
+            'rejected': base_counts.get('rejected', 0),
+            'approved': just_approved,
+            'in_selection_process': len(selection_set - admitted_set - admission_set),
+            'documents_pending': docs_pending_count,
+            'documents_complete': docs_complete_count,
+            'admission_in_progress': len(admission_set),
+            'admitted': len(admitted_set),
+        }
+
+        return {'total': sum(distribution.values()), 'distribution': distribution}
+
+    @action(detail=False, methods=['get'], url_path='ai-insights')
+    def ai_insights(self, request):
+        """Gera insights com IA sobre o pipeline de candidatos."""
+        user = request.user
+        if not (user.is_staff or user.is_superuser or user.user_type == 'recruiter'):
+            return Response(
+                {'error': 'Acesso não autorizado.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        from django.conf import settings as django_settings
+        api_key = getattr(django_settings, 'OPENAI_API_KEY', '')
+        if not api_key:
+            return Response(
+                {'error': 'OPENAI_API_KEY não configurada.'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+
+        # 1. Coletar dados do pipeline (otimizado — reutiliza cache do dashboard-stats)
+        from django.core.cache import cache
+        cached_stats = cache.get('dashboard_stats_result')
+        if cached_stats:
+            distribution = cached_stats['distribution']
+            total = cached_stats['total']
+        else:
+            stats = self._compute_pipeline_distribution()
+            distribution = stats['distribution']
+            total = stats['total']
+            cache.set('dashboard_stats_result', stats, 30)
+
+        # 2. Coletar dados de candidaturas (1 query com agregação)
+        from applications.models import Application
+        from django.db.models import Count, Q
+        app_agg = Application.objects.aggregate(
+            total=Count('id'),
+            submitted=Count('id', filter=Q(status='submitted')),
+            in_process=Count('id', filter=Q(status='in_process')),
+            interview_scheduled=Count('id', filter=Q(status='interview_scheduled')),
+            approved=Count('id', filter=Q(status='approved')),
+            rejected=Count('id', filter=Q(status='rejected')),
+            withdrawn=Count('id', filter=Q(status='withdrawn')),
+        )
+        app_stats = app_agg
+
+        # 3. Calcular taxas de conversão
+        approved_profiles = distribution.get('approved', 0) + distribution.get('in_selection_process', 0) + \
+            distribution.get('documents_pending', 0) + distribution.get('documents_complete', 0) + \
+            distribution.get('admission_in_progress', 0) + distribution.get('admitted', 0)
+        docs_complete = distribution.get('documents_complete', 0) + distribution.get('in_selection_process', 0) + \
+            distribution.get('admission_in_progress', 0) + distribution.get('admitted', 0)
+        admitted_count = distribution.get('admitted', 0)
+
+        conversion = {
+            'cadastro_to_aprovado': round(approved_profiles / total * 100, 1) if total > 0 else 0,
+            'aprovado_to_docs_ok': round(docs_complete / approved_profiles * 100, 1) if approved_profiles > 0 else 0,
+            'docs_ok_to_admitido': round(admitted_count / docs_complete * 100, 1) if docs_complete > 0 else 0,
+        }
+
+        # 4. Chamar OpenAI
+        import json
+        try:
+            from openai import OpenAI
+            client = OpenAI(api_key=api_key)
+
+            prompt_data = json.dumps({
+                'total_candidatos': total,
+                'distribuicao_pipeline': distribution,
+                'candidaturas': app_stats,
+                'taxas_conversao': conversion,
+            }, ensure_ascii=False)
+
+            response = client.chat.completions.create(
+                model='gpt-4o-mini',
+                response_format={"type": "json_object"},
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "Você é um analista de RH especializado em recrutamento. "
+                            "Analise os dados do pipeline de candidatos e gere insights em português brasileiro. "
+                            "Retorne APENAS JSON válido com esta estrutura exata:\n"
+                            "{\n"
+                            '  "summary": "resumo geral em 1-2 frases",\n'
+                            '  "highlights": [{"title": "...", "description": "...", "type": "positive|warning|critical"}],\n'
+                            '  "bottleneck": "fase com maior perda de candidatos e explicação",\n'
+                            '  "recommendations": ["recomendação 1", "recomendação 2", "recomendação 3"]\n'
+                            "}\n"
+                            "Gere 3-5 highlights. Tipos: positive=bom, warning=atenção, critical=urgente."
+                        )
+                    },
+                    {
+                        "role": "user",
+                        "content": f"Analise estes dados do nosso banco de talentos:\n\n{prompt_data}"
+                    }
+                ],
+                max_tokens=800,
+                temperature=0.7,
+            )
+
+            ai_response = json.loads(response.choices[0].message.content)
+        except Exception as e:
+            ai_response = {
+                'summary': 'Não foi possível gerar insights no momento.',
+                'highlights': [],
+                'bottleneck': 'Erro ao conectar com a IA.',
+                'recommendations': [],
+                'error': str(e),
+            }
+
+        return Response({
+            **ai_response,
+            'data': {
+                'distribution': distribution,
+                'total': total,
+                'conversion': conversion,
+                'applications': app_stats,
+            },
+            'generated_at': timezone.now().isoformat(),
         })
 
 

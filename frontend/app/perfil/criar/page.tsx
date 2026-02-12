@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,7 +12,7 @@ import ProfessionalInfoSection from '@/app/perfil/account/ProfessionalInfoSectio
 import EducationExperienceSection from '@/app/perfil/account/EducationExperienceSection';
 import SkillsLanguagesSection from '@/app/perfil/account/SkillsLanguagesSection';
 import Navbar from '@/components/Navbar';
-import SplitText from '@/components/SliptText';
+const SplitText = dynamic(() => import('@/components/SliptText'), { ssr: false });
 import LoadChiap from '@/components/LoadChiap';
 
 export default function CreateProfilePage() {

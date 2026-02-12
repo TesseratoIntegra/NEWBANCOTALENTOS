@@ -1,7 +1,8 @@
 'use client'
+import dynamic from 'next/dynamic';
 import React, { useState, useEffect } from 'react';
 import { Calendar, MapPin, Clock, FileText, Target, CheckCircle, Loader } from 'lucide-react';
-import * as Icon from 'react-bootstrap-icons'
+import { Cash } from 'react-bootstrap-icons'
 import Navbar from '@/components/Navbar';
 import JobApplicationModal from '@/components/JobApplicationModal';
 import { useParams } from 'next/navigation';
@@ -9,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import CandidateService from '@/services/candidateService';
 import ApplicationService from '@/services/applicationService';
 import { CandidateProfile, Application } from '@/types';
-import SplitText from '@/components/SliptText';
+const SplitText = dynamic(() => import('@/components/SliptText'), { ssr: false });
 import LoadChiap from '@/components/LoadChiap';
 import { toast } from 'react-hot-toast';
 
@@ -218,7 +219,7 @@ const JobListingPage: React.FC = () => {
                   <span className="text-sm text-yellow-300">{getJobTypeLabel(jobData.job_type)}</span>
                 </div>
                 <div className="flex items-center space-x-2 bg-blue-900 pl-4 pr-6 py-2 rounded-full w-full lg:w-auto">
-                  <Icon.Cash className="w-4 h-4 text-yellow-300" />
+                  <Cash className="w-4 h-4 text-yellow-300" />
                   <span className="text-sm text-yellow-300">{jobData.salary_range}</span>
                 </div>
               </div>

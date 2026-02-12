@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import * as XLSX from 'xlsx';
+
 import AuthService from '@/services/auth';
 import toast from 'react-hot-toast';
 import applicationService from '@/services/applicationService';
@@ -277,19 +277,27 @@ export default function TotalCandidaturas() {
 	): Promise<UnifiedApplication[]> => {
 		const unified: UnifiedApplication[] = [];
 
-		// Processar candidaturas normais - buscar dados do perfil para obter CPF e gênero
-		for (const app of normalApps) {
-			console.log('Processando candidatura normal:', app);
-			let candidateProfile: CandidateProfile | null = null;
+		// Buscar todos os perfis em paralelo (ao invés de 1 por 1)
+		const profileIds = normalApps
+			.map(app => app.candidate_profile_id)
+			.filter((id): id is number => id != null);
+		const uniqueIds = [...new Set(profileIds)];
 
-			// Buscar perfil do candidato se tiver candidate_profile_id
-			if (app.candidate_profile_id) {
-				try {
-					candidateProfile = await candidateService.getCandidateProfile(app.candidate_profile_id);
-				} catch (error) {
-					console.error(`Erro ao buscar perfil do candidato ${app.candidate_profile_id}:`, error);
-				}
-			}
+		const profileResults = await Promise.all(
+			uniqueIds.map(id =>
+				candidateService.getCandidateProfile(id).catch(() => null)
+			)
+		);
+		const profileMap = new Map<number, CandidateProfile>();
+		profileResults.forEach((profile, idx) => {
+			if (profile) profileMap.set(uniqueIds[idx], profile);
+		});
+
+		// Processar candidaturas normais usando o Map de perfis
+		for (const app of normalApps) {
+			const candidateProfile = app.candidate_profile_id
+				? profileMap.get(app.candidate_profile_id) || null
+				: null;
 
 			unified.push({
 				id: app.id,
@@ -317,7 +325,6 @@ export default function TotalCandidaturas() {
 		// Processar candidaturas espontâneas
 		spontaneousApps.forEach(appUnknown => {
 			const app = appUnknown as SpontaneousApplicationComplete;
-			console.log('Processando candidatura espontânea:', app);
 			unified.push({
 				id: app.id,
 				type: 'spontaneous',
@@ -452,11 +459,13 @@ export default function TotalCandidaturas() {
 	};
 
 	// Função para exportar dados para Excel
-	const exportToExcel = () => {
+	const exportToExcel = async () => {
 		if (filteredApplications.length === 0) {
 			toast.error('Não há dados para exportar!');
 			return;
 		}
+
+		const XLSX = await import('xlsx');
 
 		// Preparar dados para o Excel
 		const excelData = filteredApplications.map((app, index) => {

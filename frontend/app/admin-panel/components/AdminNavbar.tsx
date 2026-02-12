@@ -31,7 +31,13 @@ const AdminNavbar = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const lastFetchRef = useRef<number>(0);
+
   useEffect(() => {
+    const now = Date.now();
+    if (now - lastFetchRef.current < 30000) return; // Throttle: skip se < 30s
+    lastFetchRef.current = now;
+
     const fetchCounts = async () => {
       try {
         const [profileResponse, docsResponse] = await Promise.all([
