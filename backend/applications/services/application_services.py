@@ -31,6 +31,25 @@ def update_application_status(user, application: Application, new_status: str, n
         application.recruiter_notes = notes
     application.save()
 
+    # Notificar candidato via WhatsApp
+    from whatsapp.services import notify_candidate_status_change
+    status_event_map = {
+        'in_process': 'application_in_process',
+        'interview_scheduled': 'application_interview',
+        'approved': 'application_approved',
+        'rejected': 'application_rejected',
+    }
+    event = status_event_map.get(new_status)
+    if event:
+        try:
+            profile = application.candidate.candidate_profile
+            notify_candidate_status_change(profile, event, {
+                'vaga': application.job.title,
+                'observacoes': notes or ''
+            })
+        except Exception:
+            pass
+
     send_status_update_email(
         application.candidate.email,
         application.candidate.name,

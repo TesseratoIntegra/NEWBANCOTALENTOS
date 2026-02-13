@@ -65,6 +65,7 @@ LOCAL_APPS = [
     'candidates',
     'selection_process',
     'admission',
+    'whatsapp',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -351,6 +352,11 @@ ORACLE_PORT = config('ORACLE_PORT', default='1521')
 ORACLE_SERVICE_NAME = config('ORACLE_SERVICE_NAME', default='')
 ORACLE_SCHEMA = config('ORACLE_SCHEMA', default='')
 
+# Evolution API (WhatsApp)
+EVOLUTION_API_URL = config('EVOLUTION_API_URL', default='')
+EVOLUTION_API_KEY = config('EVOLUTION_API_KEY', default='')
+EVOLUTION_INSTANCE_NAME = config('EVOLUTION_INSTANCE_NAME', default='')
+
 # Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'mail.chiaperini.com.br'   # Servidor de saída SMTP
@@ -409,6 +415,11 @@ LOGGING = {
             'propagate': False,
         },
         'jobs': {  # Logger específico para o app jobs
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'whatsapp': {
             'handlers': ['console', 'file'],
             'level': 'INFO',
             'propagate': False,

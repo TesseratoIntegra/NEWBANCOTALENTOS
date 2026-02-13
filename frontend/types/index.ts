@@ -854,3 +854,17 @@ export interface AdmissionPrefill {
   estado: string;
   cep: string;
 }
+
+// ============================================
+// WHATSAPP TYPES
+// ============================================
+
+export interface WhatsAppTemplate {
+  id: number;
+  status_event: string;
+  status_event_display: string;
+  message_template: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}

@@ -459,6 +459,17 @@ class CandidateProfileViewSet(viewsets.ModelViewSet):
 
         profile.save()
 
+        # Notificar candidato via WhatsApp
+        from whatsapp.services import notify_candidate_status_change
+        status_event_map = {
+            'approved': 'profile_approved',
+            'rejected': 'profile_rejected',
+            'changes_requested': 'profile_changes_requested',
+        }
+        event = status_event_map.get(new_status)
+        if event:
+            notify_candidate_status_change(profile, event, {'observacoes': observations})
+
         # Retornar perfil atualizado
         return Response({
             'message': 'Status do perfil atualizado com sucesso.',

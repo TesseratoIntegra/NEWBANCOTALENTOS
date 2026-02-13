@@ -76,6 +76,10 @@ def add_candidate_to_process(process, candidate_profile, added_by, recruiter_not
                 evaluation='pending'
             )
 
+        # Notificar candidato via WhatsApp
+        from whatsapp.services import notify_candidate_status_change
+        notify_candidate_status_change(candidate_profile, 'process_added', {'processo': process.title})
+
         return candidate_in_process
 
 
@@ -158,6 +162,12 @@ def _handle_stage_approved(candidate_in_process, current_stage):
         profile.profile_status = 'approved'
         profile.save(update_fields=['profile_status', 'updated_at'])
 
+        # Notificar candidato via WhatsApp
+        from whatsapp.services import notify_candidate_status_change
+        notify_candidate_status_change(profile, 'process_approved', {
+            'processo': candidate_in_process.process.title
+        })
+
 
 def _handle_stage_rejected(candidate_in_process, current_stage):
     """
@@ -172,6 +182,12 @@ def _handle_stage_rejected(candidate_in_process, current_stage):
         profile = candidate_in_process.candidate_profile
         profile.profile_status = 'rejected'
         profile.save(update_fields=['profile_status', 'updated_at'])
+
+        # Notificar candidato via WhatsApp
+        from whatsapp.services import notify_candidate_status_change
+        notify_candidate_status_change(profile, 'process_rejected', {
+            'processo': candidate_in_process.process.title
+        })
 
 
 def advance_candidate_manually(candidate_in_process, advanced_by):

@@ -235,6 +235,16 @@ class CandidateDocumentViewSet(viewsets.ModelViewSet):
             'status', 'observations', 'reviewed_by', 'reviewed_at', 'updated_at'
         ])
 
+        # Notificar candidato via WhatsApp
+        if document.status in ('approved', 'rejected'):
+            from whatsapp.services import notify_candidate_status_change
+            event = 'document_approved' if document.status == 'approved' else 'document_rejected'
+            notify_candidate_status_change(
+                document.candidate,
+                event,
+                {'documento': document.document_type.name, 'observacoes': document.observations}
+            )
+
         result_serializer = CandidateDocumentSerializer(
             document, context={'request': request}
         )
@@ -554,6 +564,16 @@ class AdmissionDataViewSet(viewsets.ModelViewSet):
             )
         return None
 
+    def _notify_admission_status(self, instance, old_status):
+        """Envia notificação WhatsApp se o status da admissão mudou."""
+        if instance.status == old_status:
+            return
+        from whatsapp.services import notify_candidate_status_change
+        if instance.status in ('completed', 'sent'):
+            notify_candidate_status_change(instance.candidate, 'admission_completed')
+        elif instance.status == 'confirmed':
+            notify_candidate_status_change(instance.candidate, 'admission_confirmed')
+
     def create(self, request, *args, **kwargs):
         """Cria dados de admissão para um candidato (ou atualiza se já existir)."""
         denied = self._check_recruiter(request.user)
@@ -567,9 +587,11 @@ class AdmissionDataViewSet(viewsets.ModelViewSet):
                 candidate_id=candidate_id
             ).first()
             if existing:
+                old_status = existing.status
                 serializer = self.get_serializer(existing, data=request.data, partial=True)
                 serializer.is_valid(raise_exception=True)
                 serializer.save(filled_by=request.user)
+                self._notify_admission_status(existing, old_status)
                 return Response(
                     AdmissionDataSerializer(existing).data,
                     status=status.HTTP_200_OK
@@ -578,6 +600,12 @@ class AdmissionDataViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(filled_by=request.user)
+
+        # Notificar candidato via WhatsApp - Admissão iniciada (draft criado)
+        from whatsapp.services import notify_candidate_status_change
+        notify_candidate_status_change(serializer.instance.candidate, 'admission_started')
+
+        self._notify_admission_status(serializer.instance, '')
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def update(self, request, *args, **kwargs):
@@ -588,9 +616,11 @@ class AdmissionDataViewSet(viewsets.ModelViewSet):
 
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
+        old_status = instance.status
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         serializer.save(filled_by=request.user)
+        self._notify_admission_status(instance, old_status)
         return Response(serializer.data)
 
     def partial_update(self, request, *args, **kwargs):
@@ -697,6 +727,13 @@ class AdmissionDataViewSet(viewsets.ModelViewSet):
         instance.filled_by = request.user
         instance.save(update_fields=['status', 'filled_by', 'updated_at'])
 
+        # Notificar candidato via WhatsApp - Admissão confirmada com data de início
+        from whatsapp.services import notify_candidate_status_change
+        data_inicio = instance.data_inicio_trabalho.strftime('%d/%m/%Y') if instance.data_inicio_trabalho else ''
+        notify_candidate_status_change(instance.candidate, 'admission_confirmed', {
+            'data_inicio': data_inicio,
+        })
+
         serializer = AdmissionDataSerializer(instance)
         return Response(serializer.data)
 
@@ -723,6 +760,14 @@ class AdmissionDataViewSet(viewsets.ModelViewSet):
         instance.sent_at = timezone.now()
         instance.status = 'sent' if result.get('status') == 'prepared' else 'error'
         instance.save(update_fields=['protheus_response', 'sent_at', 'status', 'updated_at'])
+
+        # Notificar candidato via WhatsApp - Admitido com data de início
+        if instance.status == 'sent':
+            from whatsapp.services import notify_candidate_status_change
+            data_inicio = instance.data_inicio_trabalho.strftime('%d/%m/%Y') if instance.data_inicio_trabalho else ''
+            notify_candidate_status_change(instance.candidate, 'admission_confirmed', {
+                'data_inicio': data_inicio,
+            })
 
         serializer = AdmissionDataSerializer(instance)
         return Response(serializer.data)

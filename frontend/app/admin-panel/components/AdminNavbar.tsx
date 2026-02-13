@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { List, Home, ClipboardList, FolderOpen, Sun, Moon, Bell, Users, X, FileText } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useState, useEffect, useRef } from 'react';
-import { FileEarmarkPerson } from 'react-bootstrap-icons';
+import { FileEarmarkPerson, Whatsapp } from 'react-bootstrap-icons';
 import candidateService from '@/services/candidateService';
 import admissionService from '@/services/admissionService';
 import { useAuth } from '@/contexts/AuthContext';
@@ -82,6 +82,11 @@ const AdminNavbar = () => {
       name: 'Documentos',
       href: '/admin-panel/documentos',
       icon: FolderOpen,
+    },
+    {
+      name: 'WhatsApp',
+      href: '/admin-panel/whatsapp',
+      icon: Whatsapp,
     },
     ...(user?.is_superuser ? [{
       name: 'Recrutadores',
