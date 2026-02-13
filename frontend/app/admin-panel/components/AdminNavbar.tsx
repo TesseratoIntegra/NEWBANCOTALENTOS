@@ -8,8 +8,10 @@ import { useState, useEffect, useRef } from 'react';
 import { FileEarmarkPerson } from 'react-bootstrap-icons';
 import candidateService from '@/services/candidateService';
 import admissionService from '@/services/admissionService';
+import { useAuth } from '@/contexts/AuthContext';
 
 const AdminNavbar = () => {
+  const { user } = useAuth();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const { theme, setTheme } = useTheme();
@@ -81,6 +83,11 @@ const AdminNavbar = () => {
       href: '/admin-panel/documentos',
       icon: FolderOpen,
     },
+    ...(user?.is_superuser ? [{
+      name: 'Recrutadores',
+      href: '/admin-panel/recrutadores',
+      icon: Users,
+    }] : []),
   ];
 
   return (

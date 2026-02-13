@@ -624,16 +624,16 @@ class CandidateProfileViewSet(viewsets.ModelViewSet):
         # 4. Processos seletivos (2 queries)
         selection_set = set(
             CandidateInProcess.objects.filter(
-                candidate_id__in=approved_ids,
+                candidate_profile_id__in=approved_ids,
                 is_active=True,
                 status__in=['pending', 'in_progress']
-            ).values_list('candidate_id', flat=True)
+            ).values_list('candidate_profile_id', flat=True)
         )
         approved_proc_set = set(
             CandidateInProcess.objects.filter(
-                candidate_id__in=approved_ids,
+                candidate_profile_id__in=approved_ids,
                 status='approved'
-            ).values_list('candidate_id', flat=True)
+            ).values_list('candidate_profile_id', flat=True)
         )
 
         # 5. Documentos (2 queries)

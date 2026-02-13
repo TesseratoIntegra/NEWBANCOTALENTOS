@@ -433,7 +433,8 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label htmlFor="cpf" className="block text-sm font-medium text-zinc-700 mb-2">
-              CPF *
+              CPF
+              <span className="ml-2 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-red-100 text-red-600">Obrigatório</span>
             </label>
             <input
               type="text"
@@ -445,12 +446,14 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
               maxLength={14}
               className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.cpf ? 'border-red-500' : 'border-slate-400'}`}
             />
+            <p className="text-xs text-slate-400 mt-1">Usado para identificação no sistema</p>
             {formErrors.cpf && <p className="text-xs text-red-500 mt-1">{formErrors.cpf}</p>}
           </div>
 
           <div>
             <label htmlFor="date_of_birth" className="block text-sm font-medium text-zinc-700 mb-2">
-              Data de Nascimento *
+              Data de Nascimento
+              <span className="ml-2 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-red-100 text-red-600">Obrigatório</span>
             </label>
             <DateInput
               id="date_of_birth"
@@ -470,7 +473,8 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label htmlFor="gender" className="block text-sm font-medium text-zinc-700 mb-2">
-              Gênero *
+              Gênero
+              <span className="ml-2 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-red-100 text-red-600">Obrigatório</span>
             </label>
             <select
               id="gender"
@@ -486,12 +490,14 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
                 </option>
               ))}
             </select>
+            <p className="text-xs text-slate-400 mt-1">Como você se identifica</p>
             {formErrors.gender && <p className="text-xs text-red-500 mt-1">{formErrors.gender}</p>}
           </div>
 
           <div>
             <label htmlFor="phone_secondary" className="block text-sm font-medium text-zinc-700 mb-2">
-              Telefone *
+              Telefone
+              <span className="ml-2 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-red-100 text-red-600">Obrigatório</span>
             </label>
             <input
               type="tel"
@@ -503,30 +509,38 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
               maxLength={19}
               className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.phone_secondary ? 'border-red-500' : 'border-slate-400'}`}
             />
+            <p className="text-xs text-slate-400 mt-1">Número com DDD para contato dos recrutadores</p>
             {formErrors.phone_secondary && <p className="text-xs text-red-500 mt-1">{formErrors.phone_secondary}</p>}
           </div>
         </div>
 
         {/* WhatsApp */}
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="accepts_whatsapp"
-            name="accepts_whatsapp"
-            checked={formData.accepts_whatsapp ?? true}
-            onChange={handleChange}
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-400 rounded bg-white cursor-pointer"
-          />
-          <label htmlFor="accepts_whatsapp" className="ml-3 block text-sm text-zinc-700 cursor-pointer">
-            <span className="font-medium">Aceito receber mensagens da empresa via WhatsApp</span>
-          </label>
+        <div>
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="accepts_whatsapp"
+              name="accepts_whatsapp"
+              checked={formData.accepts_whatsapp ?? true}
+              onChange={handleChange}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-400 rounded bg-white cursor-pointer"
+            />
+            <label htmlFor="accepts_whatsapp" className="ml-3 block text-sm text-zinc-700 cursor-pointer">
+              <span className="font-medium">
+                Aceito receber mensagens da empresa via WhatsApp
+                <span className="ml-2 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">Opcional</span>
+              </span>
+            </label>
+          </div>
+          <p className="text-xs text-slate-400 mt-1 ml-7">Permite que recrutadores entrem em contato pelo WhatsApp</p>
         </div>
 
         {/* CEP */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label htmlFor="zip_code" className="block text-sm font-medium text-zinc-700 mb-2">
-              CEP *
+              CEP
+              <span className="ml-2 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-red-100 text-red-600">Obrigatório</span>
             </label>
             <div className="relative">
               <input
@@ -556,7 +570,8 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label htmlFor="state" className="block text-sm font-medium text-zinc-700 mb-2">
-              Estado *
+              Estado
+              <span className="ml-2 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-red-100 text-red-600">Obrigatório</span>
             </label>
             <select
               id="state"
@@ -574,12 +589,14 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
                 </option>
               ))}
             </select>
+            <p className="text-xs text-slate-400 mt-1">Estado onde você mora</p>
             {formErrors.state && <p className="text-xs text-red-500 mt-1">{formErrors.state}</p>}
           </div>
 
           <div>
             <label htmlFor="city" className="block text-sm font-medium text-zinc-700 mb-2">
-              Cidade *
+              Cidade
+              <span className="ml-2 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-red-100 text-red-600">Obrigatório</span>
             </label>
             <select
               id="city"
@@ -603,6 +620,7 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
                 </option>
               ))}
             </select>
+            <p className="text-xs text-slate-400 mt-1">Cidade onde você mora</p>
             {formErrors.city && <p className="text-xs text-red-500 mt-1">{formErrors.city}</p>}
           </div>
         </div>
@@ -611,7 +629,8 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label htmlFor="neighborhood" className="block text-sm font-medium text-zinc-700 mb-2">
-              Bairro *
+              Bairro
+              <span className="ml-2 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-red-100 text-red-600">Obrigatório</span>
             </label>
             <input
               type="text"
@@ -619,15 +638,17 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
               name="neighborhood"
               value={formData.neighborhood || ''}
               onChange={handleChange}
-              placeholder="Bairro"
+              placeholder="Ex: Centro"
               className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.neighborhood ? 'border-red-500' : 'border-slate-400'}`}
             />
+            <p className="text-xs text-slate-400 mt-1">Bairro da sua residência</p>
             {formErrors.neighborhood && <p className="text-xs text-red-500 mt-1">{formErrors.neighborhood}</p>}
           </div>
 
           <div>
             <label htmlFor="street" className="block text-sm font-medium text-zinc-700 mb-2">
-              Rua *
+              Rua
+              <span className="ml-2 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-red-100 text-red-600">Obrigatório</span>
             </label>
             <input
               type="text"
@@ -635,9 +656,10 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
               name="street"
               value={formData.street || ''}
               onChange={handleChange}
-              placeholder="Nome da rua"
+              placeholder="Ex: Rua das Flores"
               className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.street ? 'border-red-500' : 'border-slate-400'}`}
             />
+            <p className="text-xs text-slate-400 mt-1">Nome da rua ou avenida</p>
             {formErrors.street && <p className="text-xs text-red-500 mt-1">{formErrors.street}</p>}
           </div>
         </div>
@@ -646,7 +668,8 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label htmlFor="number" className="block text-sm font-medium text-zinc-700 mb-2">
-              Numero *
+              Número
+              <span className="ml-2 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-red-100 text-red-600">Obrigatório</span>
             </label>
             <input
               type="text"
@@ -654,15 +677,17 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
               name="number"
               value={formData.number || ''}
               onChange={handleChange}
-              placeholder="123"
+              placeholder="Ex: 123"
               className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.number ? 'border-red-500' : 'border-slate-400'}`}
             />
+            <p className="text-xs text-slate-400 mt-1">Número da residência</p>
             {formErrors.number && <p className="text-xs text-red-500 mt-1">{formErrors.number}</p>}
           </div>
 
           <div>
             <label htmlFor="complement" className="block text-sm font-medium text-zinc-700 mb-2">
               Complemento
+              <span className="ml-2 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">Opcional</span>
             </label>
             <input
               type="text"
@@ -670,9 +695,10 @@ export default function PersonalInfoSection({ profile, onUpdate, onProfileChange
               name="complement"
               value={formData.complement || ''}
               onChange={handleChange}
-              placeholder="Apto, Bloco, Casa..."
+              placeholder="Ex: Apto 12, Bloco B"
               className="w-full px-3 py-2 bg-white border border-slate-400 rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
+            <p className="text-xs text-slate-400 mt-1">Apartamento, bloco, casa, etc.</p>
           </div>
         </div>
 

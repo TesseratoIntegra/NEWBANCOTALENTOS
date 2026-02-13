@@ -32,6 +32,39 @@ export interface RegisterRequest {
   user_type?: 'candidate' | 'recruiter' | 'admin';
 }
 
+// Recruiter types
+export interface Recruiter {
+  id: number;
+  email: string;
+  name: string;
+  last_name: string;
+  user_type: 'recruiter';
+  is_active: boolean;
+  is_staff: boolean;
+  company: number | null;
+  company_name: string | null;
+  created_at: string;
+}
+
+export interface CreateRecruiterRequest {
+  email: string;
+  name: string;
+  last_name?: string;
+  password: string;
+  company?: number | null;
+  is_staff?: boolean;
+}
+
+export interface UpdateRecruiterRequest {
+  name?: string;
+  last_name?: string;
+  email?: string;
+  company?: number | null;
+  is_active?: boolean;
+  is_staff?: boolean;
+  password?: string;
+}
+
 // Company types
 export interface CompanyGroup {
   id: number;

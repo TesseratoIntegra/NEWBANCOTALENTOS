@@ -196,7 +196,8 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
         {/* Escolaridade */}
         <div>
           <label htmlFor="education_level" className="block text-sm font-medium text-zinc-700 mb-2">
-            Nível de Escolaridade *
+            Nível de Escolaridade
+            <span className="ml-2 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-red-100 text-red-600">Obrigatório</span>
           </label>
           <select
             id="education_level"
@@ -212,6 +213,7 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
               </option>
             ))}
           </select>
+          <p className="text-xs text-slate-400 mt-1">Seu nível mais alto de formação concluída ou em andamento</p>
           {errors.education_level && <span className="text-xs text-red-600">Campo obrigatório</span>}
         </div>
 
@@ -219,7 +221,8 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label htmlFor="desired_salary_min" className="block text-sm font-medium text-zinc-700 mb-2">
-              Pretensão Salarial Mínima (R$) *
+              Pretensão Salarial Mínima (R$)
+              <span className="ml-2 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-red-100 text-red-600">Obrigatório</span>
             </label>
             <input
               type="text"
@@ -232,12 +235,14 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
               className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.desired_salary_min ? 'border-red-500' : 'border-slate-400'}`}
               maxLength={25}
             />
+            <p className="text-xs text-slate-400 mt-1">Valor mínimo que você espera receber</p>
             {errors.desired_salary_min && <span className="text-xs text-red-600">Campo obrigatório</span>}
           </div>
 
           <div>
             <label htmlFor="desired_salary_max" className="block text-sm font-medium text-zinc-700 mb-2">
-              Pretensão Salarial Máxima (R$) *
+              Pretensão Salarial Máxima (R$)
+              <span className="ml-2 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-red-100 text-red-600">Obrigatório</span>
             </label>
             <input
               type="text"
@@ -250,6 +255,7 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
               className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.desired_salary_max ? 'border-red-500' : 'border-slate-400'}`}
               maxLength={25}
             />
+            <p className="text-xs text-slate-400 mt-1">Valor máximo da sua pretensão salarial</p>
             {errors.desired_salary_max && <span className="text-xs text-red-600">Campo obrigatório</span>}
           </div>
         </div>
@@ -257,7 +263,8 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
         {/* Resumo Profissional */}
         <div>
           <label htmlFor="professional_summary" className="block text-sm font-medium text-zinc-700 mb-2">
-            Resumo Profissional *
+            Resumo Profissional
+            <span className="ml-2 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-red-100 text-red-600">Obrigatório</span>
           </label>
           <textarea
             id="professional_summary"
@@ -268,6 +275,7 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
             placeholder="Descreva sua experiência profissional, objetivos e principais conquistas..."
             className={`w-full px-3 py-2 bg-white border rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical ${errors.professional_summary ? 'border-red-500' : 'border-slate-400'}`}
           />
+          <p className="text-xs text-slate-400 mt-1">Escreva um breve resumo sobre sua carreira, habilidades e objetivos</p>
           {errors.professional_summary && <span className="text-xs text-red-600">Campo obrigatório</span>}
         </div>
 
@@ -279,6 +287,7 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
             <div>
               <label htmlFor="linkedin_url" className="block text-sm font-medium text-zinc-700 mb-2">
                 LinkedIn
+                <span className="ml-2 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">Opcional</span>
               </label>
               <input
                 type="url"
@@ -289,11 +298,13 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
                 placeholder="https://linkedin.com/in/seuperfil"
                 className="w-full px-3 py-2 bg-white border border-slate-400 rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
+              <p className="text-xs text-slate-400 mt-1">Link do seu perfil no LinkedIn</p>
             </div>
 
             <div>
               <label htmlFor="github_url" className="block text-sm font-medium text-zinc-700 mb-2">
                 GitHub
+                <span className="ml-2 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">Opcional</span>
               </label>
               <input
                 type="url"
@@ -304,11 +315,13 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
                 placeholder="https://github.com/seuusuario"
                 className="w-full px-3 py-2 bg-white border border-slate-400 rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
+              <p className="text-xs text-slate-400 mt-1">Link do seu perfil no GitHub</p>
             </div>
 
             <div>
               <label htmlFor="portfolio_url" className="block text-sm font-medium text-zinc-700 mb-2">
                 Portfólio
+                <span className="ml-2 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">Opcional</span>
               </label>
               <input
                 type="url"
@@ -319,6 +332,7 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
                 placeholder="https://seuportfolio.com"
                 className="w-full px-3 py-2 bg-white border border-slate-400 rounded-md text-slate-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
+              <p className="text-xs text-slate-400 mt-1">Link do seu site ou portfólio online</p>
             </div>
           </div>
         </div>
@@ -328,52 +342,71 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
           <h3 className="text-lg font-semibold text-slate-700">Preferências de Trabalho</h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center">
-              <input type="checkbox" id="available_for_work" name="available_for_work" checked={formData.available_for_work || false} onChange={handleChange} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-400 rounded bg-white cursor-pointer" />
-              <label htmlFor="available_for_work" className="ml-3 block text-sm text-zinc-700 cursor-pointer">
-                <span className="font-medium">Disponível para trabalho</span>
-              </label>
+            <div>
+              <div className="flex items-center">
+                <input type="checkbox" id="available_for_work" name="available_for_work" checked={formData.available_for_work || false} onChange={handleChange} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-400 rounded bg-white cursor-pointer" />
+                <label htmlFor="available_for_work" className="ml-3 block text-sm text-zinc-700 cursor-pointer">
+                  <span className="font-medium">Disponível para trabalho</span>
+                </label>
+              </div>
+              <p className="text-xs text-slate-400 mt-1 ml-7">Indica que você está buscando novas oportunidades</p>
             </div>
 
-            <div className="flex items-center">
-              <input type="checkbox" id="accepts_remote_work" name="accepts_remote_work" checked={formData.accepts_remote_work || false} onChange={handleChange} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-400 rounded bg-white cursor-pointer" />
-              <label htmlFor="accepts_remote_work" className="ml-3 block text-sm text-zinc-700 cursor-pointer">
-                <span className="font-medium">Aceita trabalho remoto</span>
-              </label>
+            <div>
+              <div className="flex items-center">
+                <input type="checkbox" id="accepts_remote_work" name="accepts_remote_work" checked={formData.accepts_remote_work || false} onChange={handleChange} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-400 rounded bg-white cursor-pointer" />
+                <label htmlFor="accepts_remote_work" className="ml-3 block text-sm text-zinc-700 cursor-pointer">
+                  <span className="font-medium">Aceita trabalho remoto</span>
+                </label>
+              </div>
+              <p className="text-xs text-slate-400 mt-1 ml-7">Aceita vagas 100% remotas ou híbridas</p>
             </div>
 
-            <div className="flex items-center">
-              <input type="checkbox" id="can_travel" name="can_travel" checked={formData.can_travel || false} onChange={handleChange} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-400 rounded bg-white cursor-pointer" />
-              <label htmlFor="can_travel" className="ml-3 block text-sm text-zinc-700 cursor-pointer">
-                <span className="font-medium">Disponível para viagens</span>
-              </label>
+            <div>
+              <div className="flex items-center">
+                <input type="checkbox" id="can_travel" name="can_travel" checked={formData.can_travel || false} onChange={handleChange} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-400 rounded bg-white cursor-pointer" />
+                <label htmlFor="can_travel" className="ml-3 block text-sm text-zinc-700 cursor-pointer">
+                  <span className="font-medium">Disponível para viagens</span>
+                </label>
+              </div>
+              <p className="text-xs text-slate-400 mt-1 ml-7">Aceita vagas que exijam viagens frequentes</p>
             </div>
 
-            <div className="flex items-center">
-              <input type="checkbox" id="accepts_relocation" name="accepts_relocation" checked={formData.accepts_relocation || false} onChange={handleChange} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-400 rounded bg-white cursor-pointer" />
-              <label htmlFor="accepts_relocation" className="ml-3 block text-sm text-zinc-700 cursor-pointer">
-                <span className="font-medium">Aceita mudança de cidade</span>
-              </label>
+            <div>
+              <div className="flex items-center">
+                <input type="checkbox" id="accepts_relocation" name="accepts_relocation" checked={formData.accepts_relocation || false} onChange={handleChange} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-400 rounded bg-white cursor-pointer" />
+                <label htmlFor="accepts_relocation" className="ml-3 block text-sm text-zinc-700 cursor-pointer">
+                  <span className="font-medium">Aceita mudança de cidade</span>
+                </label>
+              </div>
+              <p className="text-xs text-slate-400 mt-1 ml-7">Aceita se mudar para outra cidade ou estado</p>
             </div>
 
-            <div className="flex items-center">
-              <input type="checkbox" id="has_vehicle" name="has_vehicle" checked={formData.has_vehicle || false} onChange={handleChange} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-400 rounded bg-white cursor-pointer" />
-              <label htmlFor="has_vehicle" className="ml-3 block text-sm text-zinc-700 cursor-pointer">
-                <span className="font-medium">Possui veículo</span>
-              </label>
+            <div>
+              <div className="flex items-center">
+                <input type="checkbox" id="has_vehicle" name="has_vehicle" checked={formData.has_vehicle || false} onChange={handleChange} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-400 rounded bg-white cursor-pointer" />
+                <label htmlFor="has_vehicle" className="ml-3 block text-sm text-zinc-700 cursor-pointer">
+                  <span className="font-medium">Possui veículo</span>
+                </label>
+              </div>
+              <p className="text-xs text-slate-400 mt-1 ml-7">Tem carro ou moto própria</p>
             </div>
 
-            <div className="flex items-center">
-              <input type="checkbox" id="has_cnh" name="has_cnh" checked={formData.has_cnh || false} onChange={handleChange} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-400 rounded bg-white cursor-pointer" />
-              <label htmlFor="has_cnh" className="ml-3 block text-sm text-zinc-700 cursor-pointer">
-                <span className="font-medium">Possui CNH</span>
-              </label>
+            <div>
+              <div className="flex items-center">
+                <input type="checkbox" id="has_cnh" name="has_cnh" checked={formData.has_cnh || false} onChange={handleChange} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-400 rounded bg-white cursor-pointer" />
+                <label htmlFor="has_cnh" className="ml-3 block text-sm text-zinc-700 cursor-pointer">
+                  <span className="font-medium">Possui CNH</span>
+                </label>
+              </div>
+              <p className="text-xs text-slate-400 mt-1 ml-7">Tem Carteira Nacional de Habilitação</p>
             </div>
           </div>
 
           <div>
             <label htmlFor="preferred_work_shift" className="block text-sm font-medium text-zinc-700 mb-2">
               Turno Preferido
+              <span className="ml-2 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">Opcional</span>
             </label>
             <select
               id="preferred_work_shift"
@@ -388,6 +421,7 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
                 </option>
               ))}
             </select>
+            <p className="text-xs text-slate-400 mt-1">Turno de trabalho de sua preferência</p>
           </div>
         </div>
 

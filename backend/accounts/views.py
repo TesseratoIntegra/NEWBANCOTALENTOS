@@ -1,6 +1,6 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAdminUser
 
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -9,7 +9,7 @@ from drf_spectacular.utils import extend_schema, extend_schema_view
 from dj_rest_auth.views import APIView, LoginView, LogoutView, PasswordResetView, PasswordResetConfirmView, PasswordChangeView
 
 from accounts.models import UserProfile
-from accounts.serializers import UserProfileSerializer, RegisterSerializer, CustomPasswordResetSerializer, CustomPasswordResetConfirmSerializer, CustomJWTSerializer
+from accounts.serializers import UserProfileSerializer, RegisterSerializer, RecruiterSerializer, CustomPasswordResetSerializer, CustomPasswordResetConfirmSerializer, CustomJWTSerializer
 
 
 @extend_schema_view(
@@ -201,4 +201,52 @@ class CustomPasswordResetConfirmView(APIView):
         return Response(
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+@extend_schema_view(
+    list=extend_schema(
+        tags=['Gerenciamento de Recrutadores'],
+        summary='Listar recrutadores',
+        description='Retorna todos os recrutadores cadastrados. Apenas administradores.'
+    ),
+    retrieve=extend_schema(
+        tags=['Gerenciamento de Recrutadores'],
+        summary='Detalhar recrutador',
+    ),
+    create=extend_schema(
+        tags=['Gerenciamento de Recrutadores'],
+        summary='Criar recrutador',
+    ),
+    partial_update=extend_schema(
+        tags=['Gerenciamento de Recrutadores'],
+        summary='Atualizar recrutador',
+    ),
+    destroy=extend_schema(
+        tags=['Gerenciamento de Recrutadores'],
+        summary='Excluir recrutador',
+    ),
+)
+class RecruiterViewSet(viewsets.ModelViewSet):
+    """ViewSet para gerenciamento de recrutadores. Apenas administradores."""
+    serializer_class = RecruiterSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        return UserProfile.objects.filter(
+            user_type='recruiter'
+        ).select_related('company').order_by('-created_at')
+
+    def create(self, request, *args, **kwargs):
+        if not request.data.get('password'):
+            return Response(
+                {'password': ['Este campo é obrigatório para criar um recrutador.']},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        recruiter = serializer.save()
+        return Response(
+            RecruiterSerializer(recruiter).data,
+            status=status.HTTP_201_CREATED
         )

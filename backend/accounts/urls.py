@@ -3,7 +3,8 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 from accounts.views import (
-    RegisterViewSet, 
+    RegisterViewSet,
+    RecruiterViewSet,
     CustomPasswordResetView,
     CustomLoginView,
     CustomLogoutView,
@@ -14,6 +15,7 @@ from accounts.views import (
 
 router = DefaultRouter()
 router.register(r'registers', RegisterViewSet, basename='registers')
+router.register(r'recruiters', RecruiterViewSet, basename='recruiters')
 
 urlpatterns = [
     path('', include(router.urls)),

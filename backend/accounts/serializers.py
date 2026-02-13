@@ -5,7 +5,6 @@ from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
-from django.contrib.auth.password_validation import validate_password
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.encoding import force_str
 
@@ -31,7 +30,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 class RegisterSerializer(serializers.ModelSerializer):
     """Serializer para registro de novos usuários."""
-    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    password = serializers.CharField(write_only=True, required=True, min_length=8)
     password2 = serializers.CharField(write_only=True, required=True)
 
     class Meta:
@@ -166,6 +165,36 @@ class CustomPasswordResetConfirmSerializer(serializers.Serializer):
         user.save()
 
         return user
+
+
+class RecruiterSerializer(serializers.ModelSerializer):
+    """Serializer para gerenciamento de recrutadores (superuser only)."""
+    password = serializers.CharField(write_only=True, required=False, min_length=8)
+    company_name = serializers.CharField(source='company.name', read_only=True)
+
+    class Meta:
+        model = UserProfile
+        fields = [
+            'id', 'email', 'name', 'last_name', 'password', 'user_type',
+            'is_active', 'is_staff', 'company', 'company_name',
+            'created_at',
+        ]
+        read_only_fields = ['id', 'user_type', 'created_at']
+
+    def create(self, validated_data):
+        password = validated_data.pop('password', None)
+        validated_data['user_type'] = 'recruiter'
+        user = UserProfile.objects.create_user(password=password, **validated_data)
+        return user
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop('password', None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        if password:
+            instance.set_password(password)
+        instance.save()
+        return instance
 
 
 class CustomJWTSerializer(serializers.Serializer):
