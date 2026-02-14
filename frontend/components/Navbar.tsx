@@ -195,7 +195,7 @@ function Navbar() {
             <div className="xl:max-w-[92%] mx-auto px-4 sm:px-6 py-3">
                 <div className="flex items-center justify-between">
                     <Link href='/' className="flex items-center space-x-3 cursor-pointer">
-                        <Image src='https://raw.githubusercontent.com/Chiaperini-TI/Chiaperini-TI/main/chiaperini.png' width={300} height={300} alt='Chiaperini' className='animate-fade w-auto h-12 sm:h-10 -ml-4'></Image>
+                        <Image src='/img/logo.png' width={300} height={300} alt='Tesserato Integra' className='animate-fade w-auto h-12 sm:h-10 -ml-4' />
                     </Link>
                     
                     {/* Desktop Navigation */}

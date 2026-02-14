@@ -333,8 +333,8 @@ export default function LoginPage() {
 
                 <ResetPassword isOpen={openResetModal} ></ResetPassword>
 
-                <a href="https://www.chiaperini.com.br/" target="_blank" className='hover:opacity-60 fixed top-4 left-5 flex gap-x-2 duration-300'>
-                    <Image width={300} height={100} src="https://raw.githubusercontent.com/Chiaperini-TI/Chiaperini-TI/main/chiaperini.png" alt="Logo Chiaperini" className="w-32 m-auto mb-4 animate-fade-down animate-delay-[100ms] inline"/>
+                <a href="https://tesseratointegra.com.br/" target="_blank" className='hover:opacity-60 fixed top-4 left-5 flex gap-x-2 duration-300'>
+                    <Image width={300} height={100} src="/img/logo-dark.png" alt="Tesserato Integra" className="w-32 m-auto mb-4 animate-fade-down animate-delay-[100ms] inline"/>
                 </a>
 
                 <div id="all">

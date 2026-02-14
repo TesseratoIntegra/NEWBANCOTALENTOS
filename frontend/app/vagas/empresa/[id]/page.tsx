@@ -1,7 +1,7 @@
 'use client'
 import { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import LoadChiap from '@/components/LoadChiap';
+import LoadTesserato from '@/components/LoadTesserato';
 
 export default function JobRedirectPage() {
   const params = useParams();
@@ -45,7 +45,7 @@ export default function JobRedirectPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-zinc-100 to-white flex items-center justify-center">
-      <LoadChiap/>
+      <LoadTesserato/>
     </div>
   );
 }

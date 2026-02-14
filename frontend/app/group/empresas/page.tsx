@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Search, Building2, MapPin } from 'lucide-react';
-import LoadChiap from '@/components/LoadChiap';
+import LoadTesserato from '@/components/LoadTesserato';
 import companyService from '@/services/companyService';
 import { Company } from '@/types';
 import Navbar from '@/components/Navbar';
@@ -210,7 +210,7 @@ const CompaniesPage = () => {
           {/* Loading */}
           {loading && (
             <div className="flex justify-center items-center py-12">
-              <LoadChiap/>
+              <LoadTesserato/>
             </div>
           )}
 

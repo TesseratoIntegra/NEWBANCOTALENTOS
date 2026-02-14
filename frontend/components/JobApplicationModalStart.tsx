@@ -6,7 +6,7 @@ import AuthService from '@/services/auth';
 import { toast } from 'react-hot-toast';
 import { Download } from 'react-bootstrap-icons'
 const SplitText = dynamic(() => import('./SliptText'), { ssr: false });
-import LoadChiap from './LoadChiap';
+import LoadTesserato from './LoadTesserato';
 import formatCPF from '@/functions/FormatCPF';
 import { formatTEL } from '@/functions/FormatTEL';
 import locationService, { City } from '@/services/locationService';
@@ -379,7 +379,7 @@ useEffect(() => {
 						{/* Loading */}
 						{loading && (
 							<div className="flex items-center justify-center py-8">
-								<LoadChiap/>
+								<LoadTesserato/>
 							</div>
 						)}
 

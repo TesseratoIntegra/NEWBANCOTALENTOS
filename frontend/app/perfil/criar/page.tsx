@@ -13,7 +13,7 @@ import EducationExperienceSection from '@/app/perfil/account/EducationExperience
 import SkillsLanguagesSection from '@/app/perfil/account/SkillsLanguagesSection';
 import Navbar from '@/components/Navbar';
 const SplitText = dynamic(() => import('@/components/SliptText'), { ssr: false });
-import LoadChiap from '@/components/LoadChiap';
+import LoadTesserato from '@/components/LoadTesserato';
 
 export default function CreateProfilePage() {
   const router = useRouter();
@@ -121,7 +121,7 @@ export default function CreateProfilePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-white via-zinc-100 to-white flex items-center justify-center">
-        <LoadChiap/>
+        <LoadTesserato/>
       </div>
     );
   }

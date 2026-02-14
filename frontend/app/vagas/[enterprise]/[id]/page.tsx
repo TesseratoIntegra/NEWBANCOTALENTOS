@@ -11,7 +11,7 @@ import CandidateService from '@/services/candidateService';
 import ApplicationService from '@/services/applicationService';
 import { CandidateProfile, Application } from '@/types';
 const SplitText = dynamic(() => import('@/components/SliptText'), { ssr: false });
-import LoadChiap from '@/components/LoadChiap';
+import LoadTesserato from '@/components/LoadTesserato';
 import { toast } from 'react-hot-toast';
 
 // Types for job data (agora inclui company e group direto)
@@ -155,7 +155,7 @@ const JobListingPage: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-white via-zinc-100 to-white flex items-center justify-center">
-        <LoadChiap/>
+        <LoadTesserato/>
       </div>
     );
   }

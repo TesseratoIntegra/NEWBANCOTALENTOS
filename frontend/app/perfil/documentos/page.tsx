@@ -7,7 +7,7 @@ import admissionService from '@/services/admissionService';
 import candidateService from '@/services/candidateService';
 import { CandidateDocumentWithType, DocumentsSummary, CandidateProfile } from '@/types';
 import Navbar from '@/components/Navbar';
-import LoadChiap from '@/components/LoadChiap';
+import LoadTesserato from '@/components/LoadTesserato';
 import {
   FileText, Upload, CheckCircle, XCircle, Clock, AlertCircle,
   ArrowLeft, Download, RefreshCw
@@ -126,7 +126,7 @@ export default function CandidateDocumentsPage() {
       <>
         <Navbar />
         <div className="flex justify-center items-center py-12">
-          <LoadChiap />
+          <LoadTesserato />
         </div>
       </>
     );

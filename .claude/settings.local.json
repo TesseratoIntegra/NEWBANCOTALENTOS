@@ -8,7 +8,8 @@
       "Bash(python3:*)"
     ],
     "additionalDirectories": [
-      "c:\\Users\\marketing11\\Desktop\\projetos\\NEWBANCOTALENTOS"
+      "c:\\Users\\marketing11\\Desktop\\projetos\\NEWBANCOTALENTOS",
+      "c:\\Users\\Cliente\\Projetos\\NEWBANCOTALENTOS\\frontend\\app\\vagas\\[enterprise]"
     ]
   }
 }

@@ -133,8 +133,8 @@ export default function ResetPass() {
 
     return (
         <div className={`min-h-screen w-full bg-zinc-100 flex justify-center items-center duration-300`}>
-            <a href="https://www.chiaperini.com.br/" target="_blank" className='hover:opacity-60 fixed top-4 left-5 flex gap-x-2 duration-300'>
-                <Image width={300} height={100} src="https://raw.githubusercontent.com/Chiaperini-TI/Chiaperini-TI/main/chiaperini.png" alt="Logo Chiaperini" className="w-32 m-auto mb-4 animate-fade-down animate-delay-[100ms] inline"/>
+            <a href="https://tesseratointegra.com.br/" target="_blank" className='hover:opacity-60 fixed top-4 left-5 flex gap-x-2 duration-300'>
+                <Image width={300} height={100} src="/img/logo-dark.png" alt="Tesserato Integra" className="w-32 m-auto mb-4 animate-fade-down animate-delay-[100ms] inline"/>
             </a>
             <div className="inline" id="all">
                 <div className='rounded-md border-zinc-400 w-80 2xl:w-96 pt-16 pb-20 mb-7 z-10 relative mt-[-1rem] animate-fade-down px-4 overflow-hidden duration-300'>

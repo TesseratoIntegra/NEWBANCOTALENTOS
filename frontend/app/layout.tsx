@@ -18,8 +18,11 @@ const InterText = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Banco de Talentos - Chiaperini Industrial",
+  title: "Banco de Talentos - Tesserato Integra",
   description: "Plataforma completa para gestão de talentos e recrutamento",
+  icons: {
+    icon: '/img/tesserato-dark.png',
+  },
 };
 
 export default function RootLayout({

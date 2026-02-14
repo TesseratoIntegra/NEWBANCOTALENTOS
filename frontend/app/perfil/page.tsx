@@ -11,7 +11,7 @@ import admissionService from '@/services/admissionService';
 import { toast } from 'react-hot-toast';
 import { confirmDialog } from '@/lib/confirmDialog';
 import Navbar from '@/components/Navbar';
-import LoadChiap from '@/components/LoadChiap';
+import LoadTesserato from '@/components/LoadTesserato';
 import { PersonFill, PersonVcard } from 'react-bootstrap-icons';
 import { MapPin, Mail, Phone, Linkedin, Github, Globe, Briefcase, GraduationCap, Award, Languages, Settings, Edit2, Plus, Trash2, X, AlertCircle, CheckCircle, ClipboardList, FileText, Clock } from 'lucide-react';
 
@@ -345,7 +345,7 @@ export default function ProfileViewPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-white via-zinc-100 to-white flex items-center justify-center">
-        <LoadChiap />
+        <LoadTesserato />
       </div>
     );
   }
