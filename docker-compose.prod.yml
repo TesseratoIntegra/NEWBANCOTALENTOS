@@ -84,6 +84,8 @@ services:
       - CACHE_REDIS_SAVE_INSTANCES=true
       - CACHE_LOCAL_ENABLED=false
       - DEL_INSTANCE=false
+    ports:
+      - "127.0.0.1:8080:8080"
     volumes:
       - evolution_instances:/evolution/instances
     depends_on:
