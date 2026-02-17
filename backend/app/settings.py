@@ -20,7 +20,7 @@ else:
     from decouple import config  # type: ignore
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-=&ri$$873!4#j0=o$dw*drk)&jby8p*+@#--#$#g-&(5k5t1d&')
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
@@ -74,33 +74,17 @@ SITE_ID = 1
 
 
 # CSRF e CORS Configuration
-CSRF_TRUSTED_ORIGINS = [
-    "https://www.bancodetalentos.chiaperini.com.br",
-    "https://bancodetalentos.chiaperini.com.br",
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "http://localhost:3002",
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:3001",
-    "http://127.0.0.1:3002",
-    "http://localhost:3025",
-    "http://127.0.0.1:3025",
-]
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
+    default='https://bancodetalentos.chiaperini.com.br,https://www.bancodetalentos.chiaperini.com.br',
+    cast=lambda v: [s.strip() for s in v.split(',')]
+)
 
-CORS_ALLOWED_ORIGINS = [
-    "https://www.bancodetalentos.chiaperini.com.br",
-    "https://bancodetalentos.chiaperini.com.br",
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "http://localhost:3002",
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:3001",
-    "http://127.0.0.1:3002",
-    "http://localhost:3025",
-    "http://127.0.0.1:3025",
-    "http://192.168.2.83:3025",
-    "http://192.168.2.83:3000",
-]
+CORS_ALLOWED_ORIGINS = config(
+    'CORS_ALLOWED_ORIGINS',
+    default='https://bancodetalentos.chiaperini.com.br,https://www.bancodetalentos.chiaperini.com.br',
+    cast=lambda v: [s.strip() for s in v.split(',')]
+)
 
 # Configurações adicionais de CORS para melhor compatibilidade
 CORS_ALLOW_CREDENTIALS = True  # Permitir cookies e autenticação
@@ -367,7 +351,7 @@ EVOLUTION_INSTANCE_NAME = config('EVOLUTION_INSTANCE_NAME', default='')
 
 # Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'mail.chiaperini.com.br'   # Servidor de saída SMTP
+EMAIL_HOST = config('EMAIL_HOST', default='mail.chiaperini.com.br')
 EMAIL_PORT = 465                        # Porta SMTP com SSL
 EMAIL_USE_SSL = True                    # SSL (não use TLS aqui)
 EMAIL_USE_TLS = False                   # Desative o TLS

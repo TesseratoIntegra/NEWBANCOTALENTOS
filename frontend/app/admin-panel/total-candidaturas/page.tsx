@@ -389,22 +389,14 @@ export default function TotalCandidaturas() {
 					? occupationsResponse
 					: (Array.isArray(occupationsResponse.results) ? occupationsResponse.results : []);
 
-				console.log('Dados recebidos:');
-				console.log('Normal Apps:', normalApps);
-				console.log('Spontaneous Apps:', spontaneousApps);
-				console.log('Occupations:', occs);
-
 				const unifiedData = await unifyApplicationData(normalApps, spontaneousApps);
-				
-				console.log('Dados unificados:', unifiedData);
-				
+
 				setApplications(unifiedData);
 				setFilteredApplications(unifiedData);
 				setOccupations(occs);
 
-			} catch (err) {
+			} catch {
 				setError('Erro ao carregar candidaturas');
-				console.error(err);
 			} finally {
 				setLoading(false);
 			}

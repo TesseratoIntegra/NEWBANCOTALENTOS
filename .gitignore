@@ -1,25 +1,42 @@
-.env.prod
-.env.dev
+# Environment files
 .env
-backend/venv
+.env.*
+!.env-example
+
+# Backend
+backend/venv/
 backend/media/
-backend/media/*
-logs/
-logs/*
 backend/logs/
-backend/logs/*
 backend/db.sqlite3
-__pycache__*
 backend/.env
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Frontend
 frontend/node_modules/
+frontend/.next/
 frontend/dist/
-frontend/dist-ssr
+frontend/dist-ssr/
 frontend/.env
-frontend/logs
+frontend/.env.*
+!frontend/.env-example
+frontend/logs/
 frontend/*.log
 frontend/npm-debug.log*
 frontend/yarn-debug.log*
 frontend/yarn-error.log*
 frontend/pnpm-debug.log*
-frontend/lerna-debug.log*
-.env
+
+# Logs
+logs/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+nul

@@ -145,22 +145,14 @@ class CustomPasswordResetView(PasswordResetView):
     permission_classes = [AllowAny]
 
     def get_serializer_context(self):
-        print("[DEBUG] get_serializer_context foi chamado")
         context = super().get_serializer_context()
         context['request'] = self.request
         return context
 
     def post(self, request, *args, **kwargs):
-        print("[DEBUG] CustomPasswordResetView POST foi chamado")
-        print(f"[DEBUG] Request data: {request.data}")
-
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.save()
-
-        print(f"[DEBUG] UID: {data['uid']}")
-        print(f"[DEBUG] Token: {data['token']}")
-        print(f"[DEBUG] Reset URL: {data['reset_url']}")
 
         return Response(data, status=status.HTTP_200_OK)
 

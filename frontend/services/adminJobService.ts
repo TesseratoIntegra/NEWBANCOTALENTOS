@@ -28,7 +28,6 @@ class AdminJobService {
     try {
       const accessToken = AuthService.getAccessToken();
       if (!accessToken) {
-        console.log("❌ Token de acesso não encontrado nos cookies");
         throw new Error("Token de acesso ausente");
       }
       const response = await fetch(`${this.baseUrl}/jobs`, {

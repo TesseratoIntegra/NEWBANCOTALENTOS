@@ -102,7 +102,7 @@ export default function JobApplicationModalStart({ show, onClose }: JobApplicati
 				const data = await res.json();
 				setOccupations(data);
 			} catch {
-				console.log('Erro ao carregar áreas');
+				// silently ignore
 			}
 		}
 		fetchOccupations();
@@ -150,8 +150,8 @@ export default function JobApplicationModalStart({ show, onClose }: JobApplicati
 						setExistingResumeUrl(null);
 					}
 				}
-			} catch (err) {
-				console.error(err);
+			} catch {
+				// silently ignore
 			} finally {
 				setLoading(false);
 			}
@@ -262,7 +262,6 @@ useEffect(() => {
 		try {
 			const accessToken = AuthService.getAccessToken();
 			if (!accessToken) {
-				console.log("❌ Token de acesso não encontrado nos cookies");
 				toast.error("Faça login primeiro");
 				window.location.href = '/';
 				throw new Error("Token de acesso ausente");

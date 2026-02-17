@@ -83,8 +83,8 @@ export default function ProfessionalInfoSection({ profile, onUpdate, saving }: P
               setWizardStep(2);
             }
           }
-        } catch (error) {
-          console.log(error)
+        } catch {
+          // silently ignore
         }
       } else {
         setFormData({

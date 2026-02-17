@@ -54,8 +54,8 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
           try {
             const companyData = await companyService.getCompanyById(jobData.company);
             setCompany(companyData);
-          } catch (companyError) {
-            console.warn('Erro ao carregar empresa:', companyError);
+          } catch {
+            // silently ignore
           }
         }
 
@@ -71,12 +71,11 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
           const data = await response.json();
           // API retorna dados paginados com results ou array direto
           setApplications(Array.isArray(data) ? data : (data.results || []));
-        } catch (appError) {
-          console.warn('Erro ao carregar candidaturas:', appError);
+        } catch {
+          // silently ignore
         }
-      } catch (err) {
+      } catch {
         setError('Erro ao carregar vaga');
-        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -85,7 +84,7 @@ export default function JobDetailsPage({ params }: JobDetailsPageProps) {
     if (resolvedParams && resolvedParams.id) {
       fetchJobAndCompanyAndApplications(resolvedParams.id);
     } else {
-      console.log('resolvedParams ou resolvedParams.id não disponível:', resolvedParams);
+      setError('Parâmetros não disponíveis');
     }
   }, [resolvedParams]);
 

@@ -43,7 +43,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (storedUser && token && !AuthService.isTokenExpired(token)) {
         setUser(storedUser);
       } else {
-        console.log('User not authenticated, clearing data');
         // Clear invalid data
         AuthService.logout();
       }

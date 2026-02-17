@@ -41,8 +41,7 @@ export default function PasswordResetModal({isOpen} : PasswordResetModalProps) {
         setStatus('error');
         setMessage('Erro ao enviar email. Tente novamente.');
       }
-    } catch (error) {
-        console.log(error)
+    } catch {
       setStatus('error');
       setMessage('Erro de conexão. Verifique sua internet e tente novamente.');
     } finally {
