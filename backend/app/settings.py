@@ -295,34 +295,40 @@ if DEBUG:
     MEDIA_URL = '/media/'
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 else:
-    AWS_ACCESS_KEY_ID = config("AWS_ACCESS_KEY_ID")
-    AWS_SECRET_ACCESS_KEY = config("AWS_SECRET_ACCESS_KEY")
-    AWS_STORAGE_BUCKET_NAME = config("AWS_STORAGE_BUCKET_NAME")
-    AWS_S3_REGION_NAME = config("AWS_S3_REGION_NAME", "us-east-1")
-    AWS_QUERYSTRING_AUTH = False
-    AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com"
+    _aws_key = config("AWS_ACCESS_KEY_ID", default="")
+    if _aws_key:
+        AWS_ACCESS_KEY_ID = _aws_key
+        AWS_SECRET_ACCESS_KEY = config("AWS_SECRET_ACCESS_KEY")
+        AWS_STORAGE_BUCKET_NAME = config("AWS_STORAGE_BUCKET_NAME")
+        AWS_S3_REGION_NAME = config("AWS_S3_REGION_NAME", "us-east-1")
+        AWS_QUERYSTRING_AUTH = False
+        AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com"
 
-    STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/static/"
-    MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/media/"
+        STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/static/"
+        MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/media/"
 
-    STORAGES = {
-        "default": {
-            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
-            "OPTIONS": {
-                "bucket_name": AWS_STORAGE_BUCKET_NAME,
-                "region_name": AWS_S3_REGION_NAME,
-                "location": "media",
+        STORAGES = {
+            "default": {
+                "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+                "OPTIONS": {
+                    "bucket_name": AWS_STORAGE_BUCKET_NAME,
+                    "region_name": AWS_S3_REGION_NAME,
+                    "location": "media",
+                },
             },
-        },
-        "staticfiles": {
-            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
-            "OPTIONS": {
-                "bucket_name": AWS_STORAGE_BUCKET_NAME,
-                "region_name": AWS_S3_REGION_NAME,
-                "location": "static",
+            "staticfiles": {
+                "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+                "OPTIONS": {
+                    "bucket_name": AWS_STORAGE_BUCKET_NAME,
+                    "region_name": AWS_S3_REGION_NAME,
+                    "location": "static",
+                },
             },
-        },
-    }
+        }
+    else:
+        # Local storage (VPS sem S3)
+        MEDIA_URL = '/media/'
+        MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # File Upload Settings
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
