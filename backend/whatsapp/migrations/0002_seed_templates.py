@@ -6,9 +6,9 @@ DEFAULT_TEMPLATES = [
         'status_event': 'profile_approved',
         'message_template': (
             'Olá {nome}! 🎉\n\n'
-            'Seu perfil foi *aprovado* no Banco de Talentos da Chiaperini.\n\n'
+            'Seu perfil foi *aprovado* no Banco de Talentos Tesserato.\n\n'
             'Acesse a plataforma para acompanhar as próximas etapas.\n\n'
-            'Equipe Chiaperini Industrial'
+            'Equipe Tesserato Integra'
         ),
     },
     {
@@ -18,7 +18,7 @@ DEFAULT_TEMPLATES = [
             'Infelizmente, seu perfil não foi aprovado no Banco de Talentos.\n\n'
             'Observações do recrutador:\n{observacoes}\n\n'
             'Agradecemos seu interesse.\n\n'
-            'Equipe Chiaperini Industrial'
+            'Equipe Tesserato Integra'
         ),
     },
     {
@@ -28,7 +28,7 @@ DEFAULT_TEMPLATES = [
             'O recrutador solicitou algumas alterações no seu perfil do Banco de Talentos.\n\n'
             'Observações:\n{observacoes}\n\n'
             'Por favor, acesse a plataforma e atualize as informações solicitadas.\n\n'
-            'Equipe Chiaperini Industrial'
+            'Equipe Tesserato Integra'
         ),
     },
     {
@@ -37,7 +37,7 @@ DEFAULT_TEMPLATES = [
             'Olá {nome}! 📋\n\n'
             'Você foi adicionado ao processo seletivo: *{processo}*\n\n'
             'Acesse a plataforma para mais detalhes sobre as etapas.\n\n'
-            'Equipe Chiaperini Industrial'
+            'Equipe Tesserato Integra'
         ),
     },
     {
@@ -46,7 +46,7 @@ DEFAULT_TEMPLATES = [
             'Olá {nome}! 🎉\n\n'
             'Parabéns! Você foi *aprovado* no processo seletivo: *{processo}*\n\n'
             'Acesse a plataforma para acompanhar os próximos passos.\n\n'
-            'Equipe Chiaperini Industrial'
+            'Equipe Tesserato Integra'
         ),
     },
     {
@@ -55,7 +55,7 @@ DEFAULT_TEMPLATES = [
             'Olá {nome},\n\n'
             'Infelizmente, você não foi aprovado no processo seletivo: *{processo}*\n\n'
             'Agradecemos sua participação e desejamos sucesso.\n\n'
-            'Equipe Chiaperini Industrial'
+            'Equipe Tesserato Integra'
         ),
     },
     {
@@ -63,7 +63,7 @@ DEFAULT_TEMPLATES = [
         'message_template': (
             'Olá {nome},\n\n'
             'Seu documento *{documento}* foi *aprovado* ✅\n\n'
-            'Equipe Chiaperini Industrial'
+            'Equipe Tesserato Integra'
         ),
     },
     {
@@ -73,7 +73,7 @@ DEFAULT_TEMPLATES = [
             'Seu documento *{documento}* foi *rejeitado*.\n\n'
             'Motivo: {observacoes}\n\n'
             'Por favor, acesse a plataforma e reenvie o documento corrigido.\n\n'
-            'Equipe Chiaperini Industrial'
+            'Equipe Tesserato Integra'
         ),
     },
     {
@@ -82,7 +82,7 @@ DEFAULT_TEMPLATES = [
             'Olá {nome},\n\n'
             'Sua candidatura para a vaga *{vaga}* está sendo analisada.\n\n'
             'Acompanhe o andamento pela plataforma.\n\n'
-            'Equipe Chiaperini Industrial'
+            'Equipe Tesserato Integra'
         ),
     },
     {
@@ -91,7 +91,7 @@ DEFAULT_TEMPLATES = [
             'Olá {nome}! 📅\n\n'
             'Sua entrevista foi agendada para a vaga *{vaga}*.\n\n'
             'Acesse a plataforma para ver os detalhes.\n\n'
-            'Equipe Chiaperini Industrial'
+            'Equipe Tesserato Integra'
         ),
     },
     {
@@ -100,7 +100,7 @@ DEFAULT_TEMPLATES = [
             'Olá {nome}! 🎉\n\n'
             'Parabéns! Sua candidatura para a vaga *{vaga}* foi *aprovada*!\n\n'
             'Acesse a plataforma para as próximas etapas.\n\n'
-            'Equipe Chiaperini Industrial'
+            'Equipe Tesserato Integra'
         ),
     },
     {
@@ -109,7 +109,7 @@ DEFAULT_TEMPLATES = [
             'Olá {nome},\n\n'
             'Infelizmente, sua candidatura para a vaga *{vaga}* não foi aprovada.\n\n'
             'Agradecemos seu interesse e desejamos sucesso.\n\n'
-            'Equipe Chiaperini Industrial'
+            'Equipe Tesserato Integra'
         ),
     },
     {
@@ -119,7 +119,7 @@ DEFAULT_TEMPLATES = [
             'Seus dados de admissão foram preenchidos com sucesso.\n\n'
             'Sua data de início está prevista para: *{data_inicio}*\n\n'
             'Aguarde a confirmação final.\n\n'
-            'Equipe Chiaperini Industrial'
+            'Equipe Tesserato Integra'
         ),
     },
     {
@@ -128,8 +128,8 @@ DEFAULT_TEMPLATES = [
             'Olá {nome}! 🎉\n\n'
             'Sua admissão foi *confirmada*!\n\n'
             'Sua data de início de trabalho é: *{data_inicio}*\n\n'
-            'Bem-vindo(a) à equipe Chiaperini Industrial!\n\n'
-            'Equipe Chiaperini Industrial'
+            'Bem-vindo(a) à equipe Tesserato Integra!\n\n'
+            'Equipe Tesserato Integra'
         ),
     },
 ]

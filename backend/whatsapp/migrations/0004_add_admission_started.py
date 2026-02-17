@@ -10,7 +10,7 @@ def add_admission_started(apps, schema_editor):
                 'Olá {nome}! 📋\n\n'
                 'Sua fase de *admissão* foi iniciada no Banco de Talentos.\n\n'
                 'Aguarde as próximas orientações do recrutador.\n\n'
-                'Equipe Chiaperini Industrial'
+                'Equipe Tesserato Integra'
             ),
         },
     )

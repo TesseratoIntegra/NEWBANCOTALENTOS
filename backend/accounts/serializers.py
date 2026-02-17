@@ -127,7 +127,7 @@ class CustomPasswordResetSerializer(serializers.Serializer):
                         f"Acesse o link abaixo para redefinir sua senha:\n\n"
                         f"{reset_url}\n\n"
                         f"Se você não solicitou esta recuperação, ignore este email.\n\n"
-                        f"Equipe Chiaperini Industrial LTDA"
+                        f"Equipe Tesserato Integra"
                     ),
                     from_email=settings.EMAIL_HOST_USER,
                     recipient_list=[user.email],

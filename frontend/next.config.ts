@@ -25,7 +25,7 @@ const nextConfig: NextConfig = {
         },
         {
           protocol: 'https',
-          hostname: 'bancodetalentos.chiaperini.com.br',
+          hostname: 'bancodetalentos.tesseratointegra.com.br',
           pathname: '/media/**',
         },
       ],

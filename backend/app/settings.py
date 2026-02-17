@@ -76,13 +76,13 @@ SITE_ID = 1
 # CSRF e CORS Configuration
 CSRF_TRUSTED_ORIGINS = config(
     'CSRF_TRUSTED_ORIGINS',
-    default='https://bancodetalentos.chiaperini.com.br,https://www.bancodetalentos.chiaperini.com.br',
+    default='https://bancodetalentos.tesseratointegra.com.br,https://www.bancodetalentos.tesseratointegra.com.br',
     cast=lambda v: [s.strip() for s in v.split(',')]
 )
 
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS',
-    default='https://bancodetalentos.chiaperini.com.br,https://www.bancodetalentos.chiaperini.com.br',
+    default='https://bancodetalentos.tesseratointegra.com.br,https://www.bancodetalentos.tesseratointegra.com.br',
     cast=lambda v: [s.strip() for s in v.split(',')]
 )
 
@@ -351,13 +351,13 @@ EVOLUTION_INSTANCE_NAME = config('EVOLUTION_INSTANCE_NAME', default='')
 
 # Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = config('EMAIL_HOST', default='mail.chiaperini.com.br')
+EMAIL_HOST = config('EMAIL_HOST', default='mail.tesseratointegra.com.br')
 EMAIL_PORT = 465                        # Porta SMTP com SSL
 EMAIL_USE_SSL = True                    # SSL (não use TLS aqui)
 EMAIL_USE_TLS = False                   # Desative o TLS
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-DEFAULT_FROM_EMAIL = f'Chiaperini Industrial LTDA <{EMAIL_HOST_USER}>'
+DEFAULT_FROM_EMAIL = f'Tesserato Integra <{EMAIL_HOST_USER}>'
 
 # Logging Configuration
 LOGGING = {

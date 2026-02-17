@@ -2,18 +2,18 @@
 # ============================================
 # Script de Deploy - Banco de Talentos
 # VPS: 31.97.167.150
-# Dominio: bancodetalentos.chiaperini.com.br
+# Dominio: bancodetalentos.tesseratointegra.com.br
 # ============================================
 
 set -e  # Para o script se qualquer comando falhar
 
-DOMAIN="bancodetalentos.chiaperini.com.br"
+DOMAIN="bancodetalentos.tesseratointegra.com.br"
 PROJECT_DIR="/opt/bancodetalentos"
 REPO_URL="https://github.com/TesseratoIntegra/NEWBANCOTALENTOS.git"
 
 echo ""
 echo "=========================================="
-echo "  DEPLOY - Banco de Talentos Chiaperini"
+echo "  DEPLOY - Banco de Talentos Tesserato"
 echo "=========================================="
 echo ""
 
@@ -111,7 +111,7 @@ echo "[6/7] Obtendo certificado SSL via Let's Encrypt..."
 docker compose -f docker-compose.prod.yml run --rm certbot certonly \
     --webroot \
     --webroot-path=/var/www/certbot \
-    --email admin@chiaperini.com.br \
+    --email admin@tesseratointegra.com.br \
     --agree-tos \
     --no-eff-email \
     -d "$DOMAIN"
