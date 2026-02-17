@@ -1,8 +1,11 @@
+from datetime import timedelta
+
 from decouple import config
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
+from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
@@ -22,20 +25,30 @@ User = get_user_model()
 
 class UserProfileSerializer(serializers.ModelSerializer):
     """Serializer para visualizar dados do usuário (sem senha)."""
+    is_trial_expired = serializers.BooleanField(read_only=True)
+
     class Meta:
         model = UserProfile
-        fields = ['id', 'email', 'name', 'last_name', 'user_type', 'is_active', 'is_staff', 'is_superuser', 'created_at']
-        read_only_fields = ['id', 'is_active', 'is_staff', 'is_superuser', 'created_at']
+        fields = ['id', 'email', 'name', 'last_name', 'user_type', 'account_type', 'trial_expires_at', 'is_trial_expired', 'is_active', 'is_staff', 'is_superuser', 'created_at', 'company_name', 'phone', 'city', 'state']
+        read_only_fields = ['id', 'is_active', 'is_staff', 'is_superuser', 'created_at', 'account_type', 'trial_expires_at', 'is_trial_expired']
+
+
+TRIAL_DURATION_DAYS = 3
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    """Serializer para registro de novos usuários."""
+    """Serializer para registro de novos usuários (candidatos ou recrutadores trial)."""
     password = serializers.CharField(write_only=True, required=True, min_length=8)
     password2 = serializers.CharField(write_only=True, required=True)
+    user_type = serializers.ChoiceField(
+        choices=[('candidate', 'Candidato'), ('recruiter', 'Recrutador')],
+        default='candidate',
+        required=False,
+    )
 
     class Meta:
         model = UserProfile
-        fields = ['email', 'name', 'last_name', 'password', 'password2']
+        fields = ['email', 'name', 'last_name', 'password', 'password2', 'user_type', 'company_name', 'phone', 'city', 'state']
 
     def validate(self, attrs):
         if attrs['password'] != attrs['password2']:
@@ -44,7 +57,16 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data.pop('password2')
-        validated_data['user_type'] = 'candidate'
+        user_type = validated_data.get('user_type', 'candidate')
+
+        if user_type == 'recruiter':
+            validated_data['account_type'] = 'trial'
+            validated_data['trial_expires_at'] = timezone.now() + timedelta(days=TRIAL_DURATION_DAYS)
+            validated_data['is_staff'] = True
+        else:
+            validated_data['user_type'] = 'candidate'
+            validated_data['account_type'] = 'free'
+
         return UserProfile.objects.create_user(**validated_data)
 
 
@@ -170,14 +192,15 @@ class CustomPasswordResetConfirmSerializer(serializers.Serializer):
 class RecruiterSerializer(serializers.ModelSerializer):
     """Serializer para gerenciamento de recrutadores (superuser only)."""
     password = serializers.CharField(write_only=True, required=False, min_length=8)
-    company_name = serializers.CharField(source='company.name', read_only=True)
+    is_trial_expired = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = UserProfile
         fields = [
             'id', 'email', 'name', 'last_name', 'password', 'user_type',
+            'account_type', 'trial_expires_at', 'is_trial_expired',
             'is_active', 'is_staff', 'company', 'company_name',
-            'created_at',
+            'phone', 'city', 'state', 'created_at',
         ]
         read_only_fields = ['id', 'user_type', 'created_at']
 

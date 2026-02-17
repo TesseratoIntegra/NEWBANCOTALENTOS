@@ -7,13 +7,13 @@ import Link from 'next/link';
 import applicationService from '@/services/applicationService';
 import { confirmDialog } from '@/lib/confirmDialog';
 
-const STATUS_CONFIG: Record<string, { color: string; bgColor: string; label: string }> = {
-  submitted: { color: 'text-amber-700', bgColor: 'bg-amber-100', label: 'Em análise' },
-  in_process: { color: 'text-blue-700', bgColor: 'bg-blue-100', label: 'Em processo' },
-  interview_scheduled: { color: 'text-purple-700', bgColor: 'bg-purple-100', label: 'Entrevista' },
-  approved: { color: 'text-green-700', bgColor: 'bg-green-100', label: 'Aprovado' },
-  rejected: { color: 'text-red-700', bgColor: 'bg-red-100', label: 'Reprovado' },
-  withdrawn: { color: 'text-gray-700', bgColor: 'bg-gray-100', label: 'Retirado' },
+const STATUS_CONFIG: Record<string, { classes: string; label: string }> = {
+  submitted: { classes: 'bg-sky-50 text-sky-700 border border-sky-200', label: 'Em análise' },
+  in_process: { classes: 'bg-amber-50 text-amber-700 border border-amber-200', label: 'Em processo seletivo' },
+  interview_scheduled: { classes: 'bg-violet-50 text-violet-700 border border-violet-200', label: 'Entrevista agendada' },
+  approved: { classes: 'bg-emerald-50 text-emerald-700 border border-emerald-200', label: 'Aprovado' },
+  rejected: { classes: 'bg-red-50 text-red-700 border border-red-200', label: 'Reprovado' },
+  withdrawn: { classes: 'bg-slate-100 text-slate-500 border border-slate-200', label: 'Retirado pelo candidato' },
 };
 
 const JOB_TYPE_MAP: Record<string, string> = {
@@ -138,7 +138,7 @@ export default function ApplicationsSection() {
                 </div>
               </div>
 
-              <span className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${statusConfig.bgColor} ${statusConfig.color} ml-3`}>
+              <span className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${statusConfig.classes} ml-3`}>
                 {statusConfig.label}
               </span>
             </div>

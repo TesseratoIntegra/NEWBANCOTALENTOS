@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { List, Home, ClipboardList, FolderOpen, Sun, Moon, Bell, Users, X, FileText } from 'lucide-react';
+import { List, Home, ClipboardList, FolderOpen, Sun, Moon, Bell, Users, X, FileText, ChevronDown, Shield } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useState, useEffect, useRef } from 'react';
 import { FileEarmarkPerson, Whatsapp } from 'react-bootstrap-icons';
@@ -19,14 +19,19 @@ const AdminNavbar = () => {
   const [pendingReviewCount, setPendingReviewCount] = useState(0);
   const [pendingDocsCount, setPendingDocsCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showAdminDropdown, setShowAdminDropdown] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
+  const adminDropdownRef = useRef<HTMLDivElement>(null);
   useEffect(() => setMounted(true), []);
 
-  // Fechar dropdown ao clicar fora
+  // Fechar dropdowns ao clicar fora
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
         setShowNotifications(false);
+      }
+      if (adminDropdownRef.current && !adminDropdownRef.current.contains(e.target as Node)) {
+        setShowAdminDropdown(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -83,6 +88,9 @@ const AdminNavbar = () => {
       href: '/admin-panel/documentos',
       icon: FolderOpen,
     },
+  ];
+
+  const adminSubItems = [
     {
       name: 'WhatsApp',
       href: '/admin-panel/whatsapp',
@@ -94,6 +102,8 @@ const AdminNavbar = () => {
       icon: Users,
     }] : []),
   ];
+
+  const isAdminSectionActive = pathname.startsWith('/admin-panel/whatsapp') || pathname.startsWith('/admin-panel/recrutadores');
 
   return (
     <nav className="bg-white border-b border-slate-200 shadow-sm">
@@ -120,7 +130,7 @@ const AdminNavbar = () => {
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center space-x-4">
-            <div className="flex space-x-1">
+            <div className="flex space-x-1 items-center">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = item.href === '/admin-panel'
@@ -141,6 +151,45 @@ const AdminNavbar = () => {
                   </Link>
                 );
               })}
+
+              {/* Administrador dropdown */}
+              <div className="relative" ref={adminDropdownRef}>
+                <button
+                  onClick={() => setShowAdminDropdown(!showAdminDropdown)}
+                  className={`flex items-center space-x-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isAdminSectionActive
+                      ? 'bg-sky-50 text-sky-700'
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  <Shield className="h-5 w-5" />
+                  <span>Administrador</span>
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showAdminDropdown ? 'rotate-180' : ''}`} />
+                </button>
+                {showAdminDropdown && (
+                  <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50 overflow-hidden py-1">
+                    {adminSubItems.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = pathname.startsWith(item.href);
+                      return (
+                        <Link
+                          key={item.name}
+                          href={item.href}
+                          onClick={() => setShowAdminDropdown(false)}
+                          className={`flex items-center space-x-2.5 px-4 py-2.5 text-sm font-medium transition-colors ${
+                            isActive
+                              ? 'bg-sky-50 text-sky-700'
+                              : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                          }`}
+                        >
+                          <Icon className="h-4 w-4" />
+                          <span>{item.name}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
             {totalNotifications > 0 && (
               <div className="relative" ref={notifRef}>
@@ -211,6 +260,7 @@ const AdminNavbar = () => {
                 )}
               </div>
             )}
+            {/* Dark mode - desativado
             {mounted && (
               <button
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
@@ -220,6 +270,7 @@ const AdminNavbar = () => {
                 {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </button>
             )}
+            */}
             <Link
               href="/"
               className="text-slate-500 hover:text-sky-600 text-sm font-medium"
@@ -254,6 +305,34 @@ const AdminNavbar = () => {
                   </Link>
                 );
               })}
+
+              {/* Administrador section */}
+              <div className="border-t border-slate-200 mt-2 pt-2">
+                <span className="flex items-center space-x-2 px-3 py-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <Shield className="h-3.5 w-3.5" />
+                  <span>Administrador</span>
+                </span>
+                {adminSubItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = pathname.startsWith(item.href);
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ml-2 ${
+                        isActive
+                          ? 'bg-sky-50 text-sky-700'
+                          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                      }`}
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      <Icon className="h-5 w-5" />
+                      <span>{item.name}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+
               {pendingReviewCount > 0 && (
                 <Link
                   href="/admin-panel/talentos?status=awaiting_review"
@@ -274,6 +353,7 @@ const AdminNavbar = () => {
                   <span>{pendingDocsCount} documento(s) pendente(s)</span>
                 </Link>
               )}
+              {/* Dark mode - desativado
               {mounted && (
                 <button
                   onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
@@ -283,6 +363,7 @@ const AdminNavbar = () => {
                   <span>{theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}</span>
                 </button>
               )}
+              */}
               <Link
                 href="/"
                 className="text-slate-500 hover:text-sky-600 text-sm font-medium px-3 py-2 rounded-md"

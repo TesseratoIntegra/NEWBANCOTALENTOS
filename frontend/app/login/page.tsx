@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from "react";
-import { UserRound, ArrowRight, Plus, Lock, Eye, EyeOff } from 'lucide-react'
+import { UserRound, ArrowRight, Plus, Lock, Eye, EyeOff, Briefcase, User, Clock, MessageCircle, ArrowLeft, Building2, Phone, MapPin } from 'lucide-react'
 import Swal from 'sweetalert2'
 import { PersonFill } from 'react-bootstrap-icons';
 import Image from "next/image";
@@ -9,6 +9,12 @@ import { useRouter } from "next/navigation";
 import AuthService from '@/services/auth';
 import candidateService from '@/services/candidateService';
 import { useAuth } from '@/contexts/AuthContext';
+
+const BRAZILIAN_STATES = [
+    'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS',
+    'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC',
+    'SP', 'SE', 'TO'
+];
 
 export default function LoginPage() {
     const router = useRouter()
@@ -30,6 +36,17 @@ export default function LoginPage() {
     const [createPassword, setCreatePassword] = useState('');
     const [createPassword2, setCreatePassword2] = useState('');
     
+    // Estado para tipo de conta no registro
+    const [selectedUserType, setSelectedUserType] = useState<'candidate' | 'recruiter' | null>(null);
+    // Estado para trial expirado
+    const [trialExpired, setTrialExpired] = useState(false);
+    // Estado para step de dados da empresa (recrutador)
+    const [showCompanyStep, setShowCompanyStep] = useState(false);
+    const [companyName, setCompanyName] = useState('');
+    const [companyPhone, setCompanyPhone] = useState('');
+    const [companyCity, setCompanyCity] = useState('');
+    const [companyState, setCompanyState] = useState('');
+
     // Estados para controle de loading e erros
     const [isLoading, setIsLoading] = useState(false);
     
@@ -121,6 +138,14 @@ export default function LoginPage() {
             // Usar o hook useAuth para login
             const result = await login({ email: email, password: pass });
 
+            // Verificar se o trial expirou
+            const storedUser = AuthService.getUser();
+            if (storedUser?.is_trial_expired) {
+                setTrialExpired(true);
+                setIsLoading(false);
+                return;
+            }
+
             Swal.fire({
                 icon: "success",
                 title: "Login bem sucedido!",
@@ -129,7 +154,6 @@ export default function LoginPage() {
             });
 
             // Verificar se é candidato e se tem perfil
-            const storedUser = AuthService.getUser();
             if (storedUser?.user_type === 'candidate') {
                 try {
                     // Tenta buscar o perfil do candidato
@@ -140,8 +164,11 @@ export default function LoginPage() {
                     // Se não tem perfil, vai para criar
                     router.push('/perfil/criar');
                 }
+            } else if (storedUser?.user_type === 'recruiter') {
+                // Recrutador vai para admin-panel
+                router.push('/admin-panel');
             } else {
-                // Não é candidato, vai para home
+                // Outro tipo, vai para home
                 router.push('/');
             }
 
@@ -196,27 +223,47 @@ export default function LoginPage() {
         setIsLoading(true);
 
         try {
+            const userType = selectedUserType || 'candidate';
+
             // Usar o hook useAuth para registro
-            await register({
+            const registerData: Record<string, string> = {
                 email: createEmail,
                 name: createName,
                 last_name: createLastName,
                 password: createPassword,
-                password2: createPassword2
-            });
+                password2: createPassword2,
+                user_type: userType,
+            };
+
+            if (userType === 'recruiter') {
+                registerData.company_name = companyName;
+                registerData.phone = companyPhone;
+                registerData.city = companyCity;
+                registerData.state = companyState;
+            }
+
+            await register(registerData as any);
 
             // Fazer login automático após registro
             await login({ email: createEmail, password: createPassword });
 
-            Swal.fire({
-                icon: "success",
-                title: "Conta criada com sucesso!",
-                text: "Vamos completar seu perfil.",
-                theme: 'light',
-            });
-
-            // Redirecionar direto para o wizard de criação de perfil
-            router.push('/perfil/criar');
+            if (userType === 'recruiter') {
+                Swal.fire({
+                    icon: "success",
+                    title: "Conta trial criada!",
+                    text: "Bem-vindo ao painel de recrutamento. Você tem 3 dias para testar.",
+                    theme: 'light',
+                });
+                router.push('/admin-panel');
+            } else {
+                Swal.fire({
+                    icon: "success",
+                    title: "Conta criada com sucesso!",
+                    text: "Vamos completar seu perfil.",
+                    theme: 'light',
+                });
+                router.push('/perfil/criar');
+            }
         } catch (error: unknown) {
             const apiError = error as { response?: { data?: { email?: string[] } } };
             
@@ -287,12 +334,19 @@ export default function LoginPage() {
     const toggleSign = useCallback(() => {
         setSign(prev => !prev);
         setNextStep(false);
+        setSelectedUserType(null);
+        setTrialExpired(false);
+        setShowCompanyStep(false);
         // Limpar os campos e mensagens
         setCreateEmail('');
         setCreateName('');
         setCreateLastName('');
         setCreatePassword('');
         setCreatePassword2('');
+        setCompanyName('');
+        setCompanyPhone('');
+        setCompanyCity('');
+        setCompanyState('');
         setUserValue('');
         setPasswordValue('');
     }, []);
@@ -318,15 +372,77 @@ export default function LoginPage() {
         setCreatePassword2(e.target.value);
     }, []);
 
+    // Máscara de telefone brasileiro
+    const handlePhoneChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 11) value = value.slice(0, 11);
+        if (value.length > 7) {
+            value = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
+        } else if (value.length > 2) {
+            value = `(${value.slice(0, 2)}) ${value.slice(2)}`;
+        } else if (value.length > 0) {
+            value = `(${value}`;
+        }
+        setCompanyPhone(value);
+    }, []);
+
     // Função para validar e avançar para o próximo passo
     const handleNextStep = useCallback(() => {
         if (createEmail.trim() !== '' && createName.trim() !== '') {
+            if (selectedUserType === 'recruiter') {
+                setShowCompanyStep(true);
+            } else {
+                setNextStep(true);
+            }
+        }
+    }, [createEmail, createName, selectedUserType]);
+
+    // Avançar do step de empresa para senha
+    const handleCompanyNext = useCallback(() => {
+        if (companyName.trim() && companyPhone.trim() && companyCity.trim() && companyState) {
             setNextStep(true);
         }
-    }, [createEmail, createName]);
+    }, [companyName, companyPhone, companyCity, companyState]);
 
     // Verificar se os campos estão preenchidos
     const canProceed = createEmail.trim() !== '' && createName.trim() !== '';
+
+    // Tela de trial expirado
+    if (trialExpired) {
+        return (
+            <div className="min-h-screen w-full bg-gradient-to-b from-slate-950 to-slate-900 flex justify-center items-center px-4">
+                <div className="max-w-md w-full">
+                    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8 text-center">
+                        <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-5">
+                            <Clock className="w-8 h-8 text-amber-400" />
+                        </div>
+                        <h2 className="text-xl font-bold text-white mb-2 quicksand">Período de teste expirado</h2>
+                        <p className="text-slate-400 text-sm mb-6 leading-relaxed">
+                            Seu acesso gratuito de 3 dias chegou ao fim. Para continuar usando a plataforma completa de recrutamento, entre em contato com nossa equipe.
+                        </p>
+                        <a
+                            href="https://wa.me/5516992416689?text=Olá! Meu trial do Banco de Talentos expirou e gostaria de continuar usando a plataforma."
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center gap-2 w-full py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition-colors mb-3"
+                        >
+                            <MessageCircle className="w-5 h-5" />
+                            Falar no WhatsApp
+                        </a>
+                        <button
+                            onClick={() => { setTrialExpired(false); AuthService.logout(); router.push('/'); }}
+                            className="text-slate-500 hover:text-white text-sm transition-colors"
+                        >
+                            Voltar ao site
+                        </button>
+                    </div>
+                    <div className="text-center mt-6">
+                        <Image src="/img/logo.png" width={120} height={40} alt="Tesserato" className="mx-auto opacity-30" />
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return(
             <div className="min-h-screen w-full bg-zinc-100 flex justify-center items-center duration-300">
@@ -429,9 +545,66 @@ export default function LoginPage() {
 
                             {/* === MODO CADASTRO === */}
                             <div className={`${!sign ? 'duration-300' : 'absolute inset-x-0 top-0 opacity-0 pointer-events-none duration-300'}`}>
-                                {!nextStep ? (
+                                {!selectedUserType ? (
+                                    /* Step 0: Escolha do tipo de conta */
+                                    <div className="px-2 animate-fade-up">
+                                        <p className="text-zinc-500 text-sm text-center mb-4">Escolha o tipo de conta</p>
+                                        <div className="flex flex-col gap-3">
+                                            <div
+                                                className="border-2 border-zinc-300 hover:border-blue-500 rounded-xl p-4 cursor-pointer transition-all duration-200 hover:bg-blue-50/50 group"
+                                                onClick={() => setSelectedUserType('candidate')}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                                                        <User className="w-5 h-5 text-blue-700" />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="font-bold text-zinc-800 text-sm">Candidato</span>
+                                                            <span className="text-[10px] font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">Gratuito</span>
+                                                        </div>
+                                                        <p className="text-zinc-500 text-xs mt-0.5">Cadastre-se para se candidatar a vagas</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div
+                                                className="border-2 border-zinc-300 hover:border-amber-500 rounded-xl p-4 cursor-pointer transition-all duration-200 hover:bg-amber-50/50 group"
+                                                onClick={() => setSelectedUserType('recruiter')}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center group-hover:bg-amber-200 transition-colors">
+                                                        <Briefcase className="w-5 h-5 text-amber-700" />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="font-bold text-zinc-800 text-sm">Recrutador</span>
+                                                            <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">Trial 3 dias</span>
+                                                        </div>
+                                                        <p className="text-zinc-500 text-xs mt-0.5">Teste a plataforma completa de recrutamento</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : !showCompanyStep && !nextStep ? (
                                     /* Step 1: Email, Nome, Sobrenome */
                                     <div className="px-2">
+                                        <div className="flex items-center justify-between mb-3 animate-fade-up">
+                                            <button
+                                                onClick={() => setSelectedUserType(null)}
+                                                className="flex items-center gap-1 text-xs text-zinc-500 hover:text-blue-700 transition-colors"
+                                            >
+                                                <ArrowLeft className="w-3.5 h-3.5" />
+                                                Voltar
+                                            </button>
+                                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                                                selectedUserType === 'recruiter'
+                                                    ? 'text-amber-700 bg-amber-100'
+                                                    : 'text-blue-700 bg-blue-100'
+                                            }`}>
+                                                {selectedUserType === 'recruiter' ? 'Recrutador Trial' : 'Candidato'}
+                                            </span>
+                                        </div>
                                         <div className="animate-fade-up animate-delay-[100ms]">
                                             <label htmlFor="create-email" className="text-zinc-700 text-sm font-medium">E-mail</label>
                                             <input
@@ -475,6 +648,100 @@ export default function LoginPage() {
                                             <div
                                                 className={`bg-gradient-to-r from-blue-950 to-blue-900 text-zinc-100 w-full h-10 flex justify-center place-items-center font-bold duration-300 rounded-md gap-1 ${canProceed ? 'hover:opacity-70 cursor-pointer' : 'opacity-40 cursor-not-allowed'}`}
                                                 onClick={handleNextStep}
+                                            >
+                                                Próximo <ArrowRight className="w-4 h-4"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : showCompanyStep && !nextStep ? (
+                                    /* Step 1.5: Dados da Empresa (Recrutador) */
+                                    <div className="px-2 animate-fade-up">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <button
+                                                onClick={() => setShowCompanyStep(false)}
+                                                className="flex items-center gap-1 text-xs text-zinc-500 hover:text-blue-700 transition-colors"
+                                            >
+                                                <ArrowLeft className="w-3.5 h-3.5" />
+                                                Voltar
+                                            </button>
+                                            <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                                                Dados da Empresa
+                                            </span>
+                                        </div>
+
+                                        <div className="animate-fade-up animate-delay-[100ms]">
+                                            <label htmlFor="company-name" className="text-zinc-700 text-sm font-medium flex items-center gap-1.5">
+                                                <Building2 className="w-3.5 h-3.5" />
+                                                Nome da Empresa
+                                            </label>
+                                            <input
+                                                id="company-name"
+                                                type="text"
+                                                placeholder="Ex: Empresa ABC Ltda"
+                                                className="text-zinc-800 w-full h-10 bg-transparent mb-4 border-b border-zinc-400 focus:border-blue-500 focus:outline-none"
+                                                value={companyName}
+                                                onChange={(e) => setCompanyName(e.target.value)}
+                                                disabled={isLoading}
+                                            />
+                                        </div>
+
+                                        <div className="animate-fade-up animate-delay-[150ms]">
+                                            <label htmlFor="company-phone" className="text-zinc-700 text-sm font-medium flex items-center gap-1.5">
+                                                <Phone className="w-3.5 h-3.5" />
+                                                Telefone de Contato
+                                            </label>
+                                            <input
+                                                id="company-phone"
+                                                type="tel"
+                                                placeholder="(00) 00000-0000"
+                                                className="text-zinc-800 w-full h-10 bg-transparent mb-4 border-b border-zinc-400 focus:border-blue-500 focus:outline-none"
+                                                value={companyPhone}
+                                                onChange={handlePhoneChange}
+                                                disabled={isLoading}
+                                            />
+                                        </div>
+
+                                        <div className="flex gap-3 animate-fade-up animate-delay-[200ms]">
+                                            <div className="flex-1">
+                                                <label htmlFor="company-city" className="text-zinc-700 text-sm font-medium flex items-center gap-1.5">
+                                                    <MapPin className="w-3.5 h-3.5" />
+                                                    Cidade
+                                                </label>
+                                                <input
+                                                    id="company-city"
+                                                    type="text"
+                                                    placeholder="Ex: São Paulo"
+                                                    className="text-zinc-800 w-full h-10 bg-transparent mb-4 border-b border-zinc-400 focus:border-blue-500 focus:outline-none"
+                                                    value={companyCity}
+                                                    onChange={(e) => setCompanyCity(e.target.value)}
+                                                    disabled={isLoading}
+                                                />
+                                            </div>
+                                            <div className="w-20">
+                                                <label htmlFor="company-state" className="text-zinc-700 text-sm font-medium">UF</label>
+                                                <select
+                                                    id="company-state"
+                                                    className="text-zinc-800 w-full h-10 bg-transparent mb-4 border-b border-zinc-400 focus:border-blue-500 focus:outline-none cursor-pointer"
+                                                    value={companyState}
+                                                    onChange={(e) => setCompanyState(e.target.value)}
+                                                    disabled={isLoading}
+                                                >
+                                                    <option value="">--</option>
+                                                    {BRAZILIAN_STATES.map(uf => (
+                                                        <option key={uf} value={uf}>{uf}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div className="animate-fade-up animate-delay-[250ms] mt-1">
+                                            <div
+                                                className={`bg-gradient-to-r from-blue-950 to-blue-900 text-zinc-100 w-full h-10 flex justify-center place-items-center font-bold duration-300 rounded-md gap-1 ${
+                                                    companyName.trim() && companyPhone.trim() && companyCity.trim() && companyState
+                                                        ? 'hover:opacity-70 cursor-pointer'
+                                                        : 'opacity-40 cursor-not-allowed'
+                                                }`}
+                                                onClick={handleCompanyNext}
                                             >
                                                 Próximo <ArrowRight className="w-4 h-4"/>
                                             </div>

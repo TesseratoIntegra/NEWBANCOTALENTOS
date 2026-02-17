@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django_filters.rest_framework import DjangoFilterBackend, FilterSet, NumberFilter, CharFilter
+from django.db import IntegrityError
 from django.utils import timezone
 from django.db.models import Prefetch
 
@@ -599,7 +600,23 @@ class AdmissionDataViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(filled_by=request.user)
+
+        try:
+            serializer.save(filled_by=request.user)
+        except IntegrityError:
+            # Race condition: record was created between check and insert
+            existing = AdmissionData.objects.filter(
+                candidate_id=candidate_id
+            ).first()
+            if existing:
+                serializer = self.get_serializer(existing, data=request.data, partial=True)
+                serializer.is_valid(raise_exception=True)
+                serializer.save(filled_by=request.user)
+                return Response(
+                    AdmissionDataSerializer(existing).data,
+                    status=status.HTTP_200_OK
+                )
+            raise
 
         # Notificar candidato via WhatsApp - Admissão iniciada (draft criado)
         from whatsapp.services import notify_candidate_status_change

@@ -459,6 +459,18 @@ class CandidateProfileViewSet(viewsets.ModelViewSet):
 
         profile.save()
 
+        # Sincronizar status das candidaturas (Applications) com o status do perfil
+        if new_status in ('approved', 'rejected'):
+            from applications.models import Application
+            Application.objects.filter(
+                candidate=profile.user,
+                status__in=['submitted', 'in_process', 'interview_scheduled'],
+            ).update(
+                status=new_status,
+                reviewed_by=user,
+                reviewed_at=timezone.now(),
+            )
+
         # Notificar candidato via WhatsApp
         from whatsapp.services import notify_candidate_status_change
         status_event_map = {

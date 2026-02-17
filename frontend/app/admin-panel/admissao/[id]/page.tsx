@@ -325,16 +325,26 @@ export default function AdmissaoPage() {
         setPrefilledKeys(filled);
         setFormData(data);
 
-        // Create the admission record as draft
-        const created = await admissionService.createAdmissionData({
-          candidate: candidateId,
-          status: 'draft',
-          ...cleanFormData(data),
-        });
+        // Create the admission record as draft (or fetch existing if race condition)
+        try {
+          const created = await admissionService.createAdmissionData({
+            candidate: candidateId,
+            status: 'draft',
+            ...cleanFormData(data),
+          });
 
-        setAdmissionId(created.id);
-        setAdmissionStatus(created.status);
-        setCandidateName(created.candidate_name || '');
+          setAdmissionId(created.id);
+          setAdmissionStatus(created.status);
+          setCandidateName(created.candidate_name || '');
+        } catch {
+          // Record may already exist (race condition / strict mode), re-fetch
+          const refetched = await admissionService.getAdmissionByCandidate(candidateId);
+          if (refetched) {
+            setAdmissionId(refetched.id);
+            setAdmissionStatus(refetched.status);
+            setCandidateName(refetched.candidate_name || '');
+          }
+        }
       }
     } catch (err: unknown) {
       const errObj = err as { response?: { data?: Record<string, unknown> } };

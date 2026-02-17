@@ -1,8 +1,21 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.permissions import AllowAny, IsAdminUser, BasePermission
 
 from rest_framework_simplejwt.tokens import RefreshToken
+
+
+class IsTrialValid(BasePermission):
+    """Bloqueia acesso se o trial do usuário expirou."""
+    message = 'Seu período de teste expirou. Entre em contato para continuar usando a plataforma.'
+
+    def has_permission(self, request, view):
+        user = request.user
+        if not user.is_authenticated:
+            return False
+        if hasattr(user, 'is_trial_expired') and user.is_trial_expired:
+            return False
+        return True
 
 from drf_spectacular.utils import extend_schema, extend_schema_view
 

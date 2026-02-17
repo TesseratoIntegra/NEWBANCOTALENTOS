@@ -5,11 +5,18 @@ export interface User {
   name: string;
   last_name?: string;
   user_type: 'candidate' | 'recruiter' | 'admin';
+  account_type?: 'free' | 'trial' | 'premium';
+  trial_expires_at?: string | null;
+  is_trial_expired?: boolean;
   is_active: boolean;
   is_staff?: boolean;
   is_superuser?: boolean;
   created_at: string;
   company?: number;
+  company_name?: string;
+  phone?: string;
+  city?: string;
+  state?: string;
 }
 
 export interface AuthTokens {
@@ -30,6 +37,10 @@ export interface RegisterRequest {
   password: string;
   password2: string;
   user_type?: 'candidate' | 'recruiter' | 'admin';
+  company_name?: string;
+  phone?: string;
+  city?: string;
+  state?: string;
 }
 
 // Recruiter types
@@ -39,10 +50,16 @@ export interface Recruiter {
   name: string;
   last_name: string;
   user_type: 'recruiter';
+  account_type?: 'free' | 'trial' | 'premium';
+  trial_expires_at?: string | null;
+  is_trial_expired?: boolean;
   is_active: boolean;
   is_staff: boolean;
   company: number | null;
   company_name: string | null;
+  phone?: string;
+  city?: string;
+  state?: string;
   created_at: string;
 }
 
