@@ -321,28 +321,28 @@ export default function Hero() {
                     {/* --- Feature 1: Pipeline Visual --- */}
                     <div className="grid lg:grid-cols-2 gap-12 items-center mb-24">
                         {/* Mockup */}
-                        <ScrollReveal animation="fadeInLeft">
-                            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-2xl">
+                        <ScrollReveal animation="fadeInLeft" className="px-2 sm:px-0">
+                            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-2xl overflow-hidden">
                                 <div className="text-slate-300 text-sm font-medium mb-4 flex items-center gap-2">
                                     <ClipboardList className="w-4 h-4 text-blue-400" />
                                     Pipeline — Desenvolvedor React Senior
                                 </div>
-                                <div className="flex gap-3 overflow-x-auto pb-2">
+                                <div className="flex gap-3 pb-2 animate-pipeline-scroll pipeline-fade-mask">
                                     {pipelineColumns.map((col, i) => (
-                                        <div key={i} className="min-w-[120px] flex-1">
+                                        <div key={i} className="min-w-[120px]">
                                             <div className="flex items-center gap-2 mb-2">
-                                                <div className={`w-2 h-2 ${col.color} rounded-full`} />
-                                                <span className="text-white text-xs font-medium">{col.name}</span>
+                                                <div className={`w-2 h-2 ${col.color} rounded-full flex-shrink-0`} />
+                                                <span className="text-white text-xs font-medium whitespace-nowrap">{col.name}</span>
                                                 <span className="text-slate-500 text-[10px]">({col.count})</span>
                                             </div>
                                             <div className="space-y-2">
                                                 {col.candidates.map((name, j) => (
                                                     <div key={j} className="bg-white/5 rounded-lg p-2 border border-white/5">
                                                         <div className="flex items-center gap-2">
-                                                            <div className={`w-6 h-6 ${col.color}/30 rounded-full flex items-center justify-center`}>
+                                                            <div className={`w-6 h-6 ${col.color}/30 rounded-full flex items-center justify-center flex-shrink-0`}>
                                                                 <span className="text-[8px] text-white font-bold">{name.split(' ').map(n=>n[0]).join('')}</span>
                                                             </div>
-                                                            <span className="text-slate-300 text-[10px]">{name}</span>
+                                                            <span className="text-slate-300 text-[10px] whitespace-nowrap">{name}</span>
                                                         </div>
                                                     </div>
                                                 ))}

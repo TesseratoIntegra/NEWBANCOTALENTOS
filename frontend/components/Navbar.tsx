@@ -83,7 +83,7 @@ const MobileNavigationLink = memo(({ href, label, icon: Icon, pathname, onClick,
         return (
             <div
                 onClick={onClick}
-                className="animate-fade flex items-center space-x-2 py-2 px-3 rounded-md transition text-zinc-100 hover:text-blue-900 hover:bg-blue-50 cursor-pointer"
+                className="animate-fade flex items-center space-x-2 py-2.5 px-3 rounded-lg transition text-zinc-300 hover:text-zinc-100 hover:bg-white/5 cursor-pointer"
             >
                 <Icon className="w-4 h-4" />
                 <span>{label}</span>
@@ -96,10 +96,10 @@ const MobileNavigationLink = memo(({ href, label, icon: Icon, pathname, onClick,
             key={href}
             href={href}
             onClick={onClick}
-            className={`animate-fade flex items-center space-x-2 py-2 px-3 rounded-md transition ${
-                isActive 
-                    ? 'text-blue-950 bg-yellow-300' 
-                    : 'text-zinc-100 hover:text-blue-900 hover:bg-blue-50'
+            className={`animate-fade flex items-center space-x-2 py-2.5 px-3 rounded-lg transition ${
+                isActive
+                    ? 'text-yellow-300 bg-white/10 border border-yellow-300/20'
+                    : 'text-zinc-300 hover:text-zinc-100 hover:bg-white/5'
             }`}
         >
             <Icon className="w-4 h-4" />
@@ -354,34 +354,35 @@ function Navbar() {
                         <JobApplicationModalStart show={jobStart} onClose={handleCloseJobStart} />
                     )}
                     */}
-                    <div className="mt-4 pt-4 border-t border-blue-900/20">
+                    <div className="mt-4 pt-4 border-t border-white/10">
                         {isAuthenticated ? (
                             user?.user_type === 'candidate' ? (
-                                <div className="animate-fade flex flex-col space-y-3">
+                                <div className="animate-fade flex flex-col space-y-2">
                                     {notifications.length > 0 && (
                                         <Link
                                             href={notifications[0].link}
                                             onClick={handleMobileMenuClose}
-                                            className="bg-red-500/10 text-red-400 px-4 py-2 rounded-md cursor-pointer text-sm duration-300 flex justify-center place-items-center gap-2 border border-red-500/30"
+                                            className="bg-amber-400/10 text-amber-300 px-4 py-2.5 rounded-lg cursor-pointer text-sm duration-300 flex items-center gap-2 border border-amber-400/15"
                                         >
-                                            <Bell className="w-4 h-4" /> {notifications.length} notificação(ões) pendente(s)
+                                            <Bell className="w-4 h-4" />
+                                            <span>{notifications.length} notificação{notifications.length > 1 ? 'ões' : ''} pendente{notifications.length > 1 ? 's' : ''}</span>
                                         </Link>
                                     )}
                                     <Link
                                         href='/perfil'
                                         onClick={handleMobileMenuClose}
-                                        className="bg-blue-700 text-yellow-400 px-4 py-2 rounded-md cursor-pointer text-sm duration-300 flex justify-center place-items-center gap-2 hover:bg-blue-800"
+                                        className="bg-white/10 border border-white/10 text-zinc-100 px-4 py-2.5 rounded-lg cursor-pointer text-sm duration-300 flex items-center gap-2 hover:bg-white/15"
                                     >
                                         <BsPerson className="w-4 h-4" /> Meu Perfil
                                     </Link>
                                     <LogoutBtn />
                                 </div>
                             ) : user?.user_type === 'recruiter' ? (
-                                <div className="animate-fade flex flex-col space-y-3">
+                                <div className="animate-fade flex flex-col space-y-2">
                                     <Link
                                         href='/admin-panel'
                                         onClick={handleMobileMenuClose}
-                                        className="bg-zinc-900 hover:bg-zinc-800 text-white px-4 py-2 rounded-md cursor-pointer text-sm duration-300 flex justify-center place-items-center gap-2"
+                                        className="bg-white/10 border border-white/10 text-zinc-100 px-4 py-2.5 rounded-lg cursor-pointer text-sm duration-300 flex items-center gap-2 hover:bg-white/15"
                                     >
                                         <BsPerson className="w-4 h-4" /> Admin Panel
                                     </Link>
@@ -392,9 +393,9 @@ function Navbar() {
                             <Link
                                 href="/login"
                                 onClick={handleMobileMenuClose}
-                                className="animate-fade bg-gradient-to-r from-yellow-400 to-yellow-300 hover:opacity-70 text-zinc-900 px-4 py-2 rounded-md transition font-semibold flex justify-center place-items-center gap-2 w-full -mt-5"
+                                className="animate-fade bg-yellow-300/90 hover:bg-yellow-300 text-zinc-900 px-4 py-2.5 rounded-lg transition font-semibold flex justify-center items-center gap-2 w-full"
                             >
-                              <BsPerson className='w-4 h-4'/>  Faça seu Login
+                              <BsPerson className='w-4 h-4'/> Faça seu Login
                             </Link>
                             )}
                     </div>
