@@ -31,7 +31,10 @@ import {
   CheckCircle,
   AlertCircle,
   ClipboardList,
-  ExternalLink
+  ExternalLink,
+  MessageCircle,
+  Home,
+  Shield
 } from 'lucide-react';
 import candidateService from '@/services/candidateService';
 import applicationService from '@/services/applicationService';
@@ -479,7 +482,42 @@ export default function TalentoDetalhesPage() {
                   {profile.experience_years} anos de experiência
                 </div>
               )}
+              {profile.cpf && (
+                <div className="flex items-center gap-2 text-slate-600">
+                  <FileText className="h-4 w-4 text-slate-400" />
+                  CPF: {profile.cpf}
+                </div>
+              )}
+              {profile.date_of_birth && (
+                <div className="flex items-center gap-2 text-slate-600">
+                  <Calendar className="h-4 w-4 text-slate-400" />
+                  {new Date(profile.date_of_birth + 'T00:00:00').toLocaleDateString('pt-BR')}
+                  {' '}({Math.floor((Date.now() - new Date(profile.date_of_birth + 'T00:00:00').getTime()) / (365.25 * 24 * 60 * 60 * 1000))} anos)
+                </div>
+              )}
+              {profile.gender && (
+                <div className="flex items-center gap-2 text-slate-600">
+                  <User className="h-4 w-4 text-slate-400" />
+                  {{ M: 'Masculino', F: 'Feminino', O: 'Outro', N: 'Prefiro não dizer' }[profile.gender] || profile.gender}
+                </div>
+              )}
             </div>
+
+            {/* Endereço completo */}
+            {(profile.street || profile.neighborhood || profile.zip_code) && (
+              <div className="flex items-start gap-2 text-slate-500 text-sm mt-3">
+                <Home className="h-4 w-4 text-slate-400 mt-0.5 flex-shrink-0" />
+                <span>
+                  {[
+                    profile.street && `${profile.street}${profile.number ? `, ${profile.number}` : ''}`,
+                    profile.complement,
+                    profile.neighborhood,
+                    [profile.city, profile.state].filter(Boolean).join('/'),
+                    profile.zip_code && `CEP ${profile.zip_code}`,
+                  ].filter(Boolean).join(' - ')}
+                </span>
+              </div>
+            )}
 
             {/* Social Links */}
             <div className="flex gap-3 mt-4">
@@ -551,6 +589,14 @@ export default function TalentoDetalhesPage() {
               }`}>
                 {profile.can_travel ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
                 Viagens
+              </span>
+              <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm ${
+                profile.accepts_whatsapp
+                  ? 'bg-slate-100 text-slate-700 border border-slate-300'
+                  : 'bg-slate-50 text-slate-400 border border-slate-200'
+              }`}>
+                {profile.accepts_whatsapp ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
+                WhatsApp
               </span>
             </div>
           </div>
@@ -1002,15 +1048,19 @@ export default function TalentoDetalhesPage() {
             {skills.length === 0 && !profile.skills ? (
               <p className="text-slate-400 text-sm">Nenhuma habilidade cadastrada</p>
             ) : (
-              <div className="flex flex-wrap gap-2">
+              <div className="space-y-2">
                 {skills.map((skill) => (
-                  <span
-                    key={skill.id}
-                    className="px-3 py-1 bg-sky-50 text-sky-500 rounded-full text-sm"
-                    title={getSkillLabel(skill.level)}
-                  >
-                    {skill.skill_name}
-                  </span>
+                  <div key={skill.id} className="flex items-center justify-between">
+                    <span className="text-slate-600">{skill.skill_name}</span>
+                    <div className="flex items-center gap-2">
+                      {skill.years_experience && (
+                        <span className="text-xs text-slate-400">{skill.years_experience}a</span>
+                      )}
+                      <span className="text-xs px-2 py-0.5 bg-sky-50 text-sky-600 rounded-full">
+                        {getSkillLabel(skill.level)}
+                      </span>
+                    </div>
+                  </div>
                 ))}
                 {profile.skills && skills.length === 0 && (
                   <p className="text-slate-600 text-sm">{profile.skills}</p>
@@ -1029,11 +1079,33 @@ export default function TalentoDetalhesPage() {
             {languages.length === 0 ? (
               <p className="text-slate-400 text-sm">Nenhum idioma cadastrado</p>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {languages.map((lang) => (
-                  <div key={lang.id} className="flex justify-between items-center">
-                    <span className="text-slate-600">{lang.language}</span>
-                    <span className="text-sm text-sky-600">{getLanguageLabel(lang.proficiency)}</span>
+                  <div key={lang.id}>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-700 font-medium">{lang.language}</span>
+                      <span className="text-sm text-sky-600">{getLanguageLabel(lang.proficiency)}</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 mt-1.5">
+                      <div className="text-center">
+                        <p className="text-[10px] text-slate-400 uppercase">Fala</p>
+                        <p className="text-xs text-slate-600">{getLanguageLabel(lang.speaking_level)}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-[10px] text-slate-400 uppercase">Leitura</p>
+                        <p className="text-xs text-slate-600">{getLanguageLabel(lang.reading_level)}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-[10px] text-slate-400 uppercase">Escrita</p>
+                        <p className="text-xs text-slate-600">{getLanguageLabel(lang.writing_level)}</p>
+                      </div>
+                    </div>
+                    {lang.has_certificate && lang.certificate_name && (
+                      <p className="text-xs text-emerald-600 mt-1">
+                        <Award className="h-3 w-3 inline mr-1" />
+                        {lang.certificate_name}
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>
@@ -1079,6 +1151,30 @@ export default function TalentoDetalhesPage() {
               </div>
             </div>
           </div>
+
+          {/* Emergency Contact */}
+          {(profile.emergency_contact_name || profile.emergency_contact_phone) && (
+            <div className="bg-white rounded-lg p-6 border border-slate-200">
+              <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                <Shield className="h-5 w-5 text-sky-600" />
+                Contato de Emergência
+              </h2>
+              <div className="space-y-2 text-sm">
+                {profile.emergency_contact_name && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Nome</span>
+                    <span className="text-slate-600">{profile.emergency_contact_name}</span>
+                  </div>
+                )}
+                {profile.emergency_contact_phone && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Telefone</span>
+                    <span className="text-slate-600">{profile.emergency_contact_phone}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Certifications */}
           {profile.certifications && (
