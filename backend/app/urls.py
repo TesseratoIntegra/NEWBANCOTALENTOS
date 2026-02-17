@@ -38,7 +38,17 @@ urlpatterns = [
     path('api/v1/accounts/', include('dj_rest_auth.urls')),
     path('api/v1/accounts/registration/', include('dj_rest_auth.registration.urls')),
 
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
+
+# Servir media files (em produção o Nginx faz proxy para cá)
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+else:
+    from django.urls import re_path
+    from django.views.static import serve
+    urlpatterns += [
+        re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+    ]
 
 # Configuração do admin
 admin.site.site_header = "Banco de Talentos Admin"
