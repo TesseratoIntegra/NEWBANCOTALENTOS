@@ -36,6 +36,9 @@ logs/
 .vscode/
 .idea/
 
+# Nginx (gerado pelo deploy.sh)
+nginx/nginx.active.conf
+
 # OS
 .DS_Store
 Thumbs.db
