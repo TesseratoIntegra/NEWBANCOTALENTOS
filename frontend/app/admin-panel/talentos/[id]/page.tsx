@@ -1044,24 +1044,49 @@ export default function TalentoDetalhesPage() {
             <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
               <Award className="h-5 w-5 text-sky-600" />
               Habilidades
+              {skills.length > 0 && (
+                <span className="text-xs font-normal text-slate-400 ml-auto">{skills.length} {skills.length === 1 ? 'habilidade' : 'habilidades'}</span>
+              )}
             </h2>
             {skills.length === 0 && !profile.skills ? (
               <p className="text-slate-400 text-sm">Nenhuma habilidade cadastrada</p>
             ) : (
-              <div className="space-y-2">
-                {skills.map((skill) => (
-                  <div key={skill.id} className="flex items-center justify-between">
-                    <span className="text-slate-600">{skill.skill_name}</span>
-                    <div className="flex items-center gap-2">
-                      {skill.years_experience && (
-                        <span className="text-xs text-slate-400">{skill.years_experience}a</span>
-                      )}
-                      <span className="text-xs px-2 py-0.5 bg-sky-50 text-sky-600 rounded-full">
-                        {getSkillLabel(skill.level)}
-                      </span>
+              <div className="space-y-3">
+                {skills.map((skill) => {
+                  const levelMap: Record<string, { dots: number; color: string; bg: string; border: string }> = {
+                    beginner: { dots: 1, color: 'bg-slate-400', bg: 'bg-slate-50', border: 'border-l-slate-400' },
+                    intermediate: { dots: 2, color: 'bg-sky-500', bg: 'bg-sky-50/50', border: 'border-l-sky-500' },
+                    advanced: { dots: 3, color: 'bg-indigo-500', bg: 'bg-indigo-50/50', border: 'border-l-indigo-500' },
+                    expert: { dots: 4, color: 'bg-purple-500', bg: 'bg-purple-50/50', border: 'border-l-purple-500' },
+                  };
+                  const config = levelMap[skill.level || ''] || levelMap.beginner;
+
+                  return (
+                    <div key={skill.id} className={`p-3 rounded-lg border-l-[3px] ${config.border} ${config.bg} border border-slate-100`}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-slate-700">{skill.skill_name}</span>
+                        {skill.years_experience && (
+                          <span className="text-[11px] text-slate-500 bg-white/80 px-2 py-0.5 rounded-full border border-slate-200">
+                            {skill.years_experience} {Number(skill.years_experience) === 1 ? 'ano' : 'anos'}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex gap-1 flex-1">
+                          {[1, 2, 3, 4].map((seg) => (
+                            <div
+                              key={seg}
+                              className={`h-1.5 flex-1 rounded-full transition-all ${
+                                seg <= config.dots ? config.color : 'bg-slate-200'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-[11px] text-slate-500 whitespace-nowrap">{getSkillLabel(skill.level)}</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
                 {profile.skills && skills.length === 0 && (
                   <p className="text-slate-600 text-sm">{profile.skills}</p>
                 )}
@@ -1075,39 +1100,85 @@ export default function TalentoDetalhesPage() {
             <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
               <Languages className="h-5 w-5 text-sky-600" />
               Idiomas
+              {languages.length > 0 && (
+                <span className="text-xs font-normal text-slate-400 ml-auto">{languages.length} {languages.length === 1 ? 'idioma' : 'idiomas'}</span>
+              )}
             </h2>
             {languages.length === 0 ? (
               <p className="text-slate-400 text-sm">Nenhum idioma cadastrado</p>
             ) : (
               <div className="space-y-4">
-                {languages.map((lang) => (
-                  <div key={lang.id}>
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-700 font-medium">{lang.language}</span>
-                      <span className="text-sm text-sky-600">{getLanguageLabel(lang.proficiency)}</span>
+                {languages.map((lang) => {
+                  const profMap: Record<string, { level: number; color: string; badge: string }> = {
+                    basic: { level: 1, color: 'bg-amber-400', badge: 'bg-amber-50 text-amber-700 border-amber-200' },
+                    intermediate: { level: 2, color: 'bg-sky-500', badge: 'bg-sky-50 text-sky-700 border-sky-200' },
+                    advanced: { level: 3, color: 'bg-indigo-500', badge: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+                    fluent: { level: 4, color: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+                    native: { level: 5, color: 'bg-purple-500', badge: 'bg-purple-50 text-purple-700 border-purple-200' },
+                  };
+                  const mainConf = profMap[lang.proficiency || ''] || profMap.basic;
+
+                  const getLevelNum = (level?: string): number => {
+                    if (!level) return 0;
+                    const map: Record<string, number> = { basic: 1, intermediate: 2, advanced: 3, fluent: 4, native: 5 };
+                    return map[level] || 0;
+                  };
+                  const getLevelColor = (level?: string): string => {
+                    if (!level) return 'bg-slate-200';
+                    return profMap[level]?.color || 'bg-slate-300';
+                  };
+
+                  const hasDetailedLevels = lang.speaking_level || lang.reading_level || lang.writing_level;
+
+                  return (
+                    <div key={lang.id} className="p-3 bg-slate-50/80 rounded-lg border border-slate-100">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-medium text-slate-700">{lang.language}</span>
+                        <span className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full border ${mainConf.badge}`}>
+                          {getLanguageLabel(lang.proficiency)}
+                        </span>
+                      </div>
+
+                      {hasDetailedLevels && (
+                        <div className="space-y-2 mt-3">
+                          {([
+                            { label: 'Fala', level: lang.speaking_level },
+                            { label: 'Leitura', level: lang.reading_level },
+                            { label: 'Escrita', level: lang.writing_level },
+                          ] as const).map((item) => {
+                            const num = getLevelNum(item.level);
+                            const barColor = getLevelColor(item.level);
+                            return (
+                              <div key={item.label} className="flex items-center gap-2">
+                                <span className="text-[11px] text-slate-400 w-12 flex-shrink-0">{item.label}</span>
+                                <div className="flex gap-0.5 flex-1">
+                                  {[1, 2, 3, 4, 5].map((seg) => (
+                                    <div
+                                      key={seg}
+                                      className={`h-2 flex-1 rounded-sm ${
+                                        seg <= num ? barColor : 'bg-slate-200'
+                                      }`}
+                                    />
+                                  ))}
+                                </div>
+                                <span className="text-[10px] text-slate-500 w-[70px] text-right flex-shrink-0">
+                                  {item.level ? getLanguageLabel(item.level) : '—'}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {lang.has_certificate && lang.certificate_name && (
+                        <div className="flex items-center gap-1.5 mt-3 px-2.5 py-1.5 bg-emerald-50 rounded-md border border-emerald-200">
+                          <Award className="h-3.5 w-3.5 text-emerald-600 flex-shrink-0" />
+                          <span className="text-xs text-emerald-700 font-medium">{lang.certificate_name}</span>
+                        </div>
+                      )}
                     </div>
-                    <div className="grid grid-cols-3 gap-2 mt-1.5">
-                      <div className="text-center">
-                        <p className="text-[10px] text-slate-400 uppercase">Fala</p>
-                        <p className="text-xs text-slate-600">{getLanguageLabel(lang.speaking_level)}</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-[10px] text-slate-400 uppercase">Leitura</p>
-                        <p className="text-xs text-slate-600">{getLanguageLabel(lang.reading_level)}</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-[10px] text-slate-400 uppercase">Escrita</p>
-                        <p className="text-xs text-slate-600">{getLanguageLabel(lang.writing_level)}</p>
-                      </div>
-                    </div>
-                    {lang.has_certificate && lang.certificate_name && (
-                      <p className="text-xs text-emerald-600 mt-1">
-                        <Award className="h-3 w-3 inline mr-1" />
-                        {lang.certificate_name}
-                      </p>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
