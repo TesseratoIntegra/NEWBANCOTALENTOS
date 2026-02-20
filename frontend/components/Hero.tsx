@@ -321,8 +321,8 @@ export default function Hero() {
                     {/* --- Feature 1: Pipeline Visual --- */}
                     <div className="grid lg:grid-cols-2 gap-12 items-center mb-24">
                         {/* Mockup */}
-                        <ScrollReveal animation="fadeInLeft" className="px-2 sm:px-0">
-                            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-2xl overflow-hidden">
+                        <ScrollReveal animation="fadeInLeft">
+                            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-2xl overflow-hidden mx-2 sm:mx-0">
                                 <div className="text-slate-300 text-sm font-medium mb-4 flex items-center gap-2">
                                     <ClipboardList className="w-4 h-4 text-blue-400" />
                                     Pipeline — Desenvolvedor React Senior
