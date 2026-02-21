@@ -321,13 +321,13 @@ export default function Hero() {
                     {/* --- Feature 1: Pipeline Visual --- */}
                     <div className="grid lg:grid-cols-2 gap-12 items-center mb-24">
                         {/* Mockup */}
-                        <ScrollReveal animation="fadeInLeft">
+                        <ScrollReveal animation="fadeInLeft" className="min-w-0 overflow-hidden">
                             <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-2xl overflow-hidden mx-2 sm:mx-0">
                                 <div className="text-slate-300 text-sm font-medium mb-4 flex items-center gap-2">
                                     <ClipboardList className="w-4 h-4 text-blue-400" />
                                     Pipeline — Desenvolvedor React Senior
                                 </div>
-                                <div className="flex gap-3 pb-2 animate-pipeline-scroll pipeline-fade-mask">
+                                <div className="flex gap-3 pb-2 overflow-x-auto pipeline-scrollbar">
                                     {pipelineColumns.map((col, i) => (
                                         <div key={i} className="min-w-[120px]">
                                             <div className="flex items-center gap-2 mb-2">

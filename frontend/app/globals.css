@@ -212,6 +212,17 @@ body {
   border-color: #0ea5e9;
 }
 
+/* Scrollbar oculta (mantém swipe) */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Pipeline scrollbar estilizada */
+.pipeline-scrollbar { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.25) transparent; }
+.pipeline-scrollbar::-webkit-scrollbar { height: 4px; }
+.pipeline-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.pipeline-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius: 4px; }
+.pipeline-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
+
 /* Detectar autofill do navegador */
 @keyframes onAutoFillStart {
   from { /* vazio */ }

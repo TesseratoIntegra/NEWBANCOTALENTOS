@@ -1,20 +1,21 @@
 import type { Metadata } from "next";
-import { Quicksand } from "next/font/google";
-import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from 'react-hot-toast';
 import AuthInterceptorProvider from "@/components/AuthProvider";
 import { ThemeProvider } from 'next-themes';
 
-const QuicksandText = Quicksand({
+const QuicksandText = localFont({
+  src: "../public/fonts/Quicksand-Variable.ttf",
   variable: "--font-quicksand",
-  subsets: ["latin"],
+  display: "swap",
 });
 
-const InterText = Inter({
+const InterText = localFont({
+  src: "../public/fonts/Inter-Variable.ttf",
   variable: "--font-inter",
-  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {

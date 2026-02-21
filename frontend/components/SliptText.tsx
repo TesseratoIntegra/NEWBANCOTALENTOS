@@ -132,7 +132,8 @@ const SplitText: React.FC<SplitTextProps> = ({
       className={`split-parent ${className}`}
       style={{
         textAlign,
-        overflow: "hidden",
+        overflow: "clip",
+        overflowClipMargin: "3px",
         display: "inline-block",
         whiteSpace: "normal",
         wordWrap: "break-word",
