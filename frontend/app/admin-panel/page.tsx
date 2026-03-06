@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
@@ -81,39 +82,39 @@ export default function AdminDashboard() {
   const [docsCompletedCount, setDocsCompletedCount] = useState(0);
   const [jobs, setJobs] = useState<Job[]>([]);
 
-  useEffect(() => {
-    const fetchAll = async () => {
-      try {
-        const results = await Promise.allSettled([
-          candidateService.getDashboardStats(),
-          adminApplicationService.getStatistics(),
-          selectionProcessService.getProcesses(),
-          admissionService.getPendingReview(),
-          admissionService.getApprovedAwaitingDocuments(),
-          admissionService.getDocumentsCompleted(),
-          adminJobService.getJobs(),
-        ]);
+  const fetchAll = useCallback(async () => {
+    try {
+      const results = await Promise.allSettled([
+        candidateService.getDashboardStats(),
+        adminApplicationService.getStatistics(),
+        selectionProcessService.getProcesses(),
+        admissionService.getPendingReview(),
+        admissionService.getApprovedAwaitingDocuments(),
+        admissionService.getDocumentsCompleted(),
+        adminJobService.getJobs(),
+      ]);
 
-        if (results[0].status === 'fulfilled') setPipelineStats(results[0].value);
-        if (results[1].status === 'fulfilled') setAppStats(results[1].value);
-        if (results[2].status === 'fulfilled') {
-          const processesRes = results[2].value;
-          const procList = Array.isArray(processesRes) ? processesRes : processesRes.results || [];
-          setProcesses(procList);
-        }
-        if (results[3].status === 'fulfilled') setPendingDocsCount(Array.isArray(results[3].value) ? results[3].value.length : 0);
-        if (results[4].status === 'fulfilled') setAwaitingDocsCount(Array.isArray(results[4].value) ? results[4].value.length : 0);
-        if (results[5].status === 'fulfilled') setDocsCompletedCount(Array.isArray(results[5].value) ? results[5].value.length : 0);
-        if (results[6].status === 'fulfilled') setJobs(Array.isArray(results[6].value) ? results[6].value : []);
-      } catch (err) {
-        setError('Erro ao carregar dados do dashboard.');
-        console.error(err);
-      } finally {
-        setLoading(false);
+      if (results[0].status === 'fulfilled') setPipelineStats(results[0].value);
+      if (results[1].status === 'fulfilled') setAppStats(results[1].value);
+      if (results[2].status === 'fulfilled') {
+        const processesRes = results[2].value;
+        const procList = Array.isArray(processesRes) ? processesRes : processesRes.results || [];
+        setProcesses(procList);
       }
-    };
-    fetchAll();
+      if (results[3].status === 'fulfilled') setPendingDocsCount(Array.isArray(results[3].value) ? results[3].value.length : 0);
+      if (results[4].status === 'fulfilled') setAwaitingDocsCount(Array.isArray(results[4].value) ? results[4].value.length : 0);
+      if (results[5].status === 'fulfilled') setDocsCompletedCount(Array.isArray(results[5].value) ? results[5].value.length : 0);
+      if (results[6].status === 'fulfilled') setJobs(Array.isArray(results[6].value) ? results[6].value : []);
+    } catch (err) {
+      setError('Erro ao carregar dados do dashboard.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => { fetchAll(); }, [fetchAll]);
+  useAutoRefresh(fetchAll);
 
   if (loading) {
     return (

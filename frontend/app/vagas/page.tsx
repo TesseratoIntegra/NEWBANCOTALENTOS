@@ -1,6 +1,7 @@
 'use client'
 import dynamic from 'next/dynamic';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 import Link from 'next/link';
 import { Building2, Search, MapPin, Clock, Monitor, Calendar, Filter, X, Smartphone, ArrowRight, Puzzle, RefreshCw, Database, Zap, Briefcase, BrainCircuit, Sparkles, BarChart3, TrendingUp } from 'lucide-react';
 import Hero from '@/components/Hero';
@@ -73,10 +74,11 @@ const Home = () => {
   };
 
   // Função para carregar todas as vagas (para filtros)
+  const initialLoadDone = useRef(false);
+
   const loadAllJobs = React.useCallback(async () => {
     try {
-      setLoading(true);
-      setError(null);
+      if (!initialLoadDone.current) { setLoading(true); setError(null); }
 
       const allJobsData = await jobService.getJobs();
       const jobsArray = Array.isArray(allJobsData?.results) ? allJobsData.results : [];
@@ -84,10 +86,11 @@ const Home = () => {
       setJobs(jobsArray);
       setTotalJobs(Array.isArray(jobsArray) ? jobsArray.length : 0);
     } catch (err) {
-      setError('Erro ao carregar todas as vagas. Tente novamente.');
+      if (!initialLoadDone.current) setError('Erro ao carregar todas as vagas. Tente novamente.');
       console.error('Erro ao carregar todas as vagas:', err);
     } finally {
       setLoading(false);
+      initialLoadDone.current = true;
     }
   }, []);
 
@@ -148,6 +151,7 @@ const Home = () => {
     loadAllJobs();
     loadCompanies();
   }, [loadAllJobs]);
+  useAutoRefresh(loadAllJobs);
 
   // Obter localizações únicas
   const getUniqueLocations = (): string[] => {

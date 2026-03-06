@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
@@ -163,15 +164,11 @@ export default function ProfileViewPage() {
   const [editPreferencesModal, setEditPreferencesModal] = useState(false);
   const [showApprovedBanner, setShowApprovedBanner] = useState(false);
 
-  useEffect(() => {
-    if (user?.user_type === 'candidate') {
-      loadProfile();
-    }
-  }, [user]);
+  const initialLoadDone = useRef(false);
 
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     try {
-      setLoading(true);
+      if (!initialLoadDone.current) setLoading(true);
       const [profileData, educationsData, experiencesData, skillsData, languagesData, processesData, docsData] = await Promise.all([
         candidateService.getCandidateProfile().catch(() => null),
         candidateService.getCandidateEducations().catch(() => []),
@@ -184,7 +181,7 @@ export default function ProfileViewPage() {
 
       // Se não tem perfil, redirecionar para o wizard de criação
       if (!profileData) {
-        router.push('/perfil/criar');
+        if (!initialLoadDone.current) router.push('/perfil/criar');
         return;
       }
 
@@ -205,11 +202,19 @@ export default function ProfileViewPage() {
       }
     } catch (error) {
       console.error('Erro ao carregar perfil:', error);
-      toast.error('Erro ao carregar informações do perfil');
+      if (!initialLoadDone.current) toast.error('Erro ao carregar informações do perfil');
     } finally {
       setLoading(false);
+      initialLoadDone.current = true;
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    if (user?.user_type === 'candidate') {
+      loadProfile();
+    }
+  }, [user, loadProfile]);
+  useAutoRefresh(loadProfile);
 
   // Funções auxiliares
   const getImageUrl = (imagePath: string | undefined) => {

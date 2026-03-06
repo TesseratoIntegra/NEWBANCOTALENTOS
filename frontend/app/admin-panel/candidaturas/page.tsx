@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 import Link from 'next/link';
 import adminApplicationService from '@/services/adminApplicationService';
 import { Application } from '@/types/index';
@@ -56,32 +57,34 @@ export default function AdminApplicationsPage() {
     return labels[status as keyof typeof labels] || status;
   };
 
-  useEffect(() => {
-    const fetchApplications = async () => {
-      try {
-        setLoading(true);
-        const params: { page: number; status?: string } = { page: filters.page };
-        if (filters.status) params.status = filters.status;
+  const initialLoadDone = useRef(false);
 
-        const response = await adminApplicationService.getAllApplications(params);
+  const fetchApplications = useCallback(async () => {
+    try {
+      if (!initialLoadDone.current) setLoading(true);
+      const params: { page: number; status?: string } = { page: filters.page };
+      if (filters.status) params.status = filters.status;
 
-        if (Array.isArray(response)) {
-          setApplications(response);
-          setTotalCount(response.length);
-        } else {
-          setApplications(response.results || []);
-          setTotalCount(response.count || 0);
-        }
-      } catch (err) {
-        setError('Erro ao carregar candidaturas');
-        console.error('Error fetching applications:', err);
-      } finally {
-        setLoading(false);
+      const response = await adminApplicationService.getAllApplications(params);
+
+      if (Array.isArray(response)) {
+        setApplications(response);
+        setTotalCount(response.length);
+      } else {
+        setApplications(response.results || []);
+        setTotalCount(response.count || 0);
       }
-    };
-
-    fetchApplications();
+    } catch (err) {
+      if (!initialLoadDone.current) setError('Erro ao carregar candidaturas');
+      console.error('Error fetching applications:', err);
+    } finally {
+      setLoading(false);
+      initialLoadDone.current = true;
+    }
   }, [filters]);
+
+  useEffect(() => { fetchApplications(); }, [fetchApplications]);
+  useAutoRefresh(fetchApplications);
 
   const handleStatusFilter = (status: string) => {
     setFilters(prev => ({ ...prev, status: status || undefined, page: 1 }));

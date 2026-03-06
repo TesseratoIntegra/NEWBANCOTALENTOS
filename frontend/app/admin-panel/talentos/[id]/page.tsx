@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
@@ -192,65 +193,61 @@ export default function TalentoDetalhesPage() {
   const skillLevels = candidateService.getSkillLevels();
   const languageProficiency = candidateService.getLanguageProficiencyLevels();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  const initialLoadDone = useRef(false);
 
-        const [profileData, eduData, expData, skillData, langData] = await Promise.all([
-          candidateService.getCandidateProfile(candidateId),
-          candidateService.getCandidateEducations(candidateId),
-          candidateService.getCandidateExperiences(candidateId),
-          candidateService.getCandidateSkills(candidateId),
-          candidateService.getCandidateLanguages(candidateId),
-        ]);
+  const fetchData = useCallback(async () => {
+    try {
+      if (!initialLoadDone.current) { setLoading(true); setError(null); }
 
-        setProfile(profileData);
-        setEducations(eduData.results || []);
-        setExperiences(expData.results || []);
-        setSkills(skillData.results || []);
-        setLanguages(langData.results || []);
+      const [profileData, eduData, expData, skillData, langData] = await Promise.all([
+        candidateService.getCandidateProfile(candidateId),
+        candidateService.getCandidateEducations(candidateId),
+        candidateService.getCandidateExperiences(candidateId),
+        candidateService.getCandidateSkills(candidateId),
+        candidateService.getCandidateLanguages(candidateId),
+      ]);
 
-        // Buscar candidaturas do usuário (usando user_id ou user)
-        const userId = profileData.user_id || profileData.user;
-        if (userId) {
-          try {
-            const appsData = await applicationService.getApplications({ candidate: userId });
-            setApplications(appsData.results || []);
-          } catch (appErr) {
-            console.error('Erro ao buscar candidaturas:', appErr);
-          }
-        }
+      setProfile(profileData);
+      setEducations(eduData.results || []);
+      setExperiences(expData.results || []);
+      setSkills(skillData.results || []);
+      setLanguages(langData.results || []);
 
-        // Buscar processos seletivos do candidato
+      const userId = profileData.user_id || profileData.user;
+      if (userId) {
         try {
-          const processData = await selectionProcessService.getCandidatesInProcess({ candidate_profile: candidateId });
-          setCandidateProcesses(processData.results || []);
-        } catch (processErr) {
-          console.error('Erro ao buscar processos do candidato:', processErr);
+          const appsData = await applicationService.getApplications({ candidate: userId });
+          setApplications(appsData.results || []);
+        } catch (appErr) {
+          console.error('Erro ao buscar candidaturas:', appErr);
         }
-
-        // Buscar documentos do candidato
-        try {
-          const docsData = await admissionService.getCandidateSummary(candidateId);
-          setCandidateDocs(docsData.documents || []);
-          setDocsSummary(docsData.summary || null);
-        } catch (docErr) {
-          console.error('Erro ao buscar documentos do candidato:', docErr);
-        }
-      } catch (err) {
-        console.error('Erro ao buscar dados do talento:', err);
-        setError('Erro ao carregar dados do talento.');
-      } finally {
-        setLoading(false);
       }
-    };
 
-    if (candidateId) {
-      fetchData();
+      try {
+        const processData = await selectionProcessService.getCandidatesInProcess({ candidate_profile: candidateId });
+        setCandidateProcesses(processData.results || []);
+      } catch (processErr) {
+        console.error('Erro ao buscar processos do candidato:', processErr);
+      }
+
+      try {
+        const docsData = await admissionService.getCandidateSummary(candidateId);
+        setCandidateDocs(docsData.documents || []);
+        setDocsSummary(docsData.summary || null);
+      } catch (docErr) {
+        console.error('Erro ao buscar documentos do candidato:', docErr);
+      }
+    } catch (err) {
+      console.error('Erro ao buscar dados do talento:', err);
+      if (!initialLoadDone.current) setError('Erro ao carregar dados do talento.');
+    } finally {
+      setLoading(false);
+      initialLoadDone.current = true;
     }
   }, [candidateId]);
+
+  useEffect(() => { if (candidateId) fetchData(); }, [candidateId, fetchData]);
+  useAutoRefresh(fetchData);
 
   const getEducationLabel = (level?: string) => {
     if (!level) return '-';

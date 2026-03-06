@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 import { Search, Filter, Users, MapPin, Briefcase, GraduationCap, Check, X, ChevronLeft, ChevronRight, Eye, FileText, UserCheck, ClipboardList, LayoutGrid, LayoutList, Bell } from 'lucide-react';
 import Link from 'next/link';
 import candidateService from '@/services/candidateService';
@@ -46,9 +47,11 @@ export default function TalentosPage() {
     fetchJobs();
   }, []);
 
+  const initialLoadDone = useRef(false);
+
   const fetchCandidates = useCallback(async () => {
     try {
-      setLoading(true);
+      if (!initialLoadDone.current) setLoading(true);
       setError(null);
 
       const params: Parameters<typeof candidateService.getAllCandidates>[0] = {
@@ -71,15 +74,17 @@ export default function TalentosPage() {
       setTotalPages(Math.ceil((response.count || 0) / 10));
     } catch (err) {
       console.error('Erro ao buscar talentos:', err);
-      setError('Erro ao carregar talentos. Tente novamente.');
+      if (!initialLoadDone.current) setError('Erro ao carregar talentos. Tente novamente.');
     } finally {
       setLoading(false);
+      initialLoadDone.current = true;
     }
   }, [currentPage, searchTerm, educationLevel, availableForWork, acceptsRemote, selectedJobId, profileStatus]);
 
   useEffect(() => {
     fetchCandidates();
   }, [fetchCandidates]);
+  useAutoRefresh(fetchCandidates);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
